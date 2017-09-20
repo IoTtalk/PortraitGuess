@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>猜猜我是誰</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <script type="text/javascript">
+        var nameList = <%- JSON.stringify(nameList) %>;
+        var iotTalkIP = "<%- iotTalkIP %>";
+        var webSocketPort = "<%- webSocketPort %>";
+    </script>
+    <script type="text/javascript" src="../js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/csmapi.js"></script>
+    <script type="text/javascript" src="../js/dan.js"></script>
+    <script type="text/javascript" src="../js/dai.js"></script>
+    <script type="text/javascript" src="../js/dai-app.js"></script>
+
+</head>
+<body>
+    <div class="container container-table">
+        <div class="row vertical-center-row">
+            <div class="center-block">
+                <div id="prompt">WHO AM I ?</div>
+                <div id="prompt2">Choose an answer</div>
+                <div><img id="successImage" src="../img/success.png"></div>
+                <div id="successAlert" class="alert alert-success" role="alert">You got it! I am</div>
+                <div id="successName" class="alert alert-success" role="alert"></div>
+                <div id="wrongAlert" class="alert alert-danger" role="alert">Incorrect answer. Try again!</div>
+                <div id="chance"> </div>
+                <ul id="options" hidden>                    
+                    <li><button class="optionBtn btn btn-danger center-block"></button></li>
+                    <li><button class="optionBtn btn btn-danger center-block"></button></li>
+                    <li><button class="optionBtn btn btn-danger center-block"></button></li>
+                    <li><button class="optionBtn btn btn-danger center-block"></button></li>
+                    <li><button class="optionBtn btn btn-danger center-block"></button></li>
+                </ul>
+                <button id="startButton" class="btn btn-info center-block">Play</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
