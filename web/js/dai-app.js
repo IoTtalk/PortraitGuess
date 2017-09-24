@@ -11,7 +11,7 @@ $(function () {
     $("#prompt2").hide();  // 猜謎頁 "Choose an answer"
     $("#chance").hide();
     var lastClickTime = new Date(); //record last click optionBtn time
-    const timeout = 150; // if over 300 seconds not click optionBtn then send disconnect WebSocket	
+    const timeout = 150; // if over 150 seconds not click optionBtn then disconnect WebSocket	
     const optionLength = 5;  // 選項數目
     const chance = 5;  // 猜錯機會
     var chance_count = chance;
@@ -29,6 +29,7 @@ $(function () {
     };
     function iot_app (dan) {
             var ws = new WebSocket("ws://" + "140.113.169.227" + ":" + webSocketPort);
+			var playedNameNumber = [];
             ws.onopen=function(){
                 $("#startButton").click(function () {
                     if(nameList.length < 5){
@@ -42,6 +43,9 @@ $(function () {
                     $("#wrongAlert").hide();
                     var answerNameNumber = Math.floor((Math.random() * nameList.length));
                     var answerOptionIndex = Math.floor((Math.random() * optionLength));
+					while(playedNameNumber.length != nameList.length && playedNameNumber.contains(answerNameNumber))
+						Math.floor((Math.random() * nameList.length));
+					playedNameNumber.push(answerNameNumber);	
                     var randomOptions = [];
                     dan.push("Name-I",[answerNameNumber]);
                     ws.send(answerNameNumber);
