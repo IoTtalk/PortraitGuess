@@ -92,12 +92,12 @@ $(function () {
                             $("#prompt2").hide();
                             $("#chance").hide();
                             $("#startButton").show().prop('disabled', true);
-                            $("#startButton").html("Play in 5 sec.");
+                            $("#startButton").html("Play in 1 sec.");
                             $("#startButton").css("font-size","30px");
                             $("#startButton").css("width","250px");
                             $("#startButton").css("height","80px");
                             $("#startButton").css("height","80px");
-                            var count = 5; //count down 5 second
+                            var count = 1; //count down 1 second
                             var countDown = function(){ 
                                 if(count == 1){
                                     $("#startButton").show().prop("disabled", false);
@@ -133,12 +133,12 @@ $(function () {
                                 $("#chance").hide();
 
                                 $("#startButton").show().prop('disabled', true);
-                                $("#startButton").html("Play in 5 sec.");
+                                $("#startButton").html("Play in 1 sec.");
                                 $("#startButton").css("font-size","30px");
                                 $("#startButton").css("width","250px");
                                 $("#startButton").css("height","80px");
                                 $("#startButton").css("height","80px");
-                                var count = 5; //count down 5 second
+                                var count = 1; //count down 1 second
                                 var countDown = function(){ 
                                     if(count == 1){
                                         $("#startButton").show().prop("disabled", false);
