@@ -31,12 +31,12 @@ $(function () {
             var ws = new WebSocket("ws://" + "140.113.169.227" + ":" + webSocketPort);
 			var playedNameNumber = [];
             ws.onopen=function(){
-                $("#startButton").click(function () {
+                $("#playButton").click(function () {
                     if(nameList.length < 5){
                         alert("Can not play, lack of pating");
                         return;
                     }
-                    $("#startButton").hide();
+                    $("#playButton").hide();
                     $("#successAlert").hide();
                     $("#successName").hide();
                     $("#successImage").hide();
@@ -91,24 +91,24 @@ $(function () {
                             $("#prompt").hide();
                             $("#prompt2").hide();
                             $("#chance").hide();
-                            $("#startButton").show().prop('disabled', true);
-                            $("#startButton").html("Play in 1 sec.");
-                            $("#startButton").css("font-size","30px");
-                            $("#startButton").css("width","250px");
-                            $("#startButton").css("height","80px");
-                            $("#startButton").css("height","80px");
+                            $("#playButton").show().prop('disabled', true);
+                            $("#playButton").html("Play in 1 sec.");
+                            $("#playButton").css("font-size","30px");
+                            $("#playButton").css("width","250px");
+                            $("#playButton").css("height","80px");
+                            $("#playButton").css("height","80px");
                             var count = 1; //count down 1 second
                             var countDown = function(){ 
                                 if(count == 1){
-                                    $("#startButton").show().prop("disabled", false);
-                                    $("#startButton").css("font-size","50px");
-                                    $("#startButton").html("Play Again");
-                                    $("#startButton").css("width","300px");
-                                    $("#startButton").css("height","100px");
+                                    $("#playButton").show().prop("disabled", false);
+                                    $("#playButton").css("font-size","50px");
+                                    $("#playButton").html("Play Again");
+                                    $("#playButton").css("width","300px");
+                                    $("#playButton").css("height","100px");
                                 }
                                 else{
                                     count--;
-                                    $("#startButton").html("Play in " + count + " sec.");
+                                    $("#playButton").html("Play in " + count + " sec.");
                                     setTimeout(countDown, 1000);
                                 }
                             };
@@ -132,24 +132,24 @@ $(function () {
                                 $("#prompt2").hide();
                                 $("#chance").hide();
 
-                                $("#startButton").show().prop('disabled', true);
-                                $("#startButton").html("Play in 1 sec.");
-                                $("#startButton").css("font-size","30px");
-                                $("#startButton").css("width","250px");
-                                $("#startButton").css("height","80px");
-                                $("#startButton").css("height","80px");
+                                $("#playButton").show().prop('disabled', true);
+                                $("#playButton").html("Play in 1 sec.");
+                                $("#playButton").css("font-size","30px");
+                                $("#playButton").css("width","250px");
+                                $("#playButton").css("height","80px");
+                                $("#playButton").css("height","80px");
                                 var count = 1; //count down 1 second
                                 var countDown = function(){ 
                                     if(count == 1){
-                                        $("#startButton").show().prop("disabled", false);
-                                        $("#startButton").css("font-size","50px");
-                                        $("#startButton").html("Try Again");
-                                        $("#startButton").css("width","300px");
-                                        $("#startButton").css("height","100px");
+                                        $("#playButton").show().prop("disabled", false);
+                                        $("#playButton").css("font-size","50px");
+                                        $("#playButton").html("Try Again");
+                                        $("#playButton").css("width","300px");
+                                        $("#playButton").css("height","100px");
                                     }
                                     else{
                                         count--;
-                                        $("#startButton").html("Play in " + count + " sec.");
+                                        $("#playButton").html("Play in " + count + " sec.");
                                         setTimeout(countDown, 1000);
                                     }
                                 };
@@ -176,6 +176,30 @@ $(function () {
                     $("#chance").html("<span class='badge' style='background-color:blue'>" + chance_count + "</span> chances left");
                     $("#chance").show();
                 });
+
+                $("#voiceButton").click(function(){
+                    if (!('webkitSpeechRecognition' in window)) {
+                        console.log( "not support!" );
+                    } 
+                    else {
+                        var recognition = new webkitSpeechRecognition();
+                        recognition.continuous = true;
+                        recognition.interimResults = true;
+                        recognition.lang="cmn-Hant-TW";
+                        recognition.onstart=function(){
+                            console.log("on start");
+                        };
+                        recognition.onend=function(){
+                            console.log("on end");
+                            recognition.start();
+                        };
+                        recognition.onresult=function(event){
+                            console.log(event);
+                        };
+                        recognition.start();
+                    }
+                });
+
 				var checkTimeout = setInterval(function(){
 					var now = new Date();
 					if( (now - lastClickTime)/1000 >= timeout ){
