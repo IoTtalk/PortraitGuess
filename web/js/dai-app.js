@@ -44,7 +44,7 @@ $(function () {
                     var answerNameNumber = Math.floor((Math.random() * nameList.length));
                     var answerOptionIndex = Math.floor((Math.random() * optionLength));
 					while(playedNameNumber.length != nameList.length && playedNameNumber.contains(answerNameNumber))
-						Math.floor((Math.random() * nameList.length));
+						answerNameNumber = Math.floor((Math.random() * nameList.length));
 					playedNameNumber.push(answerNameNumber);	
                     var randomOptions = [];
                     dan.push("Name-I",[answerNameNumber]);
