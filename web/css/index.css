@@ -13,7 +13,7 @@ html, body, .container-table {
     font-size: 20px;
     color: green;
 }
-#playButton, #endButton{
+#playButton{
     margin-top: 20px;
     width:300px;
     height:100px;
@@ -21,6 +21,16 @@ html, body, .container-table {
     font-size: 50px;
     font-weight: bold;
 }
+#endButton{
+    margin-top: 20px;
+    width:300px;
+    height:80px;
+    border-radius: 25px;
+    font-size: 50px;
+    font-weight: bold;
+}
+
+
 #voiceButton{
     margin-top: 20px;
     width:300px;

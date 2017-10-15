@@ -10,6 +10,7 @@ $(function () {
     $("#prompt").hide();  // 猜謎頁 "WHO AM I ?"
     $("#prompt2").hide();  // 猜謎頁 "Choose an answer"
     $("#chance").hide();
+    $("#endButton").hide();
     var lastClickTime = new Date(); //record last click optionBtn time
     const timeout = 150; // if over 150 seconds not click optionBtn then disconnect WebSocket	
     const optionLength = 5;  // 選項數目
