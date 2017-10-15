@@ -31,12 +31,22 @@ $(function () {
             var ws = new WebSocket("ws://" + "140.113.169.227" + ":" + webSocketPort);
 			var playedNameNumber = [];
             ws.onopen=function(){
+				$("#endButton").click(function(){
+					if (navigator.userAgent.indexOf('Safari') != -1 && 
+							navigator.userAgent.indexOf('Chrome') == -1){//safari
+						 open(location, '_self').close();
+					}
+					else{ //chrome or smt else
+						window.close();
+					}
+				});
                 $("#playButton").click(function () {
                     if(nameList.length < 5){
                         alert("Can not play, lack of pating");
                         return;
                     }
                     $("#playButton").hide();
+					$("#endButton").hide();
                     $("#successAlert").hide();
                     $("#successName").hide();
                     $("#successImage").hide();
@@ -97,6 +107,7 @@ $(function () {
                             $("#playButton").css("width","250px");
                             $("#playButton").css("height","80px");
                             $("#playButton").css("height","80px");
+							$("#endButton").show();
                             var count = 1; //count down 1 second
                             var countDown = function(){ 
                                 if(count == 1){
@@ -131,13 +142,13 @@ $(function () {
                                 $("#prompt").hide();
                                 $("#prompt2").hide();
                                 $("#chance").hide();
-
                                 $("#playButton").show().prop('disabled', true);
                                 $("#playButton").html("Play in 1 sec.");
                                 $("#playButton").css("font-size","30px");
                                 $("#playButton").css("width","250px");
                                 $("#playButton").css("height","80px");
                                 $("#playButton").css("height","80px");
+								$("#endButton").show();
                                 var count = 1; //count down 1 second
                                 var countDown = function(){ 
                                     if(count == 1){
