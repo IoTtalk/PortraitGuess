@@ -12,7 +12,7 @@ $(function () {
     $("#chance").hide();
     $("#endButton").hide();
     var lastClickTime = new Date(); //record last click optionBtn time
-    const timeout = 150; // if over 150 seconds not click optionBtn then disconnect WebSocket	
+    const timeout = 30; // if over 150 seconds not click optionBtn then disconnect WebSocket	
     const optionLength = 5;  // 選項數目
     const chance = 5;  // 猜錯機會
     var chance_count = chance;
