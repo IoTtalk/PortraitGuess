@@ -3,7 +3,8 @@
  */
 var express = require("express"),
     app = express(),
-    server = require("http").createServer(app),
+    http = require("http").createServer(app),
+	io = require('socket.io')(http),
     fs = require('fs'),
     ejs = require('ejs'),
     shortid = require('shortid'),
@@ -63,6 +64,35 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 /******/
 
+/*** socket.io ***/
+var connectedCount = 0;
+var isGamePlaying = false;
+var playID = "";
+io.on('connection', function(socket){
+	connectedCount++; 
+	console.log("connected count: " + connectedCount);
+	
+	socket.on("disconnect", function(){
+		connectedCount--;
+		console.log("connected count: " + connectedCount);
+		if(isGamePlaying && playID == socket.id){
+			isGamePlaying = false;	
+		}
+	});
+
+	socket.on("playACK", function(msg){
+		console.log("request to enter the game");
+		socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
+		if(isGamePlaying == false){
+			isGamePlaying = true;
+			playID = socket.id;
+			socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
+		}
+	});
+});
+
+/******/
+
 var nameList = [];
 var url = shortid.generate();
 console.log(url);
@@ -89,7 +119,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 // start server
-server.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
 
 // authentication url API
