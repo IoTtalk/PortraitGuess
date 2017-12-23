@@ -29,18 +29,11 @@ $(function () {
         return false;
     };
     function iot_app (dan) {
-            var ws = new WebSocket("ws://" + "140.113.169.227" + ":" + webSocketPort);
+            var ws = new WebSocket("ws://" + paintingIP + ":" + webSocketPort);
 			var playedNameNumber = [];
             ws.onopen=function(){
 				$("#endButton").click(function(){
-					if (navigator.userAgent.indexOf('Safari') != -1 && 
-							navigator.userAgent.indexOf('Chrome') == -1){//safari
-						window.close();
-						open(location, '_self').close();
-					}
-					else{ //chrome or smt else
-						window.close();
-					}
+					window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
 				});
                 $("#playButton").click(function () {
                     if(nameList.length < 5){

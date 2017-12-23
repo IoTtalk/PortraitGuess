@@ -1,4 +1,5 @@
 exports.iotTalkIP = "";
+exports.paintingIP = "";
 exports.patingPath = "";
 exports.painting_db = "";
 exports.webServerPort = ;

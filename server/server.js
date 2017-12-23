@@ -91,9 +91,12 @@ app.use(bodyParser.json());
 // start server
 server.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
+
 // authentication url API
 app.post("/url",function(req, res){
     if(req.body.accessToken === config.accessToken){
+    	url = shortid.generate();
+    	console.log(url);
         var fullUrl = req.protocol + '://' + req.get('host') + '/' + url;
         res.writeHead(200, {"Content-Type": "text/html"});
         res.end(fullUrl);
@@ -106,10 +109,11 @@ app.post("/url",function(req, res){
 
 // get index API
 app.get("/*", function (req, res) {
-    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload"){
+    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload" && 
+    	req.originalUrl.substr(1) != "endPage"){
         res.writeHead(404, {"Content-Type": "text/html"});
         res.end("url not found");
-		return
+		return;
     }
 	else if(req.originalUrl.substr(1) == "upload"){
 		fs.readFile("../web/html/upload.html", function (err, contents) {
@@ -119,9 +123,19 @@ app.get("/*", function (req, res) {
 			else{
 				contents = contents.toString('utf8');
 				res.writeHead(200, {"Content-Type": "text/html"});
-				res.end(ejs.render(contents, {nameList: nameList, iotTalkIP: config.iotTalkIP, webSocketPort: config.webSocketPort}));
-				url = shortid.generate();
-				console.log(url);
+				res.end(contents);
+			}
+		});
+	}
+	else if(req.originalUrl.substr(1) == "endPage"){
+		fs.readFile("../web/html/endPage.html", function (err, contents) {
+			if (err){
+				console.log(err);
+			}
+			else{
+				contents = contents.toString('utf8');
+				res.writeHead(200, {"Content-Type": "text/html"});
+				res.end(contents);
 			}
 		});
 	}
@@ -133,9 +147,14 @@ app.get("/*", function (req, res) {
 			else{
 				contents = contents.toString('utf8');
 				res.writeHead(200, {"Content-Type": "text/html"});
-				res.end(ejs.render(contents, {nameList: nameList, iotTalkIP: config.iotTalkIP, webSocketPort: config.webSocketPort}));
-				url = shortid.generate();
-				console.log(url);
+				res.end(ejs.render(contents, 
+				{
+					nameList: nameList, 
+					iotTalkIP: config.iotTalkIP, 
+					webSocketPort: config.webSocketPort, 
+					webServerPort: config.webServerPort,
+					paintingIP: config.paintingIP
+				}));
 			}
 		});
 	}
