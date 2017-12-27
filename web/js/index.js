@@ -27,13 +27,13 @@ $(function () {
     };
 
 	var socket = io();
-    var ws;
 	var playedNameNumber = [];
     var answerNameNumber;
     var answerOptionIndex;
     var randomOptions;
+    var isMePlaying = false;
     var enterPlay = function(){
-    	if(nameList.length < 5){
+    	if(nameList.length <= 5){
 			alert("Can not play, lack of pating");
 			return;
 		}
@@ -192,13 +192,14 @@ $(function () {
 			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
 		}
 		else{
+			isMePlaying = true;
 			enterPlay();
     	}
 		
 	});
 	
     $("#playButton").click(function () {
-    	if(ws == undefined)
+    	if(isMePlaying == false)
 			socket.emit("playACK", "");
 		else
 			enterPlay();
@@ -231,7 +232,6 @@ $(function () {
 		if( (now - lastClickTime)/1000 >= timeout ){
 			console.log("timeout");
 			clearInterval(checkTimeout);
-			ws.close();
 			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
 		}	
 	}, 1000);

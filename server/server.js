@@ -4,28 +4,27 @@
 var express = require("express"),
     app = express(),
     http = require("http").createServer(app),
-	io = require('socket.io')(http),
+    io = require('socket.io')(http),
     fs = require('fs'),
     ejs = require('ejs'),
     shortid = require('shortid'),
-    ws = require("nodejs-websocket"),
     config = require('./config'),
     bodyParser = require('body-parser'),
-	multer  = require('multer'),
-	mv = require('mv'),
-	websocket = require('ws'),
-	dai = require("./dai").dai;
+    multer  = require('multer'),
+    mv = require('mv'),
+    dai = require("./dai").dai,
+    websocketclient = require("./websocketclient").WebSocketClient;
 
 /*** upload ***/
 var uploadFolder = './upload_cache/';
 var createFolder = function(folder){
-	try{
-		fs.accessSync(folder); 
-		return false; // exist
-	}catch(e){
-		fs.mkdirSync(folder);
-		return true; // does not exist 
-	}
+    try{
+        fs.accessSync(folder); 
+        return false; // exist
+    }catch(e){
+        fs.mkdirSync(folder);
+        return true; // does not exist 
+    }
 };
 function alphanum(a, b) {
   function chunkify(t) {
@@ -56,77 +55,80 @@ function alphanum(a, b) {
 }
 createFolder(uploadFolder);
 var storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, uploadFolder);
-	},
-	/*filename: function (req, file, cb) {
-		cb(null, file.fieldname + '-' + Date.now());  
- 	}*/
+    destination: function (req, file, cb) {
+        cb(null, uploadFolder);
+    },
+    /*filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now());  
+    }*/
 });
 var upload = multer({ storage: storage });
 /******/
 
 /*** register to IoTtalk ***/
-dai.register();
+// dai.register();
 
 /*** connect websocket to paintingDA ***/
-var ws2Painting;
-var retry = true;
-while(retry){
-	try{
-		ws2Painting = new websocket('ws://' + config.paintingIP + ':' + config.webSocketPort); 
-		retry = false;
-	}catch(err){
-		retry = true;
-		console.log(err);
-	}
-}
-ws2Painting.on('open', function(){
-	/*** socket.io ***/
-	var connectedCount = 0;
-	var isGamePlaying = false;
-	var playID = "";
-	io.on('connection', function(socket){
-		connectedCount++; 
-		console.log("connected count: " + connectedCount);
-		
-		socket.on("disconnect", function(){
-			connectedCount--;
-			console.log("connected count: " + connectedCount);
-			if(isGamePlaying && playID == socket.id){
-				ws.send("leaveGame");
-				isGamePlaying = false;
-			}
-		});
 
-		socket.on("playACK", function(msg){
-			console.log("request to enter the game");
-			socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
-			if(isGamePlaying == false){
-				ws.send("startGame");
-				isGamePlaying = true;
-				playID = socket.id;
-				socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
+var connectedCount;
+var isGamePlaying;
 
-			}
-		});
+var ws2Painting = new websocketclient();
+ws2Painting.open('ws://' + config.paintingIP + ':' + config.webSocketPort);
 
-		socket.on("Name-I", function(msg){
-			ws.send(msg);
-			dai.push("Name_I", [msg]);
-		});
+ws2Painting.onerror= function(err){
+    console.log('FrameDA is not running!');
+};
+ws2Painting.onopen = function(){
+    /*** socket.io ***/
+    connectedCount = 0;
+    isGamePlaying = false;
+    var playID = "";
+    io.on('connection', function(socket){
+        connectedCount++; 
+        console.log("connected count: " + connectedCount);
+        ws2Painting.send("enterGame");
+        console.log("enterGame");
+        socket.on("disconnect", function(){
+            connectedCount--;
+            console.log("connected count: " + connectedCount);
+            if(isGamePlaying && playID == socket.id){
+                ws2Painting.send("leaveGame");
+                console.log("leaveGame");
+                isGamePlaying = false;
+            }
+        });
 
-		socket.on("Correct", function(msg){
-			ws.send(msg);
-			dai.push("Correct", [1]);
-		});
-		
-		socket.on("Wrong", function(msg){
-			ws.send(msg);
-			dai.push("Wrong", [1]);
-		});
-	});
-});
+        socket.on("playACK", function(msg){
+            console.log("request to start the game");
+            socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
+            if(isGamePlaying == false){
+                isGamePlaying = true;
+                playID = socket.id;
+                socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
+
+            }
+        });
+
+        socket.on("Name-I", function(msg){
+            ws2Painting.send(msg);
+            // dai.push("Name_I", [msg]);
+            console.log("Name-I");
+        });
+
+        socket.on("Correct", function(msg){
+            ws2Painting.send("Correct");
+            // dai.push("Correct", [1]);
+            console.log("Correct");
+        });
+        
+        socket.on("Wrong", function(msg){
+            ws2Painting.send("Wrong");
+            // dai.push("Wrong", [1]);
+            console.log("Wrong");
+        });
+    });
+};
 
 /******/
 
@@ -136,8 +138,8 @@ console.log(url);
 //create painting_db.txt.
 fs.writeFileSync(config.painting_db,"");
 fs.readdirSync(config.patingPath).forEach(function(fileName){
-	if(fileName == ".DS_Store") //filter macOS dirty file
-		return;
+    if(fileName == ".DS_Store") //filter macOS dirty file
+        return;
     console.log(fileName);
     fs.appendFileSync(config.painting_db, fileName+"\n");
     nameList.push(fileName);
@@ -162,8 +164,8 @@ http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 // authentication url API
 app.post("/url",function(req, res){
     if(req.body.accessToken === config.accessToken){
-    	url = shortid.generate();
-    	console.log(url);
+        url = shortid.generate();
+        console.log(url);
         var fullUrl = req.protocol + '://' + req.get('host') + '/' + url;
         res.writeHead(200, {"Content-Type": "text/html"});
         res.end(fullUrl);
@@ -177,88 +179,88 @@ app.post("/url",function(req, res){
 // get index API
 app.get("/*", function (req, res) {
     if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload" && 
-    	req.originalUrl.substr(1) != "endPage"){
+        req.originalUrl.substr(1) != "endPage"){
         res.writeHead(404, {"Content-Type": "text/html"});
         res.end("url not found");
-		return;
+        return;
     }
-	else if(req.originalUrl.substr(1) == "upload"){
-		fs.readFile("../web/html/upload.html", function (err, contents) {
-			if (err){
-				console.log(err);
-			}
-			else{
-				contents = contents.toString('utf8');
-				res.writeHead(200, {"Content-Type": "text/html"});
-				res.end(contents);
-			}
-		});
-	}
-	else if(req.originalUrl.substr(1) == "endPage"){
-		fs.readFile("../web/html/endPage.html", function (err, contents) {
-			if (err){
-				console.log(err);
-			}
-			else{
-				contents = contents.toString('utf8');
-				res.writeHead(200, {"Content-Type": "text/html"});
-				res.end(contents);
-			}
-		});
-	}
-	else{
-		fs.readFile("../web/html/index.html", function (err, contents) {
-			if (err){
-				console.log(err);
-			}
-			else if(isGamePlaying){
-				fs.readFile("../web/html/endPage.html", function (err, contents) {
-					if (err){
-						console.log(err);
-					}
-					else{
-						contents = contents.toString('utf8');
-						res.writeHead(200, {"Content-Type": "text/html"});
-						res.end(contents);
-					}
-				});
-			}
-			else{
-				contents = contents.toString('utf8');
-				res.writeHead(200, {"Content-Type": "text/html"});
-				res.end(ejs.render(contents, 
-				{
-					nameList: nameList, 
-					webSocketPort: config.webSocketPort, 
-					webServerPort: config.webServerPort,
-					paintingIP: config.paintingIP
-				}));
-			}
-		});
-	}
+    else if(req.originalUrl.substr(1) == "upload"){
+        fs.readFile("../web/html/upload.html", function (err, contents) {
+            if (err){
+                console.log(err);
+            }
+            else{
+                contents = contents.toString('utf8');
+                res.writeHead(200, {"Content-Type": "text/html"});
+                res.end(contents);
+            }
+        });
+    }
+    else if(req.originalUrl.substr(1) == "endPage"){
+        fs.readFile("../web/html/endPage.html", function (err, contents) {
+            if (err){
+                console.log(err);
+            }
+            else{
+                contents = contents.toString('utf8');
+                res.writeHead(200, {"Content-Type": "text/html"});
+                res.end(contents);
+            }
+        });
+    }
+    else{
+        fs.readFile("../web/html/index.html", function (err, contents) {
+            if (err){
+                console.log(err);
+            }
+            else if(isGamePlaying){
+                fs.readFile("../web/html/endPage.html", function (err, contents) {
+                    if (err){
+                        console.log(err);
+                    }
+                    else{
+                        contents = contents.toString('utf8');
+                        res.writeHead(200, {"Content-Type": "text/html"});
+                        res.end(contents);
+                    }
+                });
+            }
+            else{
+                contents = contents.toString('utf8');
+                res.writeHead(200, {"Content-Type": "text/html"});
+                res.end(ejs.render(contents, 
+                {
+                    nameList: nameList, 
+                    webSocketPort: config.webSocketPort, 
+                    webServerPort: config.webServerPort,
+                    paintingIP: config.paintingIP
+                }));
+            }
+        });
+    }
 });
 
 // post images API
 app.post('/upload', upload.array('images'),function (req, res) {
-	var files = req.files;
-	var saveDir = config.patingPath + '/' + req.body.dirName;
-	console.log(req.body.dirName);
-	createFolder(saveDir)
-	files.sort(function(a, b){
-		return alphanum(a.originalname, b.originalname);
-	});						
-	console.log(files);
-	for(var i = 0,j = 1; i < files.length; i++){
-		if(files[i].mimetype != 'image/jpeg'){
-			continue;
-		}
-		mv(files[i].path, saveDir + '/' + j+".jpg", function(err) {
-			if(err)
-				res.end(err);
-		});		
-		j++;
-	}
-	res.end('File uploaded!');
+    var files = req.files;
+    var saveDir = config.patingPath + '/' + req.body.dirName;
+    console.log(req.body.dirName);
+    createFolder(saveDir)
+    files.sort(function(a, b){
+        return alphanum(a.originalname, b.originalname);
+    });                     
+    console.log(files);
+    for(var i = 0,j = 1; i < files.length; i++){
+        if(files[i].mimetype != 'image/jpeg'){
+            continue;
+        }
+        mv(files[i].path, saveDir + '/' + j+".jpg", function(err) {
+            if(err)
+                res.end(err);
+        });     
+        j++;
+    }
+    res.end('File uploaded!');
 })
 
 

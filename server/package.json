@@ -9,8 +9,9 @@
 		"multer": "^1.3.0",
 		"mv": "^2.1.1",
 		"nodejs-websocket": "*",
+		"request": "",
 		"shortid": "*",
 		"socket.io": "",
-		"ws": ""
+		"ws": "",
 	}
 }

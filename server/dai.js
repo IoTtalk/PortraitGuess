@@ -2,6 +2,9 @@ var dan = require("./dan").dan(),
 	config = require("./config");
 
 var dai = function(){
+	var pull = function(odf, data){
+		console.log(odf + ':' + data);
+	}
 	var register = function(){
 		dan.init(pull, config.IotTalkIP, config.macAddr, {
 			'dm_name': 'Riddle',
