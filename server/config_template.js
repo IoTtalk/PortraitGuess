@@ -1,7 +1,8 @@
-exports.iotTalkIP = "";
+exports.IoTtalkIP = "";
+exports.MACAddr = "";
 exports.paintingIP = "";
 exports.patingPath = "";
 exports.painting_db = "";
-exports.webServerPort = ;
 exports.webSocketPort = ;
+exports.webServerPort = ;
 exports.accessToken = ""

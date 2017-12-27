@@ -12,7 +12,9 @@ var express = require("express"),
     config = require('./config'),
     bodyParser = require('body-parser'),
 	multer  = require('multer'),
-	mv = require('mv');
+	mv = require('mv'),
+	websocket = require('ws'),
+	dai = require("./dai").dai;
 
 /*** upload ***/
 var uploadFolder = './upload_cache/';
@@ -64,30 +66,65 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 /******/
 
-/*** socket.io ***/
-var connectedCount = 0;
-var isGamePlaying = false;
-var playID = "";
-io.on('connection', function(socket){
-	connectedCount++; 
-	console.log("connected count: " + connectedCount);
-	
-	socket.on("disconnect", function(){
-		connectedCount--;
-		console.log("connected count: " + connectedCount);
-		if(isGamePlaying && playID == socket.id){
-			isGamePlaying = false;	
-		}
-	});
+/*** register to IoTtalk ***/
+dai.register();
 
-	socket.on("playACK", function(msg){
-		console.log("request to enter the game");
-		socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
-		if(isGamePlaying == false){
-			isGamePlaying = true;
-			playID = socket.id;
-			socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
-		}
+/*** connect websocket to paintingDA ***/
+var ws2Painting;
+var retry = true;
+while(retry){
+	try{
+		ws2Painting = new websocket('ws://' + config.paintingIP + ':' + config.webSocketPort); 
+		retry = false;
+	}catch(err){
+		retry = true;
+		console.log(err);
+	}
+}
+ws2Painting.on('open', function(){
+	/*** socket.io ***/
+	var connectedCount = 0;
+	var isGamePlaying = false;
+	var playID = "";
+	io.on('connection', function(socket){
+		connectedCount++; 
+		console.log("connected count: " + connectedCount);
+		
+		socket.on("disconnect", function(){
+			connectedCount--;
+			console.log("connected count: " + connectedCount);
+			if(isGamePlaying && playID == socket.id){
+				ws.send("leaveGame");
+				isGamePlaying = false;
+			}
+		});
+
+		socket.on("playACK", function(msg){
+			console.log("request to enter the game");
+			socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
+			if(isGamePlaying == false){
+				ws.send("startGame");
+				isGamePlaying = true;
+				playID = socket.id;
+				socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
+
+			}
+		});
+
+		socket.on("Name-I", function(msg){
+			ws.send(msg);
+			dai.push("Name_I", [msg]);
+		});
+
+		socket.on("Correct", function(msg){
+			ws.send(msg);
+			dai.push("Correct", [1]);
+		});
+		
+		socket.on("Wrong", function(msg){
+			ws.send(msg);
+			dai.push("Wrong", [1]);
+		});
 	});
 });
 
@@ -174,13 +211,24 @@ app.get("/*", function (req, res) {
 			if (err){
 				console.log(err);
 			}
+			else if(isGamePlaying){
+				fs.readFile("../web/html/endPage.html", function (err, contents) {
+					if (err){
+						console.log(err);
+					}
+					else{
+						contents = contents.toString('utf8');
+						res.writeHead(200, {"Content-Type": "text/html"});
+						res.end(contents);
+					}
+				});
+			}
 			else{
 				contents = contents.toString('utf8');
 				res.writeHead(200, {"Content-Type": "text/html"});
 				res.end(ejs.render(contents, 
 				{
 					nameList: nameList, 
-					iotTalkIP: config.iotTalkIP, 
 					webSocketPort: config.webSocketPort, 
 					webServerPort: config.webServerPort,
 					paintingIP: config.paintingIP

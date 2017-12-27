@@ -10,6 +10,7 @@
 		"mv": "^2.1.1",
 		"nodejs-websocket": "*",
 		"shortid": "*",
-		"socket.io": ""
+		"socket.io": "",
+		"ws": ""
 	}
 }
