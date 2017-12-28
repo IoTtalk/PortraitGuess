@@ -92,7 +92,7 @@ ws2Painting.onopen = function(){
         socket.on("disconnect", function(){
             connectedCount--;
             console.log("connected count: " + connectedCount);
-            if(isGamePlaying && playID == socket.id){
+            if((isGamePlaying && playID == socket.id) || connectedCount == 0){
                 ws2Painting.send("leaveGame");
                 console.log("leaveGame");
                 isGamePlaying = false;
@@ -178,14 +178,8 @@ app.post("/url",function(req, res){
 
 // get index API
 app.get("/*", function (req, res) {
-    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload" && 
-        req.originalUrl.substr(1) != "endPage"){
-        res.writeHead(404, {"Content-Type": "text/html"});
-        res.end("url not found");
-        return;
-    }
-    else if(req.originalUrl.substr(1) == "upload"){
-        fs.readFile("../web/html/upload.html", function (err, contents) {
+    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload"){
+         fs.readFile("../web/html/endPage.html", function (err, contents) {
             if (err){
                 console.log(err);
             }
@@ -195,9 +189,10 @@ app.get("/*", function (req, res) {
                 res.end(contents);
             }
         });
+        return;
     }
-    else if(req.originalUrl.substr(1) == "endPage"){
-        fs.readFile("../web/html/endPage.html", function (err, contents) {
+    else if(req.originalUrl.substr(1) == "upload"){
+        fs.readFile("../web/html/upload.html", function (err, contents) {
             if (err){
                 console.log(err);
             }
@@ -214,7 +209,7 @@ app.get("/*", function (req, res) {
                 console.log(err);
             }
             else if(isGamePlaying){
-                fs.readFile("../web/html/endPage.html", function (err, contents) {
+                fs.readFile("../web/html/gamePlaying.html", function (err, contents) {
                     if (err){
                         console.log(err);
                     }
