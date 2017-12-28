@@ -32,6 +32,7 @@ $(function () {
     var answerOptionIndex;
     var randomOptions;
     var isMePlaying = false;
+    var urlCorrect = false;
     var enterPlay = function(){
     	if(nameList.length <= 5){
 			alert("Can not play, lack of pating");
@@ -197,9 +198,20 @@ $(function () {
     	}
 		
 	});
-	
+	socket.on("checkUrl", function(msg){
+		var url = window.location.href;
+		socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
+    });
+    socket.on("checkUrlACK", function(msg){
+    	urlCorrect = msg.urlCorrect;
+    	if(urlCorrect == false){
+    		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+    	}
+    });
     $("#playButton").click(function () {
-    	if(isMePlaying == false)
+    	if(urlCorrect == false)
+    		return;
+		if(isMePlaying == false)
 			socket.emit("playACK", "");
 		else
 			enterPlay();

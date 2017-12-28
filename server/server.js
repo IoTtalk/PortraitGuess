@@ -83,12 +83,10 @@ ws2Painting.onopen = function(){
     /*** socket.io ***/
     connectedCount = 0;
     isGamePlaying = false;
-    var playID = "";
+    var playID = undefined;
     io.on('connection', function(socket){
         connectedCount++; 
         console.log("connected count: " + connectedCount);
-        ws2Painting.send("enterGame");
-        console.log("enterGame");
         socket.on("disconnect", function(){
             connectedCount--;
             console.log("connected count: " + connectedCount);
@@ -96,17 +94,30 @@ ws2Painting.onopen = function(){
                 ws2Painting.send("leaveGame");
                 console.log("leaveGame");
                 isGamePlaying = false;
+                playID = undefined;
             }
         });
-
+        socket.emit("checkUrl", "");
+        socket.on("checkUrl", function(msg){
+            console.log(msg);
+            if(msg != url){
+                socket.emit("checkUrlACK", {"urlCorrect": false});
+            }
+            else{
+                ws2Painting.send("enterGame");
+                console.log("enterGame");
+                socket.emit("checkUrlACK", {"urlCorrect": true});
+            }
+        });
         socket.on("playACK", function(msg){
             console.log("request to start the game");
-            socket.emit("isGamePlaying",{"isGamePlaying": isGamePlaying});
-            if(isGamePlaying == false){
-                isGamePlaying = true;
-                playID = socket.id;
-                socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
-
+            if(playID != socket.id){
+                socket.emit("isGamePlaying", {"isGamePlaying": isGamePlaying});
+                if(isGamePlaying == false){
+                    isGamePlaying = true;
+                    playID = socket.id;
+                    socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
+                }
             }
         });
 
