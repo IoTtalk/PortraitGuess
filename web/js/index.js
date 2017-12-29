@@ -11,6 +11,8 @@ $(function () {
     $("#prompt2").hide();  // 猜謎頁 "Choose an answer"
     $("#chance").hide();
     $("#endButton").hide();
+    $("#playButton").prop('disabled', true);
+    $("#endButton").prop('disabled', true);
     var lastClickTime = new Date(); //record last click optionBtn time
     const timeout = 60; // if over 150 seconds not click optionBtn then disconnect WebSocket	
     const optionLength = 5;  // 選項數目
@@ -175,7 +177,7 @@ $(function () {
 					$("#successName").hide();
 					$("#successImage").hide();
 					console.log("wrong answer!");
-				}                    
+				}           
 			}       
 		});
 		$("#options").show();
@@ -183,6 +185,7 @@ $(function () {
         $("#prompt2").show();
         $("#chance").html("<span class='badge' style='background-color:blue'>" + chance_count + "</span> chances left");
         $("#chance").show();
+
     };
 	$("#endButton").click(function(){
 		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
@@ -198,6 +201,17 @@ $(function () {
     	}
 		
 	});
+window.onpageshow = function (event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    };
+    if (!!window.performance && window.performance.navigation.type === 2) {
+            // value 2 means "The page was accessed by navigating into the history"
+            console.log('Reloading');
+            window.location.reload(); // reload whole page
+
+        }
 	socket.on("checkUrl", function(msg){
 		var url = window.location.href;
 		socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
@@ -206,6 +220,10 @@ $(function () {
     	urlCorrect = msg.urlCorrect;
     	if(urlCorrect == false){
     		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+    	}
+    	else{
+    		$("#playButton").prop('disabled', false);
+    		$("#endButton").prop('disabled', false);
     	}
     });
     $("#playButton").click(function () {
