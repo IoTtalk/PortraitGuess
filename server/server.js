@@ -220,7 +220,7 @@ app.get("/*", function (req, res) {
                 console.log(err);
             }
             else if(isGamePlaying){
-                fs.readFile("../web/html/gamePlaying.html", function (err, contents) {
+                fs.readFile("../web/html/endPage.html", function (err, contents) {
                     if (err){
                         console.log(err);
                     }
