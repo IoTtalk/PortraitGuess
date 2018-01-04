@@ -261,7 +261,7 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 	    		$("#loadingIndicator").hide();
 	    		$("#playButton").prop('disabled', false);
 	    		$("#endButton").prop('disabled', false);
-    		},1500);
+    		},1000);
     	}
     });
     $("#playButton").click(function () {
