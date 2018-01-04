@@ -3,6 +3,39 @@
  */
 
 $(function () {
+
+
+var bar = new ProgressBar.Circle(loadingIndicator, {
+    color: '#3cb371',
+    // This has to be the same size as the maximum width to
+    // prevent clipping
+    strokeWidth: 4,
+    trailWidth: 1,
+    easing: 'easeInOut',
+    duration: 500,
+    text: {
+      autoStyleContainer: false
+    },
+    from: { color: '#228b22', width: 1 },
+    to: { color: '#3cb371', width: 4 },
+    // Set default step function for all animate calls
+    step: function(state, circle) {
+	      circle.path.setAttribute('stroke', state.color);
+	      circle.path.setAttribute('stroke-width', state.width);
+
+	      var value = Math.round(circle.value() * 100);
+	      if (value === 0) {
+	        circle.setText('');
+	      } else {
+	        circle.setText(value);
+	      }
+    	}
+  	});
+   bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif'; 
+   bar.text.style.fontSize = '5rem';
+   bar.animate(0.5);  // Number from 0.0 to 0.5
+
+
     $("#successAlert").hide();  // 猜對頁 訊息
     $("#successName").hide();  // 猜對頁人名
     $("#successImage").hide();  // 猜對頁 讚讚圖片
@@ -201,7 +234,7 @@ $(function () {
     	}
 		
 	});
-window.onpageshow = function (event) {
+	window.onpageshow = function (event) {
         if (event.persisted) {
             window.location.reload();
         }
@@ -222,8 +255,13 @@ window.onpageshow = function (event) {
     		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
     	}
     	else{
-    		$("#playButton").prop('disabled', false);
-    		$("#endButton").prop('disabled', false);
+    		bar.animate(1.0);
+    		setTimeout(function(){
+	    		$("#playButton").show();
+	    		$("#loadingIndicator").hide();
+	    		$("#playButton").prop('disabled', false);
+	    		$("#endButton").prop('disabled', false);
+    		},1500);
     	}
     });
     $("#playButton").click(function () {

@@ -9,6 +9,12 @@ html, body, .container-table {
     display: table-cell;
     vertical-align: middle;
 }
+#loadingIndicator {
+  margin: auto;
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
 #result{
     font-size: 20px;
     color: green;

@@ -15,6 +15,7 @@
     <script type="text/javascript" src="../js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="../js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="../js/socket.io.js"></script>
+    <script type="text/javascript" src="../js/progressbar.min.js"></script>
     <script type="text/javascript" src="../js/index.js"></script>
 
 </head>
@@ -22,13 +23,13 @@
     <div class="container container-table">
         <div class="row vertical-center-row">
             <div class="center-block">
-                <div id="prompt">WHO AM I ?</div>
-                <div id="prompt2">Choose an answer</div>
-                <div><img id="successImage" src="../img/success.png"></div>
-                <div id="successAlert" class="alert alert-success" role="alert">You got it! I am</div>
-                <div id="successName" class="alert alert-success" role="alert"></div>
-                <div id="wrongAlert" class="alert alert-danger" role="alert">Incorrect answer. Try again!</div>
-                <div id="chance"> </div>
+                <div id="prompt" style="display:none">WHO AM I ?</div>
+                <div id="prompt2" style="display:none">Choose an answer</div>
+                <div><img id="successImage" src="../img/success.png" style="display:none"></div>
+                <div id="successAlert" class="alert alert-success" role="alert" style="display:none">You got it! I am</div>
+                <div id="successName" class="alert alert-success" role="alert" style="display:none"></div>
+                <div id="wrongAlert" class="alert alert-danger" role="alert" style="display:none">Incorrect answer. Try again!</div>
+                <div id="chance" style="display:none"> </div>
                 <ul id="options" hidden>                    
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
@@ -37,8 +38,9 @@
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
                 </ul>
                 <!-- <button id="voiceButton" class="btn btn-info center-block">Voice</button> -->
-                <button id="playButton" class="btn btn-info center-block">Play</button>
-				<button id="endButton" class="btn btn-danger center-block">End</button>
+                <button id="playButton" class="btn btn-info center-block" style="display:none">Play</button>
+				<button id="endButton" class="btn btn-danger center-block" style="display:none">End</button>
+                <div id="loadingIndicator"></div>
             </div>
         </div>
     </div>
