@@ -1,5 +1,5 @@
 {
-	"name": "Riddle",
+	"name": "PortraitGuess",
 	"private": true,
 	"dependencies": {
 		"body-parser": "*",
