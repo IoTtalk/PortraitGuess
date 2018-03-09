@@ -189,7 +189,8 @@ app.post("/url",function(req, res){
 
 // get index API
 app.get("/*", function (req, res) {
-    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload"){
+    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload" && 
+    	req.originalUrl.substr(1) != "test"){
          fs.readFile("../web/html/endPage.html", function (err, contents) {
             if (err){
                 console.log(err);

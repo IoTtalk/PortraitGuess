@@ -81,8 +81,6 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 		$("#wrongAlert").hide();
 		answerNameNumber = Math.floor((Math.random() * nameList.length));
 		answerOptionIndex = Math.floor((Math.random() * optionLength));
-		while(playedNameNumber.length != nameList.length && playedNameNumber.contains(answerNameNumber))
-			answerNameNumber = Math.floor((Math.random() * nameList.length));
 		playedNameNumber.push(answerNameNumber);	
 		randomOptions = [];
 		// dan.push("Name-I",[answerNameNumber]);
