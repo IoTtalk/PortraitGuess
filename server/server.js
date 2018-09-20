@@ -148,7 +148,7 @@ var url = shortid.generate();
 console.log(url);
 //create painting_db.txt.
 fs.writeFileSync(config.painting_db,"");
-fs.readdirSync(config.patingPath).forEach(function(fileName){
+fs.readdirSync(config.paintingPath).forEach(function(fileName){
     if(fileName == ".DS_Store") //filter macOS dirty file
         return;
     console.log(fileName);
