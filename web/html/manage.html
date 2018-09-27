@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>猜猜我是誰-管理頁面</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/manage.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        var nameList = <%- JSON.stringify(nameList) %>;
+        var dbList = <%- JSON.stringify(dbList) %>;
+    </script>
+    <script type="text/javascript" src="../js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/manage.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <h2 class="center top">選取現有的名單</h2>
+                <div id="dblist_table"></div>
+                <p class="center">working on ~ </p>
+
+                <hr>
+
+                <h2 class="center">請勾選想要顯示的人像(至少5位)</h2>
+                <div id="namelist_table"></div>
+                <div class="center bottom">
+                    <button id="select_btn" class="btn btn-info">確認</button>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    </div>
+</body>
+</html>

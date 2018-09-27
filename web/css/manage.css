@@ -1,0 +1,26 @@
+.top {
+        padding-top: 20px;
+}
+.bottom {
+    padding-bottom: 20px;
+}
+.center {
+    text-align: center;
+}
+.mycheckbox {
+    text-align: right;
+}
+hr {
+    background-color: blue;
+    height: 1px;
+    border: 0;
+}
+table {
+    width: 100%;
+}
+label {
+    margin-left: 10px;
+    display: block;
+    float: left;
+    padding-top: 10px;
+};

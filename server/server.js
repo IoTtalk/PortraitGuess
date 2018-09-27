@@ -143,19 +143,58 @@ ws2Painting.onopen = function(){
 
 /******/
 
-var nameList = [];
+var getPaintingDBListByName = function(painting_db){
+    var portraitList = [];
+    fs.readFileSync(painting_db).toString().split(/\n/).forEach(function(line){
+        if(line == "\n" || line == " " || line == "")
+            return;
+        //console.log("-", line, "-");
+        portraitList.push(line);
+    });
+    return portraitList;
+}
+
+var getPaintingDBListByPath = function(paintingPath){
+    var dirNameList = [];
+    fs.readdirSync(paintingPath).forEach(function(dirName){
+        if(dirName == ".DS_Store") //filter macOS dirty file
+            return;
+        dirNameList.push(dirName);
+    });
+    return dirNameList;
+}
+
+var createPaintingDB = function(dbName, portraitList){
+    fs.writeFileSync(dbName, "");
+    portraitList.forEach((protraitName) => {
+        fs.appendFileSync(dbName, protraitName + "\n");
+    });
+}
+
+var getAllPaintingDBList = function(){
+    var DBList = [],
+        tmp;
+    fs.readdirSync("./").forEach(function(filename){
+        if(filename == ".DS_Store") //filter macOS dirty file
+            return;
+        tmp = filename.split('.');
+        if(tmp.length > 1 && tmp[1] == "txt"){
+            if(filename == config.painting_db)
+                DBList.push(tmp[0] + "&#91;all&#93;");
+            else
+                DBList.push(tmp[0]);
+        }
+    });
+    return DBList
+}
+
+/**********/
+var nameList = getPaintingDBListByPath(config.paintingPath);
+//create painting_db.txt
+createPaintingDB(config.painting_db, nameList);
+
 var url = shortid.generate();
 console.log(url);
-//create painting_db.txt.
-fs.writeFileSync(config.painting_db,"");
-fs.readdirSync(config.paintingPath).forEach(function(fileName){
-    if(fileName == ".DS_Store") //filter macOS dirty file
-        return;
-    console.log(fileName);
-    fs.appendFileSync(config.painting_db, fileName+"\n");
-    nameList.push(fileName);
-});
-
 
 
 //static files
@@ -189,9 +228,11 @@ app.post("/url",function(req, res){
 
 // get index API
 app.get("/*", function (req, res) {
-    if(req.originalUrl.substr(1) != url && req.originalUrl.substr(1) != "upload" && 
-    	req.originalUrl.substr(1) != "test"){
-         fs.readFile("../web/html/endPage.html", function (err, contents) {
+    if(req.originalUrl.substr(1) != url && 
+        req.originalUrl.substr(1) != "upload" && 
+        req.originalUrl.substr(1) != "test" && 
+        req.originalUrl.substr(1) != "manage"){
+        fs.readFile("../web/html/endPage.html", function (err, contents) {
             if (err){
                 console.log(err);
             }
@@ -212,6 +253,29 @@ app.get("/*", function (req, res) {
                 contents = contents.toString('utf8');
                 res.writeHead(200, {"Content-Type": "text/html"});
                 res.end(contents);
+            }
+        });
+    }
+    else if(req.originalUrl.substr(1) == "manage"){
+        fs.readFile("../web/html/manage.html", function (err, contents) {
+            if (err){
+                console.log(err);
+            }
+            else{
+                //get all painting dblist
+                var dbList = getAllPaintingDBList();
+                console.log('------dbList-----\n', dbList, '\n------dbList-----');
+
+                //get all portrait name
+                var allList = getPaintingDBListByName(config.painting_db);
+
+                contents = contents.toString('utf8');
+                res.writeHead(200, {"Content-Type": "text/html"});
+                res.end(ejs.render(contents, 
+                {
+                    dbList: dbList,
+                    nameList: allList
+                }));
             }
         });
     }
@@ -270,6 +334,19 @@ app.post('/upload', upload.array('images'),function (req, res) {
     res.end('File uploaded!');
 })
 
+// post manage API
+app.post('/manage', function(req, res){
+    var selectedlist_name = req.body.selected_list_name,
+        selected_portrait = req.body.selected_portrait;
+    
+    //create db file
+    createPaintingDB(selectedlist_name + ".txt", selected_portrait);
 
-
-
+    //update nameList in memory
+    nameList = selected_portrait.slice(0);
+    console.log("----in memory----\n", nameList, "\n----in memory----");
+    
+    //response
+    res.writeHead(200, {"Content-Type": "text/html"});
+    res.end("success!");
+});
