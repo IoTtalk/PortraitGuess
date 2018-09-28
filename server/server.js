@@ -13,54 +13,17 @@ var express = require("express"),
     multer  = require('multer'),
     mv = require('mv'),
     dai = require("./dai").dai,
-    websocketclient = require("./websocketclient").WebSocketClient;
+    websocketclient = require("./websocketclient").WebSocketClient,
+    utils = require("./utils");
 
 /*** upload ***/
 var uploadFolder = './upload_cache/';
-var createFolder = function(folder){
-    try{
-        fs.accessSync(folder); 
-        return false; // exist
-    }catch(e){
-        fs.mkdirSync(folder);
-        return true; // does not exist 
-    }
-};
-function alphanum(a, b) {
-  function chunkify(t) {
-    var tz = [], x = 0, y = -1, n = 0, i, j;
-    while (i = (j = t.charAt(x++)).charCodeAt(0)) {
-      var m = (i == 46 || (i >=48 && i <= 57));
-      if (m !== n) {
-        tz[++y] = "";
-        n = m;
-      }
-      tz[y] += j;
-    }
-    return tz;
-  }
+utils.createFolder(uploadFolder);
 
-  var aa = chunkify(a);
-  var bb = chunkify(b);
-
-  for (x = 0; aa[x] && bb[x]; x++) {
-    if (aa[x] !== bb[x]) {
-      var c = Number(aa[x]), d = Number(bb[x]);
-      if (c == aa[x] && d == bb[x]) {
-        return c - d;
-      } else return (aa[x] > bb[x]) ? 1 : -1;
-    }
-  }
-  return aa.length - bb.length;
-}
-createFolder(uploadFolder);
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadFolder);
-    },
-    /*filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now());  
-    }*/
+    }
 });
 var upload = multer({ storage: storage });
 /******/
@@ -69,13 +32,11 @@ var upload = multer({ storage: storage });
 // dai.register();
 
 /*** connect websocket to paintingDA ***/
-
 var connectedCount;
 var isGamePlaying;
 
 var ws2Painting = new websocketclient();
 ws2Painting.open('ws://' + config.paintingIP + ':' + config.webSocketPort);
-
 ws2Painting.onerror= function(err){
     console.log('FrameDA is not running!');
 };
@@ -141,61 +102,21 @@ ws2Painting.onopen = function(){
     });
 };
 
-/******/
+//load all existed portrait
+var nameList = utils.getPaintingDBListByPath(config.paintingPath);
+//var nameList = utils.getPaintingDBListByName("./db/Top10.txt");
+console.log("---- list in memory----\n", nameList);
 
-var getPaintingDBListByName = function(painting_db){
-    var portraitList = [];
-    fs.readFileSync(painting_db).toString().split(/\n/).forEach(function(line){
-        if(line == "\n" || line == " " || line == "")
-            return;
-        //console.log("-", line, "-");
-        portraitList.push(line);
-    });
-    return portraitList;
-}
+//create db dir
+utils.createFolder("./db/");
 
-var getPaintingDBListByPath = function(paintingPath){
-    var dirNameList = [];
-    fs.readdirSync(paintingPath).forEach(function(dirName){
-        if(dirName == ".DS_Store") //filter macOS dirty file
-            return;
-        dirNameList.push(dirName);
-    });
-    return dirNameList;
-}
+//create default db
+utils.createPaintingDB("./db/" + config.painting_db, nameList);
 
-var createPaintingDB = function(dbName, portraitList){
-    fs.writeFileSync(dbName, "");
-    portraitList.forEach((protraitName) => {
-        fs.appendFileSync(dbName, protraitName + "\n");
-    });
-}
 
-var getAllPaintingDBList = function(){
-    var DBList = [],
-        tmp;
-    fs.readdirSync("./").forEach(function(filename){
-        if(filename == ".DS_Store") //filter macOS dirty file
-            return;
-        tmp = filename.split('.');
-        if(tmp.length > 1 && tmp[1] == "txt"){
-            if(filename == config.painting_db)
-                DBList.push(tmp[0] + "&#91;all&#93;");
-            else
-                DBList.push(tmp[0]);
-        }
-    });
-    return DBList
-}
-
-/**********/
-var nameList = getPaintingDBListByPath(config.paintingPath);
-//create painting_db.txt
-createPaintingDB(config.painting_db, nameList);
 
 var url = shortid.generate();
-console.log(url);
-
+console.log("----Game url----\n", url);
 
 //static files
 app.use(express.static("../web"));
@@ -213,16 +134,14 @@ http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
 // authentication url API
 app.post("/url",function(req, res){
-    if(req.body.accessToken === config.accessToken){
+    if(req.body.accessToken == config.accessToken){
         url = shortid.generate();
         console.log(url);
         var fullUrl = req.protocol + '://' + req.get('host') + '/' + url;
-        res.writeHead(200, {"Content-Type": "text/html"});
-        res.end(fullUrl);
+        utils.sendResponse(res, 200, fullUrl);
     }
     else{
-        res.writeHead(403, {"Content-Type": "text/html"});
-        res.end("permission denied");
+        utils.sendResponse(res, 403, "permission denied");
     }
 });
 
@@ -238,8 +157,7 @@ app.get("/*", function (req, res) {
             }
             else{
                 contents = contents.toString('utf8');
-                res.writeHead(200, {"Content-Type": "text/html"});
-                res.end(contents);
+                utils.sendResponse(res, 200, contents);
             }
         });
         return;
@@ -251,8 +169,7 @@ app.get("/*", function (req, res) {
             }
             else{
                 contents = contents.toString('utf8');
-                res.writeHead(200, {"Content-Type": "text/html"});
-                res.end(contents);
+                utils.sendResponse(res, 200, contents);
             }
         });
     }
@@ -263,19 +180,17 @@ app.get("/*", function (req, res) {
             }
             else{
                 //get all painting dblist
-                var dbList = getAllPaintingDBList();
-                console.log('------dbList-----\n', dbList, '\n------dbList-----');
+                var dbList = utils.getAllPaintingDBList();
+                console.log('------dbList-----\n', dbList);
 
                 //get all portrait name
-                var allList = getPaintingDBListByName(config.painting_db);
+                var allList = utils.getPaintingDBListByName("./db/" + config.painting_db);
 
                 contents = contents.toString('utf8');
-                res.writeHead(200, {"Content-Type": "text/html"});
-                res.end(ejs.render(contents, 
-                {
+                utils.sendEjsRenderResponse(res, 200, contents, {
                     dbList: dbList,
                     nameList: allList
-                }));
+                });
             }
         });
     }
@@ -291,34 +206,32 @@ app.get("/*", function (req, res) {
                     }
                     else{
                         contents = contents.toString('utf8');
-                        res.writeHead(200, {"Content-Type": "text/html"});
-                        res.end(contents);
+                        utils.sendResponse(res, 200, contents);
                     }
                 });
             }
             else{
                 contents = contents.toString('utf8');
-                res.writeHead(200, {"Content-Type": "text/html"});
-                res.end(ejs.render(contents, 
-                {
+                utils.sendEjsRenderResponse(res, 200, contents, {
                     nameList: nameList, 
                     webSocketPort: config.webSocketPort, 
                     webServerPort: config.webServerPort,
                     paintingIP: config.paintingIP
-                }));
+                });
             }
         });
     }
 });
 
 // post images API
-app.post('/upload', upload.array('images'),function (req, res) {
+app.post('/upload', upload.array('images'), function (req, res) {
     var files = req.files;
-    var saveDir = config.patingPath + '/' + req.body.dirName;
+    var saveDir = config.paintingPath + '/' + req.body.dirName;
     console.log(req.body.dirName);
-    createFolder(saveDir)
+    console.log(saveDir);
+    utils.createFolder(saveDir);
     files.sort(function(a, b){
-        return alphanum(a.originalname, b.originalname);
+        return utils.alphanum(a.originalname, b.originalname);
     });                     
     console.log(files);
     for(var i = 0,j = 1; i < files.length; i++){
@@ -334,19 +247,32 @@ app.post('/upload', upload.array('images'),function (req, res) {
     res.end('File uploaded!');
 })
 
-// post manage API
-app.post('/manage', function(req, res){
+// post createDB API
+app.post('/createDB', function(req, res){
     var selectedlist_name = req.body.selected_list_name,
         selected_portrait = req.body.selected_portrait;
     
     //create db file
-    createPaintingDB(selectedlist_name + ".txt", selected_portrait);
+    utils.createPaintingDB("./db/" + selectedlist_name + ".txt", selected_portrait);
 
     //update nameList in memory
     nameList = selected_portrait.slice(0);
-    console.log("----in memory----\n", nameList, "\n----in memory----");
+    console.log("----create new db----\n", selectedlist_name);
+    console.log("----update list in memory----\n", nameList);
     
     //response
-    res.writeHead(200, {"Content-Type": "text/html"});
-    res.end("success!");
+    utils.sendResponse(res, 200, "success!");
+});
+
+// post loadDB API
+app.post('/loadDB', function(req, res){
+    var selected_db = req.body.selected_db;
+    
+    //update nameList in memory
+    nameList = utils.getPaintingDBListByName("./db/" + selected_db + ".txt");
+    console.log("----load db----\n", selected_db);
+    console.log("----update list in memory----\n", nameList);
+
+    //response
+    utils.sendResponse(res, 200, "success!");
 });

@@ -20,16 +20,38 @@
         <div class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-                <h2 class="center top">選取現有的名單</h2>
+                <h2 class="center top">選取名單</h2>
                 <div id="dblist_table"></div>
-                <p class="center">working on ~ </p>
+                <div class="center bottom">
+                    <button id="select_db_btn" class="btn btn-success">確認</button>
+                </div>
 
                 <hr>
 
-                <h2 class="center">請勾選想要顯示的人像(至少5位)</h2>
+                <div id="upload" class="center">
+                    <h2>上傳檔案(資料夾)</h2>
+                    <h3 class="warning">For now only supports Google Chrome browser</h3>
+                    <form ref='uploadForm'
+                          id='uploadForm'
+                          action='http://192.168.0.3:5566/upload'
+                          method='post'
+                          encType="multipart/form-data">
+                        <h3>輸入名字</h3>
+                        <input type="text" name="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />
+                        <h3>選取資料夾</h3>
+                        <input type="file" name="images" id="fileInput"  webkitdirectory class="center" />
+                        <h3>上傳</h3>
+                        <input class="btn btn-warning" type='submit' value='Upload!' />
+                    </form>
+                </div>
+
+                <hr>
+
+                <h2 class="center">建立新名單</h2>
+                <h3 class="center">勾選人像(至少6位)</h3>
                 <div id="namelist_table"></div>
                 <div class="center bottom">
-                    <button id="select_btn" class="btn btn-info">確認</button>
+                    <button id="select_portrait_btn" class="btn btn-info">確認</button>
                 </div>
             </div>
             <div class="col-md-2"></div>
