@@ -89,13 +89,17 @@ var getAllPaintingDBList = function(){
             return;
         tmp = filename.split('.');
         if(tmp.length > 1 && tmp[1] == "txt"){
-            if(filename == config.painting_db)
-                DBList.push(tmp[0] + "&#91;all&#93;");
-            else
-                DBList.push(tmp[0]);
+            DBList.push(tmp[0]);
         }
     });
     return DBList
+}
+
+var addPortraitToPaintingDB = function(dbname, portraitname){
+    fs.appendFile(dbname, portraitname + "\n", function (err) {
+        if(err) return console.log(err);
+        console.log('successfully appended "' + portraitname + '"');
+    });
 }
 
 module.exports = {
@@ -107,6 +111,7 @@ module.exports = {
     getPaintingDBListByPath: getPaintingDBListByPath,
     createPaintingDB: createPaintingDB,
     getAllPaintingDBList: getAllPaintingDBList,
+    addPortraitToPaintingDB: addPortraitToPaintingDB,
 };
 
 
