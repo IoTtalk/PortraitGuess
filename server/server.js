@@ -85,7 +85,7 @@ ws2Painting.onopen = function(){
         socket.on("Name-I", function(msg){
             ws2Painting.send(msg);
             // dai.push("Name_I", [msg]);
-            console.log("Name-I");
+            console.log("Name-I ", msg);
         });
 
         socket.on("Correct", function(msg){
@@ -244,7 +244,17 @@ app.post('/upload', upload.array('images'), function (req, res) {
         });     
         j++;
     }
-    res.end('File uploaded!');
+
+    //apend this portait to config.pating_db
+    utils.addPortraitToPaintingDB("./db/" + config.painting_db, req.body.dirName);
+
+    //response
+    var redirect = "\
+        <script type='text/javascript'> \
+            alert('Upload success!! Back to Mange Home Page~');\
+            window.location.replace('http://" + req.get('host') + "/manage');\
+        </script>";
+    res.end(redirect);
 })
 
 // post createDB API
@@ -275,4 +285,24 @@ app.post('/loadDB', function(req, res){
 
     //response
     utils.sendResponse(res, 200, "success!");
+});
+
+// post getAllDB API
+app.post('/getAllDB', function(req, res){
+    //get all DB
+    var dbList = utils.getAllPaintingDBList();
+    var data = {'dbList' : dbList};
+
+    //response
+    utils.sendResponse(res, 200, JSON.stringify(data));
+});
+
+// post getAllPortrait API
+app.post('/getAllPortrait', function(req, res){
+    //get all portrait
+    var portraitList = utils.getPaintingDBListByName("./db/" + config.painting_db);
+    var data = {'portraitList' : portraitList};
+
+    //response
+    utils.sendResponse(res, 200, JSON.stringify(data));
 });
