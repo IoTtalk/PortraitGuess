@@ -85,7 +85,8 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 		randomOptions = [];
 		// dan.push("Name-I",[answerNameNumber]);
 		// ws.send(answerNameNumber);
-		socket.emit("Name-I", answerNameNumber);
+        socket.emit("Name-I", nameList[answerNameNumber]);
+		//socket.emit("Name-I", answerNameNumber);
 		for (var i = 0; i < optionLength; i++) {
 			var r = Math.floor((Math.random() * nameList.length));
 			console.log(r);
