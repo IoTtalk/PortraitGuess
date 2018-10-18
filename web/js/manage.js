@@ -1,14 +1,14 @@
 $(function () {
     //select_div
     function render_select_div(dbList){
-        var dblist_table_str = "<table>";
+        var dblist_table_str = "<table class='table table-hover'>";
         dbList.forEach((name) => {
             dblist_table_str += "\
                 <tr>\
-                    <td width='20%' class='mycheckbox'>\
+                    <td class='mycheckbox'>\
                         <input type='checkbox' id='" + name + "_checkbox' name='db' value='" + name + "' />\
                     </td>\
-                    <td width='80%'>\
+                    <td>\
                         <label for='" + name + "_checkbox'>" + name + "</label>\
                     </td>\
                 </tr>";
@@ -28,19 +28,50 @@ $(function () {
     }
 
     //upload_div
-    function render_upload_div(){
+    function render_upload_div(dbList){
+        var dbList_option_str = "<option value='0'> --- </option>";
+        dbList.forEach((name) => {
+            dbList_option_str += "<option value='" + name + "'>" + name + "</option>";
+        });
+
         var upload_div ='\
-            <div id="upload" class="center display">\
-                <h2>上傳檔案</h2>\
-                <h3 class="warning">For now only supports Google Chrome browser</h3>\
+            <div id="upload" class="display">\
+                <h2 class="center">上傳檔案</h2>\
+                <h3 class="center warning">For now only supports Google Chrome browser</h3>\
+                <br>\
                 <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
-                    <h3>輸入名字</h3>\
-                    <input type="text" id="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />\
-                    <h3>選取資料夾(檔案請依照數字序號命名)</h3>\
-                    <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
-                    <input type="hidden" name="csrf_token" value="just_a_text_field" />\
-                    <br>\
-                    <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
+                    <div class="form-group">\
+                        <h3>輸入人物中文名字</h3>\
+                        <input type="text" id="chiName" class="form-control" size="35" placeholder="ex: 伊麗莎白一世" required/>\
+                    </div>\
+                    <div class="form-group">\
+                        <h3>輸入人物英文名字</h3>\
+                        <input type="text" id="engName" class="form-control" size="35" placeholder="ex: Elizabeth I" required/>\
+                    </div>\
+                    <div class="form-group">\
+                        <h3>輸入人物出生年份(西元)</h3>\
+                        <input type="text" id="birth" class="form-control" size="35" placeholder="ex: 1533" required/>\
+                    </div>\
+                    <div class="form-group">\
+                        <h3>輸入人物逝世年份(西元)</h3>\
+                        <p class="help-block">可填可不填</p>\
+                        <input type="text" id="die" class="form-control" size="35" placeholder="ex: 1603"/>\
+                    </div>\
+                    <div class="form-group">\
+                        <h3>選取資料夾</h3>\
+                        <p class="help-block">檔案請依照數字序號命名</p>\
+                        <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
+                        <input type="hidden" name="csrf_token" value="just_a_text_field" />\
+                    </div>\
+                    <div class="form-group">\
+                        <h3>添加至已建立名單</h3>\
+                        <select class="form-control" id="selector">\
+                            '+ dbList_option_str + '\
+                        </select>\
+                    </div>\
+                    <div class="form-group center">\
+                        <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
+                    </div>\
                 </form>\
             </div>';
         return upload_div;
@@ -74,8 +105,14 @@ $(function () {
             // Get the files from input, create new FormData.
             var files = $('#photos-input').get(0).files,
                 formData = new FormData(),
-                dirName = $('#dirName').val();
+                chiName = $('#chiName').val(),
+                engName = $('#engName').val(),
+                birth = $('#birth').val(),
+                die = $('#die').val(),
+                targetDB = $('#selector').val(),
+                dirName = "";
 
+            //chech input
             if (files.length === 0) {
                 alert('Select at least 1 file to upload.');
                 return false;
@@ -86,7 +123,18 @@ $(function () {
                 return false;
             }
 
+            if($.trim(chiName) == '' || $.trim(engName) == '' || $.trim(birth) == ''){
+                alert('Input can not be blank');
+                return false;
+            }
+
+            if(targetDB == 0){
+                alert("Select one Sheet for this portrait");
+                return false;
+            }
+
             // Add dirName to the formData
+            dirName = chiName + "," + engName + "," + birth + "-" + die;
             console.log(dirName);
             formData.append("dirName", dirName);
 
@@ -95,6 +143,10 @@ $(function () {
                 var file = files[i];
                 formData.append('photos[]', file, file.name);
             }
+
+            // Append target painting_db to the formData
+            console.log(targetDB);
+            formData.append("targetDB", targetDB);
 
             // Note: We are only appending the file inputs to the FormData.
             $.ajax({
@@ -111,14 +163,14 @@ $(function () {
 
     //create_div
     function render_create_div(nameList){
-        var namelist_table_str = "<table>";
+        var namelist_table_str = "<table class='table table-hover'";
         nameList.forEach((name) => {
             namelist_table_str += "\
                 <tr>\
-                    <td width='20%' class='mycheckbox'>\
-                        <input type='checkbox' id='" + name + "_checkbox' name='portrait' value='" + name + "' />\
+                    <td class='mycheckbox'>\
+                        <input  type='checkbox' id='" + name + "_checkbox' name='portrait' value='" + name + "' />\
                     </td>\
-                    <td width='80%'>\
+                    <td>\
                         <label for='" + name + "_checkbox'>" + name + "</label>\
                     </td>\
                 </tr>";
@@ -297,8 +349,22 @@ $(function () {
             });
         }
         else if(target_div == "upload"){
-            $('#display').html(render_upload_div());
-            upload_btn_handler();
+            $.ajax({
+                type: "POST",
+                url: location.origin + "/getAllDB",
+                cache: false,
+                contentType: "application/json",
+                dataType: 'json',
+                error: function(e) {
+                    alert("something wrong");
+                    console.log(e);
+                },
+                success: function (data) {
+                    dbList = data.dbList;
+                    $('#display').html(render_upload_div(dbList));
+                    upload_btn_handler();
+                }
+            });
         }
         else if(target_div == "create"){
             $.ajax({
