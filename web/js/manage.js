@@ -5,10 +5,10 @@ $(function () {
         dbList.forEach((name) => {
             dblist_table_str += "\
                 <tr>\
-                    <td width='50%' class='mycheckbox'>\
+                    <td width='20%' class='mycheckbox'>\
                         <input type='checkbox' id='" + name + "_checkbox' name='db' value='" + name + "' />\
                     </td>\
-                    <td width='50%'>\
+                    <td width='80%'>\
                         <label for='" + name + "_checkbox'>" + name + "</label>\
                     </td>\
                 </tr>";
@@ -17,35 +17,94 @@ $(function () {
 
         var select_div = '\
             <h2 class="center top">選取名單</h2>\
-            <div id="dblist_table">' + dblist_table_str + '</div>\
+            <div id="dblist_table" class="table_border overflow">' + dblist_table_str + '</div>\
+            <br>\
             <div class="center bottom">\
-                <button id="select_db_btn" class="btn btn-success">確認</button>\
+                <button id="select_db_btn" class="btn btn-primary">確認</button>\
             </div>';
 
         return select_div;
     }
 
     //upload_div
-    //TODO
-    //change this upload function to ajax
     var myURL = location.origin + "/upload";
     var upload_div ='\
         <div id="upload" class="center display">\
-            <h2>上傳檔案(資料夾)</h2>\
+            <h2>上傳檔案</h2>\
             <h3 class="warning">For now only supports Google Chrome browser</h3>\
-            <form ref="uploadForm"\
-                  id="uploadForm"\
-                  action=' + myURL + '\
-                  method="post"\
-                  encType="multipart/form-data">\
+            <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
                 <h3>輸入名字</h3>\
-                <input type="text" name="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />\
-                <h3>選取資料夾</h3>\
-                <input type="file" name="images" id="fileInput"  webkitdirectory class="center" />\
-                <h3>上傳</h3>\
-                <input class="btn btn-warning" type="submit" value="Upload!" />\
+                <input type="text" id="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />\
+                <h3>選取資料夾(檔案請依照數字序號命名)</h3>\
+                <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
+                <input type="hidden" name="csrf_token" value="just_a_text_field" />\
+                <br>\
+                <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
             </form>\
         </div>';
+
+    function handleSuccess(data) {
+        if (data.length > 0) {
+            var info = '';
+            for (var i=0; i < data.length; i++) {
+                var img = data[i];
+                if (img.status) {
+                    info = info + "[ " + img.filename + " ] uploads success !\n";
+                }
+                else {
+                    info = info + "[ " + img.filename + " ] uploads fail QQ\n";
+                }
+            }
+            alert(info);
+            alert("Set successfully!");
+        } else {
+            alert('No images were uploaded.');
+        }
+    }
+
+    //upload confirm button
+    function upload_btn_handler(){
+        // On form submit, handle the file uploads.
+        $('#upload-photos').on('submit', function (event) {
+            event.preventDefault();
+
+            // Get the files from input, create new FormData.
+            var files = $('#photos-input').get(0).files,
+                formData = new FormData(),
+                dirName = $('#dirName').val();
+
+            if (files.length === 0) {
+                alert('Select at least 1 file to upload.');
+                return false;
+            }
+
+            if (files.length < 6) {
+                alert('Select at least 6 files to upload.');
+                return false;
+            }
+
+            // Add dirName to the formData
+            console.log(dirName);
+            formData.append("dirName", dirName);
+
+            // Append the files to the formData.
+            for (var i=0; i < files.length; i++) {
+                var file = files[i];
+                formData.append('photos[]', file, file.name);
+            }
+
+            // Note: We are only appending the file inputs to the FormData.
+            $.ajax({
+                url: '/upload',
+                method: 'post',
+                data: formData,
+                processData: false,
+                contentType: false,
+            }).done(handleSuccess).fail(function (xhr, status) {
+                alert(status);
+            });
+        });
+    }
 
     //create_div
     function render_create_div(nameList){
@@ -65,10 +124,13 @@ $(function () {
 
         var create_div = '\
             <div id="create" class="display">\
-                <h2 class="center">請勾選想要顯示的人像(至少5位)</h2>\
-                <div id="namelist_table">' + namelist_table_str + '</div>\
+                <h2 class="center top">建立名單</h2>\
+                <br>\
+                <h3 class="center">請勾選想要顯示的人像(至少6位)</h3>\
+                <div id="namelist_table" class="overflow table_border">' + namelist_table_str + '</div>\
+                <br>\
                 <div class="center bottom">\
-                    <button id="select_portrait_btn" class="btn btn-info">確認</button>\
+                    <button id="select_portrait_btn" class="btn btn-primary">確認</button>\
                 </div>\
             </div>';
 
@@ -119,8 +181,7 @@ $(function () {
                         console.log(e);
                     },
                     success: function(){
-                        alert("Set successfully! Back to Home Page");
-                        location.reload();
+                        alert("Set successfully!");
                     }
                 });
             }
@@ -163,8 +224,7 @@ $(function () {
                         console.log(e);
                     },
                     success: function () {
-                        alert("Set successfully! Back to Home Page");
-                        location.reload();
+                        alert("Set successfully!");
                     }
                 });
             }
@@ -173,7 +233,23 @@ $(function () {
 
     //navbar brand
     $(".navbar-brand").on("click", function(){
-        var defaultt = "<h2 class='center top'>請點選上方功能列表</h2>";
+        var defaultt = "\
+            <h2 class='top center'>管理頁面首頁</h2>\
+            <br>\
+            <ul class='margin_left'>\
+                <li><h3>上傳檔案</h3></li>\
+                    <ul>\
+                        <li><h4>上傳新人物畫像</h4></li>\
+                    </ul>\
+                <li><h3>建立名單</h3></li>\
+                    <ul>\
+                        <li><h4>選取特定人物 並 建立人物畫像名單</h4></li>\
+                    </ul>\
+                <li><h3>選取名單</h3></li>\
+                    <ul>\
+                        <li><h4>選取已建立的人物畫像名單</h4></li>\
+                    </ul>\
+            </ul>";
         $("#display").html(defaultt);
     });
 
@@ -182,7 +258,6 @@ $(function () {
         $(this).addClass('active').siblings().removeClass('active');
         var target_div = $(this).children('a').attr('at');
         if(target_div == "select"){
-            
             $.ajax({
                 type: "POST",
                 url: location.origin + "/getAllDB",
@@ -195,18 +270,17 @@ $(function () {
                 },
                 success: function (data) {
                     dbList = data.dbList;
+                    $('#display').html(render_select_div(dbList));
+                    create_checkbox_handler();
+                    select_btn_handler();
                 }
             });
-
-            $('#display').html(render_select_div(dbList));
-            create_checkbox_handler();
-            select_btn_handler();
         }
         else if(target_div == "upload"){
             $('#display').html(upload_div);
+            upload_btn_handler();
         }
         else if(target_div == "create"){
-
             $.ajax({
                 type: "POST",
                 url: location.origin + "/getAllPortrait",
@@ -219,12 +293,11 @@ $(function () {
                 },
                 success: function (data) {
                     nameList = data.portraitList;
+                    $('#display').html(render_create_div(nameList));
+                    create_checkbox_handler();
+                    create_btn_handler();
                 }
             });
-
-            $('#display').html(render_create_div(nameList));
-            create_checkbox_handler();
-            create_btn_handler();
         }
         //console.log(target_div);
     });
