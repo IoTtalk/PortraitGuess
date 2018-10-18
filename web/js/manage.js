@@ -17,6 +17,7 @@ $(function () {
 
         var select_div = '\
             <h2 class="center top">選取名單</h2>\
+            <br>\
             <div id="dblist_table" class="table_border overflow">' + dblist_table_str + '</div>\
             <br>\
             <div class="center bottom">\
@@ -27,21 +28,23 @@ $(function () {
     }
 
     //upload_div
-    var myURL = location.origin + "/upload";
-    var upload_div ='\
-        <div id="upload" class="center display">\
-            <h2>上傳檔案</h2>\
-            <h3 class="warning">For now only supports Google Chrome browser</h3>\
-            <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
-                <h3>輸入名字</h3>\
-                <input type="text" id="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />\
-                <h3>選取資料夾(檔案請依照數字序號命名)</h3>\
-                <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
-                <input type="hidden" name="csrf_token" value="just_a_text_field" />\
-                <br>\
-                <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
-            </form>\
-        </div>';
+    function render_upload_div(){
+        var upload_div ='\
+            <div id="upload" class="center display">\
+                <h2>上傳檔案</h2>\
+                <h3 class="warning">For now only supports Google Chrome browser</h3>\
+                <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
+                    <h3>輸入名字</h3>\
+                    <input type="text" id="dirName" size="35" placeholder="伊麗莎白一世,Elizabeth I,1533-1603" />\
+                    <h3>選取資料夾(檔案請依照數字序號命名)</h3>\
+                    <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
+                    <input type="hidden" name="csrf_token" value="just_a_text_field" />\
+                    <br>\
+                    <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
+                </form>\
+            </div>';
+        return upload_div;
+    }
 
     function handleSuccess(data) {
         if (data.length > 0) {
@@ -127,6 +130,11 @@ $(function () {
                 <h2 class="center top">建立名單</h2>\
                 <br>\
                 <h3 class="center">請勾選想要顯示的人像(至少6位)</h3>\
+                <br>\
+                <div class="center">\
+                    <button id="select_all_portrait_btn" class="btn btn-default">全選</button>\
+                    <button id="select_clear_portrait_btn" class="btn btn-default">全不選</button>\
+                </div>\
                 <div id="namelist_table" class="overflow table_border">' + namelist_table_str + '</div>\
                 <br>\
                 <div class="center bottom">\
@@ -138,7 +146,7 @@ $(function () {
     }
 
     //make db selection only one
-    function create_checkbox_handler(){
+    function checkbox_onlyone_handler(){
         $("input:checkbox[name='db']").on('click', function(){
             var $box = $(this);
             if($box.is(":checked")){
@@ -149,6 +157,18 @@ $(function () {
             else{
                 $box.prop("checked", false);
             }
+        });
+    }
+
+    //make protrait selection all or none
+    function checkbox_all_or_clear_handler(){
+        //TODO
+        $('#select_all_portrait_btn').on('click',function(){
+            $("input:checkbox[name='portrait']").prop("checked", true);
+        });
+
+        $('#select_clear_portrait_btn').on('click',function(){
+            $("input:checkbox[name='portrait']").prop("checked", false);
         });
     }
 
@@ -271,13 +291,13 @@ $(function () {
                 success: function (data) {
                     dbList = data.dbList;
                     $('#display').html(render_select_div(dbList));
-                    create_checkbox_handler();
+                    checkbox_onlyone_handler();
                     select_btn_handler();
                 }
             });
         }
         else if(target_div == "upload"){
-            $('#display').html(upload_div);
+            $('#display').html(render_upload_div());
             upload_btn_handler();
         }
         else if(target_div == "create"){
@@ -294,7 +314,7 @@ $(function () {
                 success: function (data) {
                     nameList = data.portraitList;
                     $('#display').html(render_create_div(nameList));
-                    create_checkbox_handler();
+                    checkbox_all_or_clear_handler();
                     create_btn_handler();
                 }
             });
