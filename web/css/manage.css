@@ -8,11 +8,25 @@
     text-align: center;
     margin: auto;
 }
+.margin_left {
+    margin-left: 25%;
+}
 .mycheckbox {
     text-align: right;
 }
 .warning {
     color: red;
+}
+.table_border {
+    border: solid;
+}
+.overflow {
+    height: 500px;
+    overflow: auto;
+}
+#dblist_table {
+    margin-left: 25%;
+    width: 50%;
 }
 hr {
     background-color: blue;
