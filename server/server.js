@@ -238,6 +238,7 @@ app.get("/*", function (req, res) {
 app.post('/upload', function (req, res) {
     var total_files = 0;
         dirName = "",
+        targetDB = "",
         saveDir = "",
         photos = [],
         form = new formidable.IncomingForm(),
@@ -289,11 +290,19 @@ app.post('/upload', function (req, res) {
     });
 
     form.on('field', function(name, field) {
-        dirName = field;
-        console.log('Got a field:', field);
-        saveDir = config.paintingPath + '/' + field;
-        utils.createFolder(saveDir);
-        console.log(saveDir);
+        if(name == "dirName"){
+            //get the new portrait name
+            dirName = field;
+            console.log('Got the dirName:', field);
+            saveDir = config.paintingPath + '/' + field;
+            utils.createFolder(saveDir);
+            console.log(saveDir);
+        }
+        else if(name == "targetDB"){
+            //add this portrait to targetDB when upload finish
+            targetDB = field;
+            console.log("Got the targetDB", field);
+        }
     })
 
     form.on('error', function(err) {
@@ -309,6 +318,11 @@ app.post('/upload', function (req, res) {
     form.parse(req, function (err, fields, files) {
         //append this portait to config.default_db
         utils.addPortraitToPaintingDB("./db/" + config.default_db, dirName);
+
+        //append this portait to targetDB
+        if(targetDB != config.default_db){
+            utils.addPortraitToPaintingDB("./db/" + targetDB + ".txt", dirName);
+        }
 
         //append this portrait to frameDA
         utils.addPortraitToPaintingDB(config.painting_db, dirName);
