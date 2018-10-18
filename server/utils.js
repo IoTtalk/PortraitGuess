@@ -98,7 +98,7 @@ var getAllPaintingDBList = function(){
 var addPortraitToPaintingDB = function(dbname, portraitname){
     fs.appendFile(dbname, portraitname + "\n", function (err) {
         if(err) return console.log(err);
-        console.log('successfully appended "' + portraitname + '"');
+        console.log('successfully appended "' + portraitname + '" in "' + dbname + '"');
     });
 }
 
