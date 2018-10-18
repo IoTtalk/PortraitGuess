@@ -14,11 +14,18 @@ var express = require("express"),
     mv = require('mv'),
     dai = require("./dai").dai,
     websocketclient = require("./websocketclient").WebSocketClient,
-    utils = require("./utils");
+    utils = require("./utils"),
+    path = require('path'),
+    formidable = require('formidable'),
+    readChunk = require('read-chunk'),
+    fileType = require('file-type');
 
 /*** upload ***/
 var uploadFolder = './upload_cache/';
 utils.createFolder(uploadFolder);
+var uploadFolder = './uploads/';
+utils.createFolder(uploadFolder);
+
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -52,7 +59,10 @@ ws2Painting.onopen = function(){
             connectedCount--;
             console.log("connected count: " + connectedCount);
             if((isGamePlaying && playID == socket.id) || connectedCount == 0){
-                ws2Painting.send("leaveGame");
+                //ws2Painting.send("leaveGame");
+                ws2Painting.send(JSON.stringify({
+                    "Command": "leaveGame"
+                }));
                 console.log("leaveGame");
                 isGamePlaying = false;
                 playID = undefined;
@@ -65,7 +75,10 @@ ws2Painting.onopen = function(){
                 socket.emit("checkUrlACK", {"urlCorrect": false});
             }
             else{
-                ws2Painting.send("enterGame");
+                //ws2Painting.send("enterGame");
+                ws2Painting.send(JSON.stringify({
+                    "Command": "enterGame"
+                }));
                 console.log("enterGame");
                 socket.emit("checkUrlACK", {"urlCorrect": true});
             }
@@ -83,19 +96,29 @@ ws2Painting.onopen = function(){
         });
 
         socket.on("Name-I", function(msg){
-            ws2Painting.send(msg);
+            //ws2Painting.send(msg);
+            ws2Painting.send(JSON.stringify({
+                "Command": "gameTarget",
+                "name" : msg
+            }));
             // dai.push("Name_I", [msg]);
             console.log("Name-I ", msg);
         });
 
         socket.on("Correct", function(msg){
-            ws2Painting.send("Correct");
+            //ws2Painting.send("Correct");
+            ws2Painting.send(JSON.stringify({
+                "Command": "Correct"
+            }));
             // dai.push("Correct", [1]);
             console.log("Correct");
         });
         
         socket.on("Wrong", function(msg){
-            ws2Painting.send("Wrong");
+            //ws2Painting.send("Wrong");
+            ws2Painting.send(JSON.stringify({
+                "Command": "Wrong"
+            }));
             // dai.push("Wrong", [1]);
             console.log("Wrong");
         });
@@ -111,7 +134,7 @@ console.log("---- list in memory----\n", nameList);
 utils.createFolder("./db/");
 
 //create default db
-utils.createPaintingDB("./db/" + config.painting_db, nameList);
+utils.createPaintingDB("./db/" + config.default_db, nameList);
 
 
 
@@ -148,7 +171,6 @@ app.post("/url",function(req, res){
 // get index API
 app.get("/*", function (req, res) {
     if(req.originalUrl.substr(1) != url && 
-        req.originalUrl.substr(1) != "upload" && 
         req.originalUrl.substr(1) != "test" && 
         req.originalUrl.substr(1) != "manage"){
         fs.readFile("../web/html/endPage.html", function (err, contents) {
@@ -162,17 +184,6 @@ app.get("/*", function (req, res) {
         });
         return;
     }
-    else if(req.originalUrl.substr(1) == "upload"){
-        fs.readFile("../web/html/upload.html", function (err, contents) {
-            if (err){
-                console.log(err);
-            }
-            else{
-                contents = contents.toString('utf8');
-                utils.sendResponse(res, 200, contents);
-            }
-        });
-    }
     else if(req.originalUrl.substr(1) == "manage"){
         fs.readFile("../web/html/manage.html", function (err, contents) {
             if (err){
@@ -184,7 +195,7 @@ app.get("/*", function (req, res) {
                 console.log('------dbList-----\n', dbList);
 
                 //get all portrait name
-                var allList = utils.getPaintingDBListByName("./db/" + config.painting_db);
+                var allList = utils.getPaintingDBListByName("./db/" + config.default_db);
 
                 contents = contents.toString('utf8');
                 utils.sendEjsRenderResponse(res, 200, contents, {
@@ -224,38 +235,97 @@ app.get("/*", function (req, res) {
 });
 
 // post images API
-app.post('/upload', upload.array('images'), function (req, res) {
-    var files = req.files;
-    var saveDir = config.paintingPath + '/' + req.body.dirName;
-    console.log(req.body.dirName);
-    console.log(saveDir);
-    utils.createFolder(saveDir);
-    files.sort(function(a, b){
-        return utils.alphanum(a.originalname, b.originalname);
-    });                     
-    console.log(files);
-    for(var i = 0,j = 1; i < files.length; i++){
-        if(files[i].mimetype != 'image/jpeg'){
-            continue;
+app.post('/upload', function (req, res) {
+    var total_files = 0;
+        dirName = "",
+        saveDir = "",
+        photos = [],
+        form = new formidable.IncomingForm(),
+        index = 0;
+
+    form.multiples = true;
+    form.uploadDir = path.join(__dirname, 'upload_cache');
+
+    // Invoked when a file has finished uploading.
+    form.on('file', function (name, file) {
+        var buffer = null,
+            type = null;
+
+        buffer = readChunk.sync(file.path, 0, 262);
+        type = fileType(buffer);
+
+        // Check the file type, must be either png,jpg or jpeg
+        if (type !== null && (type.ext === 'png' || type.ext === 'jpg' || type.ext === 'jpeg')) {
+            //files counter
+            total_files++;
+
+            //mv file to processing painting dir
+            fs.rename(file.path, saveDir + "/" + file.name, function(err, result) {
+                if(err) console.log('error', err);
+            });
+
+            // Add to the list of photos
+            console.log("file: ", file.name, " upload!!");
+            photos.push({
+                status: true,
+                filename: file.name,
+                type: type.ext,
+            });
         }
-        mv(files[i].path, saveDir + '/' + j+".jpg", function(err) {
-            if(err)
-                res.end(err);
-        });     
-        j++;
-    }
+        else {
+            console.log("file: ", file.name, " fail QQ");
+            photos.push({
+                status: false,
+                filename: file.name,
+                message: 'Invalid file type! [only png/jpg/jpeg]'
+            });
+            
+            //delete failed file
+            fs.unlink(file.path, (err) => {
+                if(err) throw err;
+                console.log(file.name, ' was deleted');
+            });
+        }
+    });
 
-    //apend this portait to config.pating_db
-    utils.addPortraitToPaintingDB("./db/" + config.painting_db, req.body.dirName);
+    form.on('field', function(name, field) {
+        dirName = field;
+        console.log('Got a field:', field);
+        saveDir = config.paintingPath + '/' + field;
+        utils.createFolder(saveDir);
+        console.log(saveDir);
+    })
 
-    //response
-    var redirect = "\
-        <script type='text/javascript'> \
-            alert('Upload success!! Back to Mange Home Page~');\
-            window.location.replace('http://" + req.get('host') + "/manage');\
-        </script>";
-    res.end(redirect);
-})
+    form.on('error', function(err) {
+        console.log('Error occurred during processing - ' + err);
+    });
+
+    // Invoked when all the fields have been processed.
+    form.on('end', function() {
+        console.log('All the request fields have been processed.');
+    });
+
+    // Parse the incoming form fields.
+    form.parse(req, function (err, fields, files) {
+        //append this portait to config.default_db
+        utils.addPortraitToPaintingDB("./db/" + config.default_db, dirName);
+
+        //append this portrait to frameDA
+        utils.addPortraitToPaintingDB(config.painting_db, dirName);
+
+        //ask processing to reload painting_db
+        if(total_files > 0){
+            ws2Painting.send(JSON.stringify({
+                "Command": "updatePortrait",
+                "name" : dirName,
+                "total" : total_files
+            }));
+        }
+
+        //send response
+        res.status(200).json(photos);
+    });
+});
 
 // post createDB API
 app.post('/createDB', function(req, res){
@@ -300,7 +370,7 @@ app.post('/getAllDB', function(req, res){
 // post getAllPortrait API
 app.post('/getAllPortrait', function(req, res){
     //get all portrait
-    var portraitList = utils.getPaintingDBListByName("./db/" + config.painting_db);
+    var portraitList = utils.getPaintingDBListByName("./db/" + config.default_db);
     var data = {'portraitList' : portraitList};
 
     //response
