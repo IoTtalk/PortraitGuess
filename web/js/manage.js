@@ -37,7 +37,6 @@ $(function () {
         var upload_div ='\
             <div id="upload" class="display">\
                 <h2 class="center">上傳檔案</h2>\
-                <h3 class="center warning">For now only supports Google Chrome browser</h3>\
                 <br>\
                 <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
                     <div class="form-group">\
@@ -59,7 +58,8 @@ $(function () {
                     </div>\
                     <div class="form-group">\
                         <h3>選取資料夾</h3>\
-                        <p class="help-block">檔案請依照數字序號命名</p>\
+                        <p class="help-block">檔案請依照數字序號或英文字母命名</p>\
+                        <p class="help-block">ex: a.jpg 或是 1.jpg</p>\
                         <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
                         <input type="hidden" name="csrf_token" value="just_a_text_field" />\
                     </div>\
@@ -89,10 +89,44 @@ $(function () {
                     info = info + "[ " + img.filename + " ] uploads fail QQ\n";
                 }
             }
-            alert(info);
-            alert("Set successfully!");
+            //alert(info);
+            //alert("Set successfully!");
+            alert("上傳成功!!");
         } else {
-            alert('No images were uploaded.');
+            //alert('No images were uploaded.');
+            alert("上傳失敗QQ");
+        }
+    }
+
+    function moveToNewFilename(filename){
+        var tmp,
+            fname = "",
+            charCodeA = 'A'.charCodeAt(0),
+            charCodea = 'a'.charCodeAt(0);
+
+        //split filename to name and ext
+        tmp = filename.split(".");
+        if(tmp.length != 2){
+            return "wrong";
+        }
+
+        //not single character
+        fname = tmp[0];
+        if(fname.length != 1){
+            return "wrong";
+        }
+
+        if("A" <= fname && fname <= "Z"){
+            return String(fname.charCodeAt(0) - charCodeA + 1) + "." + tmp[1];
+        }
+        else if("a" <= fname && fname <= "z"){
+            return String(fname.charCodeAt(0) - charCodea + 1) + "." + tmp[1];
+        }
+        else if("1" <= fname && fname <= "9"){
+            return filename;
+        }
+        else{
+            return "wrong";
         }
     }
 
@@ -113,23 +147,15 @@ $(function () {
                 dirName = "";
 
             //chech input
-            if (files.length === 0) {
-                alert('Select at least 1 file to upload.');
+            if($.trim(chiName) == '' || $.trim(engName) == '' || $.trim(birth) == ''){
+                //alert('Input can not be blank');
+                alert("欄位不得空白");
                 return false;
             }
 
             if (files.length < 6) {
-                alert('Select at least 6 files to upload.');
-                return false;
-            }
-
-            if($.trim(chiName) == '' || $.trim(engName) == '' || $.trim(birth) == ''){
-                alert('Input can not be blank');
-                return false;
-            }
-
-            if(targetDB == 0){
-                alert("Select one Sheet for this portrait");
+                //alert('Select at least 6 files to upload.');
+                alert('至少需要上傳 6 張圖片');
                 return false;
             }
 
@@ -140,8 +166,18 @@ $(function () {
 
             // Append the files to the formData.
             for (var i=0; i < files.length; i++) {
-                var file = files[i];
-                formData.append('photos[]', file, file.name);
+                var file,
+                    newfilename = "";
+
+                file = files[i];
+                newfilename = moveToNewFilename(file.name);
+                if(newfilename == "wrong"){
+                    alert(file.name,"檔名錯誤!!");
+                    return false;
+                }
+                else{
+                    formData.append('photos[]', file, newfilename);
+                }
             }
 
             // Append target painting_db to the formData
@@ -229,7 +265,7 @@ $(function () {
         $("#select_db_btn").on("click", function(){
             var $selected_db = $('input[name=db]:checked');
             if($selected_db.length != 1){
-                alert("something wrong QQ");
+                alert("請勾選想要的人物名單");
             }
             else{
                 var selected_db;
@@ -253,7 +289,7 @@ $(function () {
                         console.log(e);
                     },
                     success: function(){
-                        alert("Set successfully!");
+                        alert("選取名單成功!!");
                     }
                 });
             }
@@ -265,7 +301,8 @@ $(function () {
         $("#select_portrait_btn").on("click", function(){
             var $selected_portrait_list = $('input[name=portrait]:checked');
             if($selected_portrait_list.length <= 5){
-                alert("at least 6 person!!");
+                //alert("at least 6 person!!");
+                alert('至少需要選取 6 位人物');
             }
             else{
                 var selected = [];
@@ -296,7 +333,7 @@ $(function () {
                         console.log(e);
                     },
                     success: function () {
-                        alert("Set successfully!");
+                        alert("建立名單成功!!");
                     }
                 });
             }
@@ -307,6 +344,8 @@ $(function () {
     $(".navbar-brand").on("click", function(){
         var defaultt = "\
             <h2 class='top center'>管理頁面首頁</h2>\
+            <br>\
+            <h3 class='center'>For now only supports Google Chrome browser</h3>\
             <br>\
             <ul class='margin_left'>\
                 <li><h3>上傳檔案</h3></li>\
