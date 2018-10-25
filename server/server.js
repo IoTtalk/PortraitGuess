@@ -320,7 +320,7 @@ app.post('/upload', function (req, res) {
         utils.addPortraitToPaintingDB("./db/" + config.default_db, dirName);
 
         //append this portait to targetDB
-        if(targetDB != config.default_db){
+        if(targetDB != config.default_db && targetDB != 0){
             utils.addPortraitToPaintingDB("./db/" + targetDB + ".txt", dirName);
         }
 
@@ -350,9 +350,9 @@ app.post('/createDB', function(req, res){
     utils.createPaintingDB("./db/" + selectedlist_name + ".txt", selected_portrait);
 
     //update nameList in memory
-    nameList = selected_portrait.slice(0);
+    //nameList = selected_portrait.slice(0);
     console.log("----create new db----\n", selectedlist_name);
-    console.log("----update list in memory----\n", nameList);
+    //console.log("----update list in memory----\n", nameList);
     
     //response
     utils.sendResponse(res, 200, "success!");
