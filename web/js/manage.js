@@ -98,11 +98,9 @@ $(function () {
         }
     }
 
-    function moveToNewFilename(filename){
+    function moveToNewFilename(filename, newFname){
         var tmp,
-            fname = "",
-            charCodeA = 'A'.charCodeAt(0),
-            charCodea = 'a'.charCodeAt(0);
+            fname = "";
 
         //split filename to name and ext
         tmp = filename.split(".");
@@ -117,13 +115,16 @@ $(function () {
         }
 
         if("A" <= fname && fname <= "Z"){
-            return String(fname.charCodeAt(0) - charCodeA + 1) + "." + tmp[1];
+            console.log(filename,"get newFname:", String(newFname), ".", tmp[1]);
+            return String(newFname) + "." + tmp[1];
         }
         else if("a" <= fname && fname <= "z"){
-            return String(fname.charCodeAt(0) - charCodea + 1) + "." + tmp[1];
+            console.log(filename,"get newFname:", String(newFname), ".", tmp[1]);
+            return String(newFname) + "." + tmp[1];
         }
         else if("1" <= fname && fname <= "9"){
-            return filename;
+            console.log(filename,"get newFname:", String(newFname), ".", tmp[1]);
+            return String(newFname) + "." + tmp[1];
         }
         else{
             return "wrong";
@@ -165,19 +166,23 @@ $(function () {
             formData.append("dirName", dirName);
 
             // Append the files to the formData.
-            for (var i=0; i < files.length; i++) {
-                var file,
-                    newfilename = "";
+            myArray = Array.from(files);
+            console.log(myArray);
+            myArray = myArray.sort(function(a,b) {
+                return a.name > b.name ? 1 : -1;
+            });
+            console.log(myArray);
 
-                file = files[i];
-                newfilename = moveToNewFilename(file.name);
+            for(var i = 0; i < myArray.length; i++){
+                var file,newfilename;
+
+                file = myArray[i];
+                newfilename = moveToNewFilename(file.name, i+1);
                 if(newfilename == "wrong"){
-                    alert(file.name,"檔名錯誤!!");
+                    alert("有檔名錯誤!!");
                     return false;
                 }
-                else{
-                    formData.append('photos[]', file, newfilename);
-                }
+                formData.append('photos[]', file, newfilename);
             }
 
             // Append target painting_db to the formData
