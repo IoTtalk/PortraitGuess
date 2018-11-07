@@ -1,22 +1,39 @@
 $(function () {
     //select_div
-    function render_select_div(dbList){
+    function render_select_div(dbList, usingDB){
+        console.log("now usingDB: " + usingDB);
+        
         var dblist_table_str = "<table class='table table-hover'>";
         dbList.forEach((name) => {
-            dblist_table_str += "\
-                <tr>\
-                    <td class='mycheckbox'>\
-                        <input type='checkbox' id='" + name + "_checkbox' name='db' value='" + name + "' />\
-                    </td>\
-                    <td>\
-                        <label for='" + name + "_checkbox'>" + name + "</label>\
-                    </td>\
-                </tr>";
+            if(usingDB == name){
+                dblist_table_str += "\
+                    <tr>\
+                        <td class='mycheckbox'>\
+                            <input type='checkbox' id='" + name + "_checkbox' name='db' value='" + name + "' />\
+                        </td>\
+                        <td>\
+                            <label for='" + name + "_checkbox'>" + name + "<span class='warning'> (使用中) </span></label>\
+                        </td>\
+                    </tr>";
+            }
+            else{
+                dblist_table_str += "\
+                    <tr>\
+                        <td class='mycheckbox'>\
+                            <input type='checkbox' id='" + name + "_checkbox' name='db' value='" + name + "' />\
+                        </td>\
+                        <td>\
+                            <label for='" + name + "_checkbox'>" + name + "</label>\
+                        </td>\
+                    </tr>";
+            }
         });
         dblist_table_str += "</table>";
 
         var select_div = '\
             <h2 class="center top">選取名單</h2>\
+            <br>\
+            <h3 class="center">請勾選欲播放的人物清單</h3>\
             <br>\
             <div id="dblist_table" class="table_border overflow">' + dblist_table_str + '</div>\
             <br>\
@@ -53,22 +70,23 @@ $(function () {
                     </div>\
                     <div class="form-group">\
                         <h3>輸入人物逝世年份(西元)</h3>\
-                        <p class="help-block">可填可不填</p>\
+                        <p class="help-block">選填</p>\
                         <input type="text" id="die" class="form-control" size="35" placeholder="ex: 1603"/>\
                     </div>\
                     <div class="form-group">\
                         <h3>選取資料夾</h3>\
-                        <p class="help-block">檔案請依照數字序號或英文字母命名</p>\
-                        <p class="help-block">ex: a.jpg 或是 1.jpg</p>\
+                        <p class="help-block">資料夾內檔案請依照數字序號或英文字母命名</p>\
+                        <p class="help-block">ex: a.jpg b.jpg c.jpg ...</p>\
+                        <p class="help-block">ex: 1.jpg 2.jpg 3.jpg ...</p>\
                         <input class="center" id="photos-input" type="file" name="photos[]" multiple="multiple" webkitdirectory>\
                         <input type="hidden" name="csrf_token" value="just_a_text_field" />\
                     </div>\
-                    <div class="form-group">\
+                    <!-- <div class="form-group">\
                         <h3>添加至已建立名單</h3>\
                         <select class="form-control" id="selector">\
                             '+ dbList_option_str + '\
                         </select>\
-                    </div>\
+                    </div> -->\
                     <div class="form-group center">\
                         <input class="btn btn-warning" type="submit" name="Photo Uploads" value="上傳" />\
                     </div>\
@@ -266,7 +284,7 @@ $(function () {
     }
 
     //db select confirm button
-    function select_btn_handler(){
+    function select_btn_handler(dbList){
         $("#select_db_btn").on("click", function(){
             var $selected_db = $('input[name=db]:checked');
             if($selected_db.length != 1){
@@ -278,7 +296,8 @@ $(function () {
                     selected_db = $(this).val();
                 });
                 
-                console.log(selected_db);
+                usingDB = selected_db;
+                console.log("update usingDB: " + usingDB);
 
                 $.ajax({
                     type: "POST",
@@ -295,6 +314,9 @@ $(function () {
                     },
                     success: function(){
                         alert("選取名單成功!!");
+                        //update usingDB red span words
+                        $('#display').html(render_select_div(dbList, selected_db));
+                        select_btn_handler(dbList);
                     }
                 });
             }
@@ -357,13 +379,13 @@ $(function () {
                     <ul>\
                         <li><h4>上傳新人物畫像</h4></li>\
                     </ul>\
-                <li><h3>建立名單</h3></li>\
+                <li><h3>建立播放名單</h3></li>\
                     <ul>\
-                        <li><h4>選取特定人物 並 建立人物畫像名單</h4></li>\
+                        <li><h4>選取人物並建立人物播放名單</h4></li>\
                     </ul>\
-                <li><h3>選取名單</h3></li>\
+                <li><h3>選取播放名單</h3></li>\
                     <ul>\
-                        <li><h4>選取已建立的人物畫像名單</h4></li>\
+                        <li><h4>選取已建立的人物播放名單</h4></li>\
                     </ul>\
             </ul>";
         $("#display").html(defaultt);
@@ -386,9 +408,11 @@ $(function () {
                 },
                 success: function (data) {
                     dbList = data.dbList;
-                    $('#display').html(render_select_div(dbList));
+                    usingDB = data.usingDB;
+                    console.log(usingDB);
+                    $('#display').html(render_select_div(dbList, usingDB));
                     checkbox_onlyone_handler();
-                    select_btn_handler();
+                    select_btn_handler(dbList);
                 }
             });
         }
