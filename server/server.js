@@ -130,6 +130,10 @@ var nameList = utils.getPaintingDBListByPath(config.paintingPath);
 //var nameList = utils.getPaintingDBListByName("./db/Top10.txt");
 console.log("---- list in memory----\n", nameList);
 
+//get usingDB
+var usingDB = config.default_db.split('.')[0];
+console.log("---- db using now ----\n", usingDB);
+
 //create db dir
 utils.createFolder("./db/");
 
@@ -200,7 +204,8 @@ app.get("/*", function (req, res) {
                 contents = contents.toString('utf8');
                 utils.sendEjsRenderResponse(res, 200, contents, {
                     dbList: dbList,
-                    nameList: allList
+                    nameList: allList,
+                    usingDB: usingDB
                 });
             }
         });
@@ -236,7 +241,7 @@ app.get("/*", function (req, res) {
 
 // post images API
 app.post('/upload', function (req, res) {
-    var total_files = 0;
+    var total_files = 0,
         dirName = "",
         targetDB = "",
         saveDir = "",
@@ -320,9 +325,9 @@ app.post('/upload', function (req, res) {
         utils.addPortraitToPaintingDB("./db/" + config.default_db, dirName);
 
         //append this portait to targetDB
-        if(targetDB != config.default_db && targetDB != 0){
-            utils.addPortraitToPaintingDB("./db/" + targetDB + ".txt", dirName);
-        }
+        // if(targetDB != config.default_db && targetDB != 0){
+        //     utils.addPortraitToPaintingDB("./db/" + targetDB + ".txt", dirName);
+        // }
 
         //append this portrait to frameDA
         utils.addPortraitToPaintingDB(config.painting_db, dirName);
@@ -361,7 +366,11 @@ app.post('/createDB', function(req, res){
 // post loadDB API
 app.post('/loadDB', function(req, res){
     var selected_db = req.body.selected_db;
-    
+
+    //update usingDB
+    usingDB = selected_db;
+    console.log("----update db using now----\n", usingDB);
+
     //update nameList in memory
     nameList = utils.getPaintingDBListByName("./db/" + selected_db + ".txt");
     console.log("----load db----\n", selected_db);
@@ -373,9 +382,12 @@ app.post('/loadDB', function(req, res){
 
 // post getAllDB API
 app.post('/getAllDB', function(req, res){
-    //get all DB
+    //get all DB and usingDB
     var dbList = utils.getAllPaintingDBList();
-    var data = {'dbList' : dbList};
+    var data = {
+        'dbList' : dbList,
+        'usingDB' : usingDB
+    };
 
     //response
     utils.sendResponse(res, 200, JSON.stringify(data));
