@@ -283,14 +283,15 @@ app.post("/getHumanCategory", function(req, res){
 });
 
 // post getPendingHuman API
-app.post("/getPendingHuman", function(req, res){
-    var pendingHuman_list = [];
+app.post("/getHuman", function(req, res){
+    var status = req.body.status,
+        Human_list = [];
 
     db.Class.findOne({ where: {name: 'human'} }).then(function(c){
         if(c != null){
             db.Question.findAll({
                 where: { 
-                    status: 0,
+                    status: status,
                     ClassId: c.id,
                 },
                 include: [
@@ -299,14 +300,15 @@ app.post("/getPendingHuman", function(req, res){
             }).then(QuestionList => {
                 QuestionList.forEach((QuestionSetItem) => {
                     var QuestionData = QuestionSetItem.get({ plain: true });
-                    pendingHuman_list.push({
+                    Human_list.push({
                         id : QuestionData.id,
                         info : QuestionData.Human,
                     });
                 });
-
+                // console.log(Human_list);
+                
                 //response
-                utils.sendResponse(res, 200, JSON.stringify(pendingHuman_list));
+                utils.sendResponse(res, 200, JSON.stringify(Human_list));
             });
         }
     });
@@ -494,6 +496,7 @@ app.post('/addNewHumanCategory', function(req, res){
 // post getHumanAllData API
 app.post('/getHumanAllData', function(req, res){
     var questionId = req.body.questionId,
+        status = req.body.status,
         humanCategory_dict = {},
         humanData = {};
 
@@ -512,7 +515,7 @@ app.post('/getHumanAllData', function(req, res){
                 db.Question.findOne({
                     where: { 
                         id: questionId,
-                        status: 0,
+                        status: status,
                         ClassId: c.id,
                     },
                     include: [
@@ -667,7 +670,7 @@ app.post('/humanDelete', function(req, res){
                         console.log("---delete---")
                         console.log("delete ", delete_human_id, " success");
                         console.log("---delete---")
-                        
+
                         //send response
                         utils.sendResponse(res, 200, "success!");
                     });
