@@ -25,7 +25,7 @@ function render_pending_div(pendingHuman_list){
     return pending_div;
 }
 
-function setupEditModalforPendingHuman(humanData){
+function setupEditModal(humanData, status){
     var editModal_body_str = "",
         category_str = "",
         picture_str = "";
@@ -78,7 +78,12 @@ function setupEditModalforPendingHuman(humanData){
         ';
 
     /* set modal title */
-    $("#editModalLabel").text("人物審核");
+    if(status){
+        $("#editModalLabel").text("人物編輯");
+    }
+    else{
+        $("#editModalLabel").text("人物審核");
+    }
 
     /* set modal body */
     //set human info
@@ -108,7 +113,8 @@ function pendingbtn_handler(){
             cache: false,
             data: JSON.stringify(
             {
-                questionId : id
+                questionId : id,
+                status : 0
             }),
             contentType: "application/json",
             error: function(e){
@@ -120,12 +126,11 @@ function pendingbtn_handler(){
                 console.log(humanData);
 
                 //set modal content by humanData
-                setupEditModalforPendingHuman(humanData);
+                setupEditModal(humanData, 0);
 
-                //[TODO] new category added but do not append to the tabele
-                // add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
+                add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
 
-                human_update_btn_handler(id);
+                human_update_btn_handler(id, 0);
                 human_delete_btn_handler(id);
 
                 //show edit modal
@@ -135,7 +140,7 @@ function pendingbtn_handler(){
     });
 }
 
-function human_update_btn_handler(id){
+function human_update_btn_handler(id, status){
     $("#editModal_update").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
@@ -201,7 +206,15 @@ function human_update_btn_handler(id){
                 console.log(e);
             },
             success: function(data){
-                console.log("editModal Update success");
+                if(!status){
+                    //remove this human from pending table
+                    $('#'+ id).remove();
+                }
+
+                //close edit modal
+                $('#editModal').modal("hide");
+
+                alert("審核成功!!");
             }
         });
     });
