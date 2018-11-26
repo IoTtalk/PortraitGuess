@@ -104,7 +104,12 @@ function render_new_category_tablerow(table_id, category_list){
             </tr>";
 
     // console.log(newCategoryId, newCategoryName);
-    $("#" + table_id).find('tbody').append(newCategoryTableRow);
+    if($("#" + table_id).find('tbody').length){
+        $("#" + table_id).find('tbody').append(newCategoryTableRow);
+    }
+    else{
+        $("#" + table_id).append(newCategoryTableRow);
+    }
 }
 
 //new category btn handler
