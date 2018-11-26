@@ -6,60 +6,155 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/manage.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script type="text/javascript">
-        var nameList = <%- JSON.stringify(nameList) %>;
-        var dbList = <%- JSON.stringify(dbList) %>;
-        var usingDB = <%- JSON.stringify(usingDB) %>;
-    </script>
-    <script type="text/javascript" src="../js/jquery-3.2.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script type="text/javascript" src="../js/bootstrap.min.js"></script>
+    <!-- <script type="text/javascript" src="../js/display.js"></script>
+    <script type="text/javascript" src="../js/classification.js"></script>
+    <script type="text/javascript" src="../js/approved.js"></script> -->
+    <script type="text/javascript" src="../js/upload.js"></script>
+    <script type="text/javascript" src="../js/pending.js"></script>
     <script type="text/javascript" src="../js/manage.js"></script>
-
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
+
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">管理頁面</a>
-        <ul class="nav navbar-nav">
-            <li >
-                <a href="#" at="upload">上傳檔案</a>
-            </li>
-            <li >
-                <a href="#" at="create">建立名單</a>
-            </li>
-            <li>
-                <a href="#" at="select">選取名單</a>
-            </li>
-        </ul>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown0" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">上傳檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown0">
+                        <a class="dropdown-item" href="#" id="dropdown-human-upload">人物</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">待審檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown1">
+                        <a class="dropdown-item" href="#" id="dropdown-human-pending">人物</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        <a class="dropdown-item" href="#" id="dropdown-human-approved">人物</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">建立群組</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown3">
+                        <a class="dropdown-item" href="#" id="dropdown-human-classification">人物</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="dropdown-display">播放清單</a>
+                </li>
+            </ul>
+        </div>
     </nav>
 
-    <div class="container">
+    <div id="main">
         <div class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-
-                <div id="display">
-                    <h2 class='top center'>管理頁面首頁</h2>
-                    <br>
-                    <h3 class="center">For now only supports Google Chrome browser</h3>
-                    <br>
-                    <ul class='margin_left'>
-                        <li><h3>上傳檔案</h3></li>
-                            <ul>
-                                <li><h4>上傳新人物畫像</h4></li>
-                            </ul>
-                        <li><h3>建立播放名單</h3></li>
-                            <ul>
-                                <li><h4>選取人物並建立人物播放名單</h4></li>
-                            </ul>
-                        <li><h3>選取播放名單</h3></li>
-                            <ul>
-                                <li><h4>選取已建立的人物播放名單</h4></li>
-                            </ul>
-                    </ul>
-                </div>
-
+                <div id="display"></div>
             </div>
             <div class="col-md-2"></div>
+        </div>
+    </div>
+
+    <!-- modal for edit -->
+    <div class="modal fade bd-example-modal-lg" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="editModalLabel">人物審核</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div id="editModal_body" class="row">
+                            <div class="col-md-6">
+                                <form>
+                                    <div class="form-group">
+                                        <h5 class="required">編輯人物中文名字</h5>
+                                        <input type="text" id="editModal_chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世" required/>
+                                    </div>
+                                    <div class="form-group">
+                                        <h5 class="required">編輯人物英文名字</h5>
+                                        <input type="text" id="editModal_eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I" required/>
+                                    </div>
+                                    <div class="form-group">
+                                        <h5 class="required">編輯人物出生年份(西元)</h5>
+                                        <input type="text" id="editModal_birth_year" class="form-control" size="35" placeholder="ex: 1533" required/>
+                                    </div>
+                                    <div class="form-group">
+                                        <h5>編輯人物逝世年份(西元)</h5>
+                                        <input type="text" id="editModal_death_year" class="form-control" size="35" placeholder="ex: 1603"/>
+                                    </div>
+                                        <div class="form-group">
+                                            <div class="row">
+                                                <h3 class="required col-md-9">編輯分類</h3>
+                                                <div class="col-md-3">
+                                                    <button id="editModal_add_new_category" class="btn btn-secondary">新增</button>
+                                                </div>
+                                            </div>
+                                            <div class="editModal_category_table">
+                                                <table id="editModal_category_table" class="table table-hover"></table>
+                                            </div>
+                                        </div>
+                                </form>
+                            </div>
+                            <div class="col-md-6 ml-auto">
+                                <form>
+                                    <div class="form-group">
+                                        <h5 class="required">編輯圖片</h5>
+                                        <div class="editModal_picture_table">
+                                            <table id="editModal_picture_table" class="table table-hover"></table>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="editModal_footer" class="modal-footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- modal for display-->
+    <div class="modal fade bd-example-modal-lg" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel">Actor</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <tr>
+                            <td><label for="test">三船敏郎,Toshiro Mifune,1920-1997</label></td>
+                        </tr>
+                        <tr>
+                            <td><label for="test">奧黛麗赫本,Audrey Hepburn,1929-1993</label></td>
+                        </tr>
+                        <tr>
+                            <td><label for="test">安德魯斯,Julie Andrews,1935-</label></td>
+                        </tr>
+                        <tr>
+                            <td><label for="test">帕克,Fess Parker,1924-2010</label></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
