@@ -10,11 +10,14 @@
 		"formidable": "^1.2.1",
 		"multer": "^1.3.0",
 		"mv": "^2.1.1",
+		"sequelize": "",
+		"sqlite3": "",
 		"nodejs-websocket": "*",
 		"read-chunk": "^3.0.0",
 		"request": "",
 		"shortid": "*",
 		"socket.io": "",
+		"basic-auth": "",
 		"ws": ""
 	}
 }
