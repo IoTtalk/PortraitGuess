@@ -50,19 +50,48 @@ $(function () {
     $("#dropdown-human-pending").on("click", function(){
         $.ajax({
             type: "POST",
-            url: location.origin + "/getPendingHuman",
+            url: location.origin + "/getHuman",
             cache: false,
+            data: JSON.stringify(
+            {
+                status : 0
+            }),
             contentType: "application/json",
-            dataType: 'json',
             error: function(e){
                 alert("something wrong");
                 console.log(e);
             },
-            success: function(pendingHuman_list){
+            success: function(data){
+                var pendingHuman_list = JSON.parse(data);
                 console.log(pendingHuman_list);
 
                 $('#display').html(render_pending_div(pendingHuman_list));
                 pendingbtn_handler();
+            }
+        });
+    });
+
+    //render_pending_div
+    $("#dropdown-human-approved").on("click", function(){
+        $.ajax({
+            type: "POST",
+            url: location.origin + "/getHuman",
+            cache: false,
+            data: JSON.stringify(
+            {
+                status : 1
+            }),
+            contentType: "application/json",
+            error: function(e){
+                alert("something wrong");
+                console.log(e);
+            },
+            success: function(data){
+                var approvedHuman_list = JSON.parse(data);
+                console.log(approvedHuman_list);
+
+                $('#display').html(render_approved_div(approvedHuman_list));
+                approvedbtn_handler();
             }
         });
     });
