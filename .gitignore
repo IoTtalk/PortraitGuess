@@ -1,3 +1,4 @@
 server/config.js
 .DS_Store
 server/node_modules
+web/img
