@@ -165,17 +165,6 @@ function checkCategoryused(used_list, categoryId){
     return 0;
 }
 
-//load all existed portrait
-var nameList = utils.getPaintingDBListByPath(config.paintingPath);
-//get usingDB
-var usingDB = config.default_db.split('.')[0];
-//create db dir
-utils.createFolder("./db/");
-//create default db
-utils.createPaintingDB("./db/" + config.default_db, nameList);
-
-
-
 var url = shortid.generate();
 console.log("----Game url----\n", url);
 
@@ -305,12 +294,36 @@ app.post("/getHuman", function(req, res){
                         info : QuestionData.Human,
                     });
                 });
-                // console.log(Human_list);
+                console.log(Human_list);
                 
                 //response
                 utils.sendResponse(res, 200, JSON.stringify(Human_list));
             });
         }
+    });
+});
+
+// post getGroup API
+app.post('/getGroup', function(req, res){
+    var group_list = [];
+
+    db.Group.findAll().then(GroupList => {
+        GroupList.forEach((GroupSetItem) => {
+            var GroupData = GroupSetItem.get({ plain: true });
+            
+            group_list.push({
+                id : GroupData.id,
+                name : GroupData.name,
+                status : GroupData.status
+            });
+        });
+        
+        console.log("---group---");
+        console.log(group_list);
+        console.log("---group---");
+
+        //response
+        utils.sendResponse(res, 200, JSON.stringify(group_list));
     });
 });
 
@@ -493,6 +506,56 @@ app.post('/addNewHumanCategory', function(req, res){
     });
 });
 
+// psot getHumanByCategory API
+app.post('/getHumanByCategory', function(req,res){
+    var target_category_id = req.body.category_id,
+        humanCategory_list = [];
+
+    db.QuestionCategory.findAll({
+        where: { category_id: target_category_id }
+    }).then(QuestionCategoryList => {
+        //count for all search done
+        var count = 0;
+        
+        //if there is no human belongs to this category, return
+        if(QuestionCategoryList.length == 0){
+            console.log(humanCategory_list);
+            console.log("no human in this category");
+
+            //response
+            utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
+
+            return false;
+        }
+
+        QuestionCategoryList.forEach((QuestionCategorySetItem) => {
+            var QuestionCategoryData = QuestionCategorySetItem.get({ plain: true });
+            db.Question.findOne({
+                where: {id: QuestionCategoryData.QuestionId},
+                include: { model: db.Human },
+            }).then(function(c){
+                if(c != null){
+                    if(c.status){
+                        humanCategory_list.push({
+                            id: c.id,
+                            info: c.Human.chi_name + "," + c.Human.eng_name + "," + c.Human.birth_year + "-" + c.Human.death_year
+                        })
+                    }
+
+                    count += 1;
+                    if(count == QuestionCategoryList.length){
+                        console.log(humanCategory_list);
+                        console.log("done");
+
+                        //response
+                        utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
+                    }
+                }
+            });
+        });
+    });
+});
+
 // post getHumanAllData API
 app.post('/getHumanAllData', function(req, res){
     var questionId = req.body.questionId,
@@ -570,6 +633,29 @@ app.post('/getHumanAllData', function(req, res){
                 });
             });
         }
+    });
+});
+
+// psot addNewHumanGroup API
+app.post('/addNewHumanGroup', function(req, res){
+    var group_name = req.body.newgroup_name,
+        group_list = req.body.group_list;
+
+    console.log("---addNewHumanGroup---");
+    console.log(group_name);
+    console.log(group_list);
+    console.log("---addNewHumanGroup---");
+    
+    var data = {
+        name : group_name,
+        status : 0,
+        GroupMembers : group_list
+    };
+    db.Group.create(data, {include: [db.GroupMember]}).then(function(){
+        console.log(group_name, " create!!");
+
+        // response
+        utils.sendResponse(res, 200, "success!");
     });
 });
 
@@ -680,42 +766,122 @@ app.post('/humanDelete', function(req, res){
     });
 });
 
-// post loadDB API
-app.post('/loadDB', function(req, res){
-    var selected_db = req.body.selected_db;
+// post deleteOldGroup API
+app.post('/deleteOldGroup', function(req,res){
+    var delete_group_id = req.body.delete_group_id;
+    
+    db.GroupMember.destroy({ 
+        where: {GroupId: delete_group_id},
+        force: true 
+    }).then(function(){
+        db.Group.destroy({
+            where: { id: delete_group_id},
+            force: true
+        }).then(function(){
+            console.log("---deleteOldGroup---");
+            console.log(delete_group_id);
+            console.log("---deleteOldGroup---");
 
-    //update usingDB
-    usingDB = selected_db;
-    console.log("----update db using now----\n", usingDB);
-
-    //update nameList in memory
-    nameList = utils.getPaintingDBListByName("./db/" + selected_db + ".txt");
-    console.log("----load db----\n", selected_db);
-    console.log("----update list in memory----\n", nameList);
-
-    //response
-    utils.sendResponse(res, 200, "success!");
+            //send response
+            utils.sendResponse(res, 200, "success!");
+        });
+    });
 });
 
-// post getAllDB API
-app.post('/getAllDB', function(req, res){
-    //get all DB and usingDB
-    var dbList = utils.getAllPaintingDBList();
-    var data = {
-        'dbList' : dbList,
-        'usingDB' : usingDB
-    };
+// post updateOldHumanGroup API
+app.post('/updateOldHumanGroup', function(req, res){
+    var update_group_id = req.body.update_group_id,
+        group_list = req.body.group_list;
 
-    //response
-    utils.sendResponse(res, 200, JSON.stringify(data));
+    db.GroupMember.destroy({ //destroy old human category
+        where: { GroupId: update_group_id }, 
+        force:true 
+    }).then(function(){ //create new human category
+        var new_groupmember_list = [];
+        group_list.forEach((element)=>{
+            new_groupmember_list.push({
+                question_id: element.question_id,
+                GroupId: update_group_id
+            });
+        });
+
+        db.GroupMember.bulkCreate(new_groupmember_list).then(function(){
+            console.log("---updateOldHumanGroup---");
+            console.log("done");
+            console.log("---updateOldHumanGroup---");
+
+            //send response
+            utils.sendResponse(res, 200, "success");
+        });
+    });
 });
 
-// post getAllPortrait API
-app.post('/getAllPortrait', function(req, res){
-    //get all portrait
-    var portraitList = utils.getPaintingDBListByName("./db/" + config.default_db);
-    var data = {'portraitList' : portraitList};
+// post getGroupMember API
+app.post('/getGroupMember', function(req, res){
+    var GroupId = req.body.GroupId,
+        groupMember_list = [];
 
-    //response
-    utils.sendResponse(res, 200, JSON.stringify(data));
+    db.GroupMember.findAll({ 
+        where: { GroupId: GroupId }
+    }).then(GroupMemberList => {
+        var count = 0;
+
+        GroupMemberList.forEach((GroupMemberSetItem) => {
+            var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+            // console.log(CategoryData);
+            
+            db.Human.findOne({ 
+                where: {QuestionId: GroupMemberData.question_id} 
+            }).then(function(c){
+                if(c != null){
+                    groupMember_list.push({
+                        question_id: GroupMemberData.question_id,
+                        chi_name: c.chi_name,
+                        eng_name: c.eng_name,
+                        birth_year: c.birth_year,
+                        death_year: c.death_year
+                    });
+
+                    count += 1;
+                    if(count == GroupMemberList.length){
+                        console.log('---getGroupMember---');
+                        console.log(groupMember_list);
+                        console.log('---getGroupMember---');
+                        
+                        //send response
+                        utils.sendResponse(res, 200, JSON.stringify(groupMember_list));
+                    }
+                }
+            });
+        });
+    });
+});
+
+//post getDisplayGroup API
+app.post('/setDisplayGroup', function(req, res){
+    var selected_group_list = req.body.selected_group_list;
+
+    db.Group.update( //let all group set to unuse
+        { status: 0 },
+        { where: {status: 1} }
+    ).then(function(){
+        var count = 0;
+
+        selected_group_list.forEach((selected_group) =>{
+            db.Group.update(
+                { status: 1 },
+                { where: {id: selected_group.id} }
+            ).then(function(){
+                count += 1;
+                if(count == selected_group_list.length){
+                    console.log("---setDisplayGroup---");
+                    console.log(selected_group_list);
+                    console.log("---setDisplayGroup---");
+
+                    //send response
+                    utils.sendResponse(res, 200, "success!");
+                }
+            });
+        });
+    });
 });
