@@ -71,7 +71,7 @@ $(function () {
         });
     });
 
-    //render_pending_div
+    //render_approved_div
     $("#dropdown-human-approved").on("click", function(){
         $.ajax({
             type: "POST",
@@ -92,6 +92,52 @@ $(function () {
 
                 $('#display').html(render_approved_div(approvedHuman_list));
                 approvedbtn_handler();
+            }
+        });
+    });
+
+    //render_classification_div
+    $("#dropdown-human-classification").on("click", function(){
+        $.ajax({
+            type: "POST",
+            url: location.origin + "/getGroup",
+            cache: false,
+            contentType: "application/json",
+            dataType: 'json',
+            error: function(e){
+                alert("something wrong");
+                console.log(e);
+            },
+            success: function(group_list){
+                console.log(group_list);
+
+                $("#display").html(render_classification_div(render_classification_selector(group_list)));
+                option_handler();
+            }
+        });
+    });
+
+    //render_display_div
+    $("#dropdown-display").on("click", function(){
+        $.ajax({
+            type: "POST",
+            url: location.origin + "/getGroup",
+            cache: false,
+            contentType: "application/json",
+            dataType: 'json',
+            error: function(e){
+                alert("something wrong");
+                console.log(e);
+            },
+            success: function(group_list){
+                console.log(group_list);
+                
+                $("#display").html(render_display_div(render_grouplist_table(group_list)));
+                // make grouplist modal handler
+                displayModal_btn_handler();
+                
+                // set using group
+                set_display_btn_handler();
             }
         });
     });
