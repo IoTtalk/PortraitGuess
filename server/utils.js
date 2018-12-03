@@ -2,37 +2,6 @@ var fs = require('fs'),
     ejs = require('ejs'),
     config = require('./config');
 
-var alphanum = function(a, b){
-    function chunkify(t){
-        var tz = [], x = 0, y = -1, n = 0, i, j;
-        while (i = (j = t.charAt(x++)).charCodeAt(0)){
-            var m = (i == 46 || (i >=48 && i <= 57));
-            if(m !== n){
-                tz[++y] = "";
-                n = m;
-            }
-            tz[y] += j;
-        }
-        return tz;
-    }
-
-    var aa = chunkify(a);
-    var bb = chunkify(b);
-
-    for (x = 0; aa[x] && bb[x]; x++) {
-        if (aa[x] !== bb[x]) {
-            var c = Number(aa[x]), d = Number(bb[x]);
-            if (c == aa[x] && d == bb[x]) {
-                return c - d;
-            }
-            else{
-                return (aa[x] > bb[x]) ? 1 : -1;
-            }
-        }
-    }
-    return aa.length - bb.length;
-}
-
 var createFolder = function(folder){
     try{
         fs.accessSync(folder); 
@@ -53,65 +22,45 @@ var sendEjsRenderResponse = function(res, statusCode, contents, JSONdata){
     res.end(ejs.render(contents, JSONdata));
 }
 
-var getPaintingDBListByName = function(painting_db){
-    var portraitList = [];
-    fs.readFileSync(painting_db).toString().split(/\n/).forEach(function(line){
-        if(line == "\n" || line == " " || line == "")
-            return;
-        //console.log("-", line, "-");
-        portraitList.push(line);
-    });
-    return portraitList;
-}
+var uuid =  function(){
+    var d = Date.now();
 
-var getPaintingDBListByPath = function(paintingPath){
-    var dirNameList = [];
-    fs.readdirSync(paintingPath).forEach(function(dirName){
-        if(dirName == ".DS_Store") //filter macOS dirty file
-            return;
-        dirNameList.push(dirName);
-    });
-    return dirNameList;
-}
-
-var createPaintingDB = function(dbName, portraitList){
-    fs.writeFileSync(dbName, "");
-    portraitList.forEach((protraitName) => {
-        fs.appendFileSync(dbName, protraitName + "\n");
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        d += performance.now(); //use high-precision timer if available
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
     });
 }
 
-var getAllPaintingDBList = function(){
-    var DBList = [],
-        tmp;
-    fs.readdirSync("./db/").forEach(function(filename){
-        if(filename == ".DS_Store") //filter macOS dirty file
-            return;
-        tmp = filename.split('.');
-        if(tmp.length > 1 && tmp[1] == "txt"){
-            DBList.push(tmp[0]);
+var getPicIdbyOrder = function(list, order){
+    for(var i = 0; i < list.length; i++){
+        if(list[i].order == order){
+            return list[i].id;
         }
-    });
-    return DBList
+    }
+    return "none";
 }
 
-var addPortraitToPaintingDB = function(dbname, portraitname){
-    fs.appendFile(dbname, portraitname + "\n", function (err) {
-        if(err) return console.log(err);
-        console.log('successfully appended "' + portraitname + '" in "' + dbname + '"');
-    });
+var checkCategoryused = function(used_list, categoryId){
+    for(var i = 0; i < used_list.length; i++){
+        // console.log(used_list[i].category_id.toString(), categoryId);
+        if(used_list[i].category_id.toString() == categoryId){
+            return 1;
+        }
+    }
+    return 0;
 }
 
 module.exports = {
-    alphanum: alphanum,
     createFolder: createFolder,
     sendResponse: sendResponse,
     sendEjsRenderResponse: sendEjsRenderResponse,
-    getPaintingDBListByName: getPaintingDBListByName,
-    getPaintingDBListByPath: getPaintingDBListByPath,
-    createPaintingDB: createPaintingDB,
-    getAllPaintingDBList: getAllPaintingDBList,
-    addPortraitToPaintingDB: addPortraitToPaintingDB,
+    uuid: uuid,
+    getPicIdbyOrder: getPicIdbyOrder,
+    checkCategoryused: checkCategoryused
 };
 
 
