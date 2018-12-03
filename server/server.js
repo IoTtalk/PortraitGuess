@@ -10,7 +10,6 @@ var express = require("express"),
     ejs = require('ejs'),
     shortid = require('shortid'),
     bodyParser = require('body-parser'),
-    mv = require('mv'),
     path = require('path'),
     formidable = require('formidable'),
     readChunk = require('read-chunk'),
@@ -20,23 +19,6 @@ var express = require("express"),
     websocketclient = require("./websocketclient").WebSocketClient,
     utils = require("./utils"),
     db = require('./db').db;
-
-var auth = function(req, res, next){
-    var user = basicAuth(req);
-    if(!user || !user.name || !user.pass){
-        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-        res.sendStatus(401);
-        return;
-    }
-    if(user.name === 'admin' && user.pass === '0000'){
-        next();
-    } 
-    else{
-        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-        res.sendStatus(401);
-        return;
-    }
-}
 
 /*** upload ***/
 var uploadFolder = './upload_cache/';
@@ -151,7 +133,7 @@ console.log('--- portraitguess server start ---');
 http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
 // manage page
-app.get("/manage", auth, function(req, res){
+app.get("/manage", utils.auth, function(req, res){
     fs.readFile("../web/html/manage.html", function (err, contents) {
         if (err){ console.log(err); }
         else{
