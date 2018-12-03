@@ -54,13 +54,29 @@ var checkCategoryused = function(used_list, categoryId){
     return 0;
 }
 
+var auth = function(req, res, next){
+    var user = basicAuth(req);
+    if(!user || !user.name || !user.pass){
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        res.sendStatus(401);
+        return;
+    }
+    if(user.name === 'admin' && user.pass === '0000'){
+        next();
+    } 
+    else{
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        res.sendStatus(401);
+        return;
+    }
+}
+
 module.exports = {
     createFolder: createFolder,
     sendResponse: sendResponse,
     sendEjsRenderResponse: sendEjsRenderResponse,
     uuid: uuid,
     getPicIdbyOrder: getPicIdbyOrder,
-    checkCategoryused: checkCategoryused
+    checkCategoryused: checkCategoryused,
+    auth: auth
 };
-
-
