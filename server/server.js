@@ -133,38 +133,6 @@ ws2Painting.onopen = function(){
     });
 };
 
-
-function uuid() {
-    var d = Date.now();
-    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
-        d += performance.now(); //use high-precision timer if available
-    }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-}
-
-function getPicIdbyOrder(list, order){
-    for(var i = 0; i < list.length; i++){
-        if(list[i].order == order){
-            return list[i].id;
-        }
-    }
-    return "none";
-}
-
-function checkCategoryused(used_list, categoryId){
-    for(var i = 0; i < used_list.length; i++){
-        // console.log(used_list[i].category_id.toString(), categoryId);
-        if(used_list[i].category_id.toString() == categoryId){
-            return 1;
-        }
-    }
-    return 0;
-}
-
 var url = shortid.generate();
 console.log("----Game url----\n", url);
 
@@ -177,7 +145,6 @@ app.use(bodyParser.urlencoded({
 
 // process http body
 app.use(bodyParser.json());
-
 
 // start server
 console.log('--- portraitguess server start ---');
@@ -250,22 +217,36 @@ app.post("/getHumanCategory", function(req, res){
 
     db.Class.findOne({ where: {name: 'human'} }).then(function(c){
         if(c != null){
+            var count = 0;
+
             db.Category.findAll({ 
                 where: { ClassId: c.id }
             }).then(CategoryList => {
                 CategoryList.forEach((CategorySetItem) => {
                     var CategoryData = CategorySetItem.get({ plain: true });
-                    // console.log(CategoryData);
-                    humanCategory_list.push({
-                        id : CategoryData.id,
-                        name : CategoryData.name
+
+                    // make sure there are humans belong to this category
+                    db.QuestionCategory.findAll({ 
+                        where: { category_id: CategoryData.id }
+                    }).then(QuestionCategoryList => {
+                        count += 1;
+
+                        if(QuestionCategoryList.length != 0){
+                            //push into list
+                            humanCategory_list.push({
+                                id : CategoryData.id,
+                                name : CategoryData.name
+                            });
+                        }
+
+                        if(count == CategoryList.length){
+                            console.log(humanCategory_list);
+
+                            //response
+                            utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
+                        }
                     });
                 });
-
-                console.log(humanCategory_list);
-
-                //response
-                utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
             });
         }
     });
@@ -342,7 +323,7 @@ app.post("/url",function(req, res){
 
 // post human upload API
 app.post('/humanUpload', function (req, res) {
-    var question_id = uuid().substring(0,16),
+    var question_id = utils.uuid().substring(0,16),
         user_upload_data = {},
         img_order = {},
         chi_name = "",
@@ -377,7 +358,7 @@ app.post('/humanUpload', function (req, res) {
         var buffer = null,
             type = null,
             order = 0,
-            picture_id = uuid().substring(0,16);
+            picture_id = utils.uuid().substring(0,16);
 
         buffer = readChunk.sync(file.path, 0, 262);
         type = fileType(buffer);
@@ -592,7 +573,7 @@ app.post('/getHumanAllData', function(req, res){
                     //sort picture by order
                     var picId, sortedPic_list = [];
                     for(var i = 0; i < QuestionData.Pictures.length; i++){
-                        picId = getPicIdbyOrder(QuestionData.Pictures, i + 1);
+                        picId = utils.getPicIdbyOrder(QuestionData.Pictures, i + 1);
                         if(picId != "none"){
                             sortedPic_list.push(picId);
                         }
@@ -603,7 +584,7 @@ app.post('/getHumanAllData', function(req, res){
                     for(var categoryId in humanCategory_dict){
                         if(humanCategory_dict.hasOwnProperty(categoryId)){
                             //console.log(key, humanCategory_dict[categoryId]);
-                            var used = checkCategoryused(QuestionData.QuestionCategories, categoryId);
+                            var used = utils.checkCategoryused(QuestionData.QuestionCategories, categoryId);
                             checkedCategory_list.push({
                                 id: categoryId,
                                 name: humanCategory_dict[categoryId],
