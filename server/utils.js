@@ -1,5 +1,6 @@
 var fs = require('fs'),
     ejs = require('ejs'),
+    basicAuth = require('basic-auth'),
     config = require('./config');
 
 var createFolder = function(folder){
@@ -71,6 +72,52 @@ var auth = function(req, res, next){
     }
 }
 
+var generateGame = function(nameList){
+    var option_info_list = [],
+        option_info, duplicate_flag;
+
+    if(nameList.length <= 5){
+        return [nameList, ""];
+    }
+
+    do{
+        //get randon nameList info
+        option_info = nameList[Math.floor(Math.random() * nameList.length)].info;
+        
+        //check if duplicate info
+        duplicate_flag = false;
+        for(var i = 0; i < option_info_list.length; i++){
+            if(option_info_list[i] == option_info){
+                duplicate_flag = true;
+                break;
+            }
+        }
+
+        //put randon nameList info into list
+        if(!duplicate_flag){
+            option_info_list.push(option_info);
+        }
+    }while(option_info_list.length <= 5);
+    
+    //find answer picture path
+    var gameAnswerPicPathList = [];
+    for(var i = 0; i < nameList.length; i++){
+        if(nameList[i].info == option_info_list[0]){
+            var total_pic = Object.keys(nameList[i].path).length;
+            for(var j = 1; j <= total_pic; j++){
+                gameAnswerPicPathList.push(nameList[i].path[j]);
+            }
+            break;
+        }
+    }
+
+    console.log("---game options---\n", option_info_list);
+    console.log("---game answer---\n", option_info_list[0]);
+    console.log("---game answer picture path---\n",gameAnswerPicPathList);
+
+    return [option_info_list, gameAnswerPicPathList];
+}
+
 module.exports = {
     createFolder: createFolder,
     sendResponse: sendResponse,
@@ -78,5 +125,6 @@ module.exports = {
     uuid: uuid,
     getPicIdbyOrder: getPicIdbyOrder,
     checkCategoryused: checkCategoryused,
-    auth: auth
+    auth: auth,
+    generateGame: generateGame
 };
