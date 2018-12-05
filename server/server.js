@@ -3,7 +3,6 @@
  */
 var express = require("express"),
     app = express(),
-    basicAuth = require('basic-auth'),
     http = require("http").createServer(app),
     io = require('socket.io')(http),
     fs = require('fs'),
@@ -86,13 +85,15 @@ ws2Painting.onopen = function(){
         });
 
         socket.on("Name-I", function(msg){
+            //sand answer picture path list to preocess
+
             //ws2Painting.send(msg);
             ws2Painting.send(JSON.stringify({
                 "Command": "gameTarget",
-                "name" : msg
+                "path" : gameAnswerPicPath
             }));
             // dai.push("Name_I", [msg]);
-            console.log("Name-I ", msg);
+            console.log("Name-I ", msg, "\n", gameAnswerPicPath);
         });
 
         socket.on("Correct", function(msg){
@@ -112,10 +113,34 @@ ws2Painting.onopen = function(){
             // dai.push("Wrong", [1]);
             console.log("Wrong");
         });
+
+        socket.on("NextGame", function(msg){
+            //[TODO] if user want to play another game, generate game info for him
+
+            //ganerate new gameinfo
+            gameInfo = utils.generateGame(nameList);
+            gameList = gameInfo[0];
+            gameAnswerPicPath = gameInfo[1];
+
+            // dai.push("NextGame", [1]);
+            console.log("NextGame");
+        });
     });
 };
 
-var url = shortid.generate();
+
+/* nameList structure
+    [   { info: '湯姆克魯斯,tom cruise,1951-',
+          path: { order: pic_path }
+        },
+    ]
+*/
+var nameList = [],
+    gameInfo,
+    gameList,
+    gameAnswerPicPath,
+    url = shortid.generate();
+
 console.log("----Game url----\n", url);
 
 //static files
@@ -128,9 +153,62 @@ app.use(bodyParser.urlencoded({
 // process http body
 app.use(bodyParser.json());
 
-// start server
-console.log('--- portraitguess server start ---');
-http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+// get initialize nameList and then start server
+db.Group.findAll( { where: {status: 1} }).then(GroupList => {
+    var group_count = 0;
+
+    GroupList.forEach((GroupSetItem) => { 
+        var GroupData = GroupSetItem.get({ plain: true });
+
+        db.GroupMember.findAll({ //find all questions in this selected group
+            where: { GroupId: GroupData.id }
+        }).then(GroupMemberList => {
+            var groupmember_count = 0;
+
+            GroupMemberList.forEach((GroupMemberSetItem) => { 
+                var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+
+                db.Question.findOne({ //for every single question get info and pic
+                    where: { id: GroupMemberData.question_id },
+                    include: [
+                        { model: db.Human },
+                        { model: db.Picture }
+                    ]
+                }).then(function(c){
+                    if(c != null){
+                        groupmember_count += 1;
+
+                        var pic_dict = {},
+                            info = c.Human.chi_name + "," + c.Human.eng_name + "," + 
+                                   c.Human.birth_year + "-" + c.Human.death_year;
+                        c.Pictures.forEach((picture) => {
+                            pic_dict[picture.order] = picture.id;
+                        });
+
+                        nameList.push({
+                            info: info,
+                            path: pic_dict
+                        });
+
+                        if(groupmember_count == GroupMemberList.length){
+                            group_count += 1;
+                            if(group_count == GroupList.length){
+                                
+                                console.log("---initialize nameList---");
+                                console.log(nameList);
+                                console.log("---initialize nameList---");
+
+                                //start server
+                                console.log('---server start---');
+                                http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    });
+});
 
 // manage page
 app.get("/manage", utils.auth, function(req, res){
@@ -144,13 +222,14 @@ app.get("/manage", utils.auth, function(req, res){
 });
 
 // user page
-app.get("/user", function(req, res){
-    fs.readFile("../web/html/user.html", function (err, contents) {
-        if (err){ console.log(err); }
-        else{
-            contents = contents.toString('utf8');
-            utils.sendResponse(res, 200, contents);
-        }
+app.get("/:lang(ch|en)/user", function(req, res){
+    fs.readFile("../web/html/user_" + req.params.lang + ".html", 
+        function(err, contents){
+            if (err){ console.log(err); }
+            else{
+                contents = contents.toString('utf8');
+                utils.sendResponse(res, 200, contents);
+            }
     });
 });
 
@@ -181,9 +260,15 @@ app.get("/*", function(req, res){
                 });
             }
             else{
+                // random generate at least 6 question info list to front-end webpage
+                // also decide the targeted answer
+                gameInfo = utils.generateGame(nameList);
+                gameList = gameInfo[0];
+                gameAnswerPicPath = gameInfo[1];
+
                 contents = contents.toString('utf8');
                 utils.sendEjsRenderResponse(res, 200, contents, {
-                    nameList: nameList, 
+                    gameList: gameList, 
                     webSocketPort: config.webSocketPort, 
                     webServerPort: config.webServerPort,
                     paintingIP: config.paintingIP
@@ -824,26 +909,67 @@ app.post('/getGroupMember', function(req, res){
 app.post('/setDisplayGroup', function(req, res){
     var selected_group_list = req.body.selected_group_list;
 
+    //flush nameList to null
+    nameList = [];
+
     db.Group.update( //let all group set to unuse
         { status: 0 },
         { where: {status: 1} }
     ).then(function(){
-        var count = 0;
+        var group_count = 0;
 
-        selected_group_list.forEach((selected_group) =>{
+        selected_group_list.forEach((selected_group) =>{ //set selected group to use
             db.Group.update(
                 { status: 1 },
                 { where: {id: selected_group.id} }
             ).then(function(){
-                count += 1;
-                if(count == selected_group_list.length){
-                    console.log("---setDisplayGroup---");
-                    console.log(selected_group_list);
-                    console.log("---setDisplayGroup---");
+                //load all question into nameList
+                db.GroupMember.findAll({ //find all questions in this selected group
+                    where: { GroupId: selected_group.id }
+                }).then(GroupMemberList => {
+                    var groupmember_count = 0;
 
-                    //send response
-                    utils.sendResponse(res, 200, "success!");
-                }
+                    GroupMemberList.forEach((GroupMemberSetItem) => { 
+                        var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+
+                        db.Question.findOne({ //for every single question get info and pic
+                            where: { id: GroupMemberData.question_id },
+                            include: [
+                                { model: db.Human },
+                                { model: db.Picture }
+                            ]
+                        }).then(function(c){
+                            if(c != null){
+                                groupmember_count += 1;
+
+                                var pic_dict = {},
+                                    info = c.Human.chi_name + "," + c.Human.eng_name + "," + 
+                                           c.Human.birth_year + "-" + c.Human.death_year;
+                                c.Pictures.forEach((picture) => {
+                                    pic_dict[picture.order] = picture.id;
+                                });
+
+                                nameList.push({
+                                    info: info,
+                                    path: pic_dict
+                                });
+
+                                if(groupmember_count == GroupMemberList.length){
+                                    group_count += 1;
+                                    if(group_count == selected_group_list.length){
+
+                                        console.log("---setDisplayGroup---");
+                                        console.log(nameList);
+                                        console.log("---setDisplayGroup---");
+
+                                        //send response
+                                        utils.sendResponse(res, 200, "success!");
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
             });
         });
     });
