@@ -3,34 +3,32 @@
  */
 
 $(function () {
+    var bar = new ProgressBar.Circle(loadingIndicator, {
+        color: '#3cb371',
+        // This has to be the same size as the maximum width to
+        // prevent clipping
+        strokeWidth: 4,
+        trailWidth: 1,
+        easing: 'easeInOut',
+        duration: 500,
+        text: {
+          autoStyleContainer: false
+        },
+        from: { color: '#228b22', width: 1 },
+        to: { color: '#3cb371', width: 4 },
+        // Set default step function for all animate calls
+        step: function(state, circle) {
+    	      circle.path.setAttribute('stroke', state.color);
+    	      circle.path.setAttribute('stroke-width', state.width);
 
-
-var bar = new ProgressBar.Circle(loadingIndicator, {
-    color: '#3cb371',
-    // This has to be the same size as the maximum width to
-    // prevent clipping
-    strokeWidth: 4,
-    trailWidth: 1,
-    easing: 'easeInOut',
-    duration: 500,
-    text: {
-      autoStyleContainer: false
-    },
-    from: { color: '#228b22', width: 1 },
-    to: { color: '#3cb371', width: 4 },
-    // Set default step function for all animate calls
-    step: function(state, circle) {
-	      circle.path.setAttribute('stroke', state.color);
-	      circle.path.setAttribute('stroke-width', state.width);
-
-	      var value = Math.round(circle.value() * 100);
-	      if (value === 0) {
-	        circle.setText('');
-	      } else {
-	        circle.setText(value);
-	      }
-    	}
-  	});
+    	      var value = Math.round(circle.value() * 100);
+    	      if (value === 0) {
+    	        circle.setText('');
+    	      } else {
+    	        circle.setText(value);
+    	      }
+        	}
+      	});
    bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif'; 
    bar.text.style.fontSize = '5rem';
    bar.animate(0.5);  // Number from 0.0 to 0.5
@@ -69,8 +67,8 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
     var isMePlaying = false;
     var urlCorrect = false;
     var enterPlay = function(){
-    	if(nameList.length <= 5){
-			alert("Can not play, lack of pating");
+    	if(gameList.length <= 5){
+			alert("Can not play, lack of painting");
 			return;
 		}
 		$("#playButton").hide();
@@ -79,34 +77,38 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 		$("#successName").hide();
 		$("#successImage").hide();
 		$("#wrongAlert").hide();
-		answerNameNumber = Math.floor((Math.random() * nameList.length));
+
+		answerNameNumber = 0;
 		answerOptionIndex = Math.floor((Math.random() * optionLength));
-		playedNameNumber.push(answerNameNumber);	
+		// playedNameNumber.push(answerNameNumber);	
 		randomOptions = [];
+
 		// dan.push("Name-I",[answerNameNumber]);
-		// ws.send(answerNameNumber);
-        socket.emit("Name-I", nameList[answerNameNumber]);
-		//socket.emit("Name-I", answerNameNumber);
+        socket.emit("Name-I", gameList[0]);
+
 		for (var i = 0; i < optionLength; i++) {
-			var r = Math.floor((Math.random() * nameList.length));
-			console.log(r);
+			var r = Math.floor((Math.random() * gameList.length));
+			// console.log(r);
 			while (randomOptions.contains(r) || r == answerNameNumber) {
-				r = Math.floor((Math.random() * nameList.length));
+				r = Math.floor((Math.random() * gameList.length));
 			}
 			randomOptions.push(r);
 		}
+
+        console.log(randomOptions);
+
 		for (var i = 0; i < optionLength; i++) {
 			if (i != answerOptionIndex) {
 				$("li").each(function (index) {
 					if (index == i) {
-						$(this).find("button").html(nameList[randomOptions[i]]);
+						$(this).find("button").html(gameList[randomOptions[i]]);
 					}
 				});
 			}
 			else {
 				$("li").each(function (index) {
 					if (index == i) {
-						$(this).find("button").html(nameList[answerNameNumber]);
+						$(this).find("button").html(gameList[answerNameNumber]);
 					}
 				});
 			}
@@ -122,7 +124,7 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 				chance_count = chance;
 				$("#successAlert").html("You got it! I am");
 				$("#successAlert").show();
-				$("#successName").html(nameList[answerNameNumber]);
+				$("#successName").html(gameList[answerNameNumber]);
 				$("#successName").show();
 				$("#successImage").show();
 				$("#wrongAlert").hide();
@@ -165,7 +167,7 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
 					chance_count = chance;
 					$("#successAlert").html("Oops... I am");
 					$("#successAlert").show();
-					$("#successName").html(nameList[answerNameNumber]);
+					$("#successName").html(gameList[answerNameNumber]);
 					$("#successName").show();
 					$("#wrongAlert").hide();
 					$("#options").hide();
@@ -219,6 +221,7 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
         $("#chance").show();
 
     };
+
 	$("#endButton").click(function(){
 		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
 	});
@@ -294,12 +297,12 @@ var bar = new ProgressBar.Circle(loadingIndicator, {
         }
     });
 
-	var checkTimeout = setInterval(function(){
-		var now = new Date();
-		if( (now - lastClickTime)/1000 >= timeout ){
-			console.log("timeout");
-			clearInterval(checkTimeout);
-			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-		}	
-	}, 1000);
+	// var checkTimeout = setInterval(function(){
+	// 	var now = new Date();
+	// 	if( (now - lastClickTime)/1000 >= timeout ){
+	// 		console.log("timeout");
+	// 		clearInterval(checkTimeout);
+	// 		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+	// 	}	
+	// }, 1000);
 });
