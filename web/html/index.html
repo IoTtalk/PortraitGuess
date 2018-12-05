@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/index.css">
     <script type="text/javascript">
-        var nameList = <%- JSON.stringify(nameList) %>;
+        var gameList = <%- JSON.stringify(gameList) %>;
         var webSocketPort = "<%- webSocketPort %>";
         var paintingIP = "<%- paintingIP %>";
         var webServerPort = "<%- webServerPort %>";
@@ -30,7 +30,7 @@
                 <div id="successName" class="alert alert-success" role="alert" style="display:none"></div>
                 <div id="wrongAlert" class="alert alert-danger" role="alert" style="display:none">Incorrect answer. Try again!</div>
                 <div id="chance" style="display:none"> </div>
-                <ul id="options" hidden>                    
+                <ul id="options" style="display:none">                    
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
                     <li><button class="optionBtn btn btn-danger center-block"></button></li>
