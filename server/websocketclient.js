@@ -44,7 +44,7 @@ WebSocketClient.prototype.send = function(data,option){
 	}
 }
 WebSocketClient.prototype.reconnect = function(e){
-	console.log(`WebSocketClient: retry in ${this.autoReconnectInterval}ms`,e);
+	// console.log(`WebSocketClient: retry in ${this.autoReconnectInterval}ms`,e);
         this.instance.removeAllListeners();
 	var that = this;
 	setTimeout(function(){
