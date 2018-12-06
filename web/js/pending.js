@@ -131,7 +131,7 @@ function pendingbtn_handler(){
                 add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
 
                 human_update_btn_handler(id, 0);
-                human_delete_btn_handler(id);
+                human_delete_btn_handler("pending", id);
 
                 //show edit modal
                 $('#editModal').modal("show");
@@ -220,13 +220,21 @@ function human_update_btn_handler(id, status){
     });
 }
 
-function human_delete_btn_handler(id){
+function human_delete_btn_handler(mode, id){
     $("#editModal_delete").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
 
         //popup confirm box
-        if(confirm("確定要刪除嗎?")){
+        var warning_str;
+        if(mode == "pending"){
+            warning_str = "確定要刪除嗎?";
+        }
+        else{
+            warning_str = "如果該人物在播放清單中\n可能會導致人數不足的錯誤\n請先確認該人物是否使用中喔\n確定要刪除嗎?";
+        }
+
+        if(confirm(warning_str)){
             //ajax
             $.ajax({
                 type: "POST",
