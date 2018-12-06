@@ -48,6 +48,7 @@ $(function () {
     const timeout = 60; // if over 150 seconds not click optionBtn then disconnect WebSocket	
     const optionLength = 5;  // 選項數目
     const chance = 5;  // 猜錯機會
+    var playButton_first_play = true;  // 檢查是不是第一次玩
     var chance_count = chance;
     Array.prototype.contains = function(obj) {
         var i = this.length;
@@ -66,7 +67,7 @@ $(function () {
     var randomOptions;
     var isMePlaying = false;
     var urlCorrect = false;
-    var enterPlay = function(){
+    var enterPlay = function(gameList){
     	if(gameList.length <= 5){
 			alert("Can not play, lack of painting");
 			return;
@@ -232,11 +233,11 @@ $(function () {
 		}
 		else{
 			isMePlaying = true;
-			enterPlay();
+            playButton_first_play = false;
+			enterPlay(gameList);
     	}
-		
-	});
-	window.onpageshow = function (event) {
+    });
+    window.onpageshow = function (event) {
         if (event.persisted) {
             window.location.reload();
         }
@@ -245,34 +246,47 @@ $(function () {
             // value 2 means "The page was accessed by navigating into the history"
             console.log('Reloading');
             window.location.reload(); // reload whole page
-
         }
-	socket.on("checkUrl", function(msg){
-		var url = window.location.href;
-		socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
+    socket.on("checkUrl", function(msg){
+        var url = window.location.href;
+        socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
     });
     socket.on("checkUrlACK", function(msg){
-    	urlCorrect = msg.urlCorrect;
-    	if(urlCorrect == false){
-    		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-    	}
-    	else{
-    		bar.animate(1.0);
-    		setTimeout(function(){
-	    		$("#playButton").show();
-	    		$("#loadingIndicator").hide();
-	    		$("#playButton").prop('disabled', false);
-	    		$("#endButton").prop('disabled', false);
-    		},1000);
-    	}
+        urlCorrect = msg.urlCorrect;
+        if(urlCorrect == false){
+            window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+        }
+        else{
+            bar.animate(1.0);
+            setTimeout(function(){
+               $("#playButton").show();
+                $("#loadingIndicator").hide();
+               $("#playButton").prop('disabled', false);
+                $("#endButton").prop('disabled', false);
+            },1000);
+        }
+    });
+    socket.on("NewGameRes", function(msg){
+        gameList = msg.gameList;
+        enterPlay(gameList);
+        console.log("get new game info");
     });
     $("#playButton").click(function () {
-    	if(urlCorrect == false)
-    		return;
-		if(isMePlaying == false)
-			socket.emit("playACK", "");
-		else
-			enterPlay();
+        if(urlCorrect == false){
+            return;
+        }
+        if(isMePlaying == false){
+            socket.emit("playACK", "");
+        }
+        else{
+            if(playButton_first_play){
+                enterPlay(gameList);
+                playButton_first_play = false;
+            }
+            else{
+                socket.emit("NewGameReq", "");
+            }
+        }
     });
     $("#voiceButton").click(function(){
         if (!('webkitSpeechRecognition' in window)) {
@@ -297,12 +311,12 @@ $(function () {
         }
     });
 
-	// var checkTimeout = setInterval(function(){
-	// 	var now = new Date();
-	// 	if( (now - lastClickTime)/1000 >= timeout ){
-	// 		console.log("timeout");
-	// 		clearInterval(checkTimeout);
-	// 		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-	// 	}	
-	// }, 1000);
+	var checkTimeout = setInterval(function(){
+		var now = new Date();
+		if( (now - lastClickTime)/1000 >= timeout ){
+			console.log("timeout");
+			clearInterval(checkTimeout);
+			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+		}	
+	}, 1000);
 });
