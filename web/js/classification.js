@@ -136,6 +136,11 @@ function updateOldGroup_btn_handler(){
             });
         });
 
+        if(newgroup_list.length <= 5){
+            alert("至少選取 6 位喔");
+            return false;
+        }
+
         console.log(update_group_id);
         console.log(newgroup_list);
 
@@ -279,6 +284,11 @@ function addNewGroup_btn_handler(){
                 question_id: $(this).attr("question_id")
             });
         });
+
+        if(newgroup_list.length <= 5){
+            alert("至少選取 6 位喔");
+            return false;
+        }
 
         console.log(newgroup_name);
         console.log(newgroup_list);
