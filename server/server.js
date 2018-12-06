@@ -115,7 +115,7 @@ ws2Painting.onopen = function(){
         });
 
         socket.on("NewGameReq", function(msg){
-            //[TODO] if user want to play game, generate game info for him
+            //if user want to play game, generate game info for him
 
             //ganerate new gameinfo
             gameInfo = utils.generateGame(nameList);
@@ -773,7 +773,7 @@ app.post('/humanUpdate', function (req, res) {
                                 count += 1;
                                 console.log(PictureData.id, " update success");
                                 if(count == PictureList.length){
-                                    //[TODO] update this human in and nameList
+                                    //update this human in and nameList
                                     index = nameIDList.indexOf(question_id);
                                     if(index > -1){ //exist
                                         //get new question path
