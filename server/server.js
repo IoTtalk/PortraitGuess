@@ -138,6 +138,7 @@ ws2Painting.onopen = function(){
     ]
 */
 var nameList = [],
+    nameIDList = [],
     gameInfo,
     gameList,
     gameAnswerPicPath,
@@ -157,7 +158,8 @@ app.use(bodyParser.json());
 
 // get initialize nameList and then start server
 db.Group.findAll( { where: {status: 1} }).then(GroupList => {
-    var group_count = 0;
+    var group_count = 0,
+        index;
 
     GroupList.forEach((GroupSetItem) => { 
         var GroupData = GroupSetItem.get({ plain: true });
@@ -187,10 +189,22 @@ db.Group.findAll( { where: {status: 1} }).then(GroupList => {
                             pic_dict[picture.order] = picture.id;
                         });
 
-                        nameList.push({
-                            info: info,
-                            path: pic_dict
-                        });
+                        //user nameIDList to check duplicate,
+                        //if false, push ID into IDlist and push data into nameList
+                        //if true,  do nothing
+
+                        index = nameIDList.indexOf(GroupMemberData.question_id);
+                        if (index > -1) { //duplicate
+                            console.log("got duplicate question_id, pass it !");
+                        }
+                        else{
+                            nameIDList.push(GroupMemberData.question_id);
+
+                            nameList.push({
+                                info: info,
+                                path: pic_dict
+                            });
+                        }
 
                         if(groupmember_count == GroupMemberList.length){
                             group_count += 1;
@@ -718,7 +732,8 @@ app.post('/humanUpdate', function (req, res) {
         new_birth_year = user_update_data.birth_year,
         new_death_year = user_update_data.death_year,
         new_img_order = user_update_data.img_order,
-        new_selected_category = user_update_data.selected_category;
+        new_selected_category = user_update_data.selected_category,
+        index;
 
     //update this human for related db
     db.Question.update( //update human status
@@ -758,6 +773,26 @@ app.post('/humanUpdate', function (req, res) {
                                 count += 1;
                                 console.log(PictureData.id, " update success");
                                 if(count == PictureList.length){
+                                    //[TODO] update this human in and nameList
+                                    index = nameIDList.indexOf(question_id);
+                                    if(index > -1){ //exist
+                                        //get new question path
+                                        nameList[index].path = {}; //flush old pic path
+                                        for(var key in new_img_order) {
+                                            nameList[index].path[new_img_order[key]] = key;
+                                        }
+
+                                        //set new question info
+                                        nameList[index].info = new_chi_name + "," + new_eng_name + "," + 
+                                                               new_birth_year + "-" + new_death_year;
+
+                                        //set new question path
+                                        console.log("---update question_id in nameList---");
+                                        console.log(nameList[index].info);
+                                        console.log(nameList[index].path);
+                                        // console.log(nameList);
+                                    }
+
                                     //send response
                                     utils.sendResponse(res, 200, "success!");
                                 }
@@ -776,7 +811,8 @@ app.post('/humanUpdate', function (req, res) {
 
 // post human delete API
 app.post('/humanDelete', function(req, res){
-    var delete_human_id = req.body.delete_human_id;
+    var delete_human_id = req.body.delete_human_id,
+        index;
 
     /* delete this human from all related tables */
     db.GroupMember.destroy({ //destroy this human from group
@@ -806,6 +842,15 @@ app.post('/humanDelete', function(req, res){
                         console.log("---delete---")
                         console.log("delete ", delete_human_id, " success");
                         console.log("---delete---")
+
+                        //remove this human from nameIDList and nameList
+                        index = nameIDList.indexOf(delete_human_id);
+                        if(index > -1){ //exist
+                            nameIDList.splice(index, 1);
+                            nameList.splice(index, 1);
+                            console.log("delete this question_id from nameList, nameIDList");
+                            // console.log(nameList);
+                        }
 
                         //send response
                         utils.sendResponse(res, 200, "success!");
@@ -912,13 +957,15 @@ app.post('/setDisplayGroup', function(req, res){
     var selected_group_list = req.body.selected_group_list;
 
     //flush nameList to null
-    nameList = [];
+    nameList = [],
+    nameIDList = [];
 
     db.Group.update( //let all group set to unuse
         { status: 0 },
         { where: {status: 1} }
     ).then(function(){
-        var group_count = 0;
+        var group_count = 0,
+            index;
 
         selected_group_list.forEach((selected_group) =>{ //set selected group to use
             db.Group.update(
@@ -951,10 +998,22 @@ app.post('/setDisplayGroup', function(req, res){
                                     pic_dict[picture.order] = picture.id;
                                 });
 
-                                nameList.push({
-                                    info: info,
-                                    path: pic_dict
-                                });
+                                //user nameIDList to check duplicate,
+                                //if false, push ID into IDlist and push data into nameList
+                                //if true,  do nothing
+
+                                index = nameIDList.indexOf(GroupMemberData.question_id);
+                                if (index > -1) { //duplicate
+                                    console.log("got duplicate question_id, pass it !");
+                                }
+                                else{
+                                    nameIDList.push(GroupMemberData.question_id);
+
+                                    nameList.push({
+                                        info: info,
+                                        path: pic_dict
+                                    });
+                                }
 
                                 if(groupmember_count == GroupMemberList.length){
                                     group_count += 1;
