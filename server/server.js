@@ -114,13 +114,15 @@ ws2Painting.onopen = function(){
             console.log("Wrong");
         });
 
-        socket.on("NextGame", function(msg){
-            //[TODO] if user want to play another game, generate game info for him
+        socket.on("NewGameReq", function(msg){
+            //[TODO] if user want to play game, generate game info for him
 
             //ganerate new gameinfo
             gameInfo = utils.generateGame(nameList);
             gameList = gameInfo[0];
             gameAnswerPicPath = gameInfo[1];
+
+            socket.emit("NewGameRes", {"gameList": gameList});
 
             // dai.push("NextGame", [1]);
             console.log("NextGame");
