@@ -54,7 +54,7 @@ function approvedbtn_handler(){
                 add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
 
                 human_update_btn_handler(id, 1);
-                human_delete_btn_handler(id);
+                human_delete_btn_handler("approved", id);
 
                 //show edit modal
                 $('#editModal').modal("show");
