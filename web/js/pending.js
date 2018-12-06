@@ -210,6 +210,11 @@ function human_update_btn_handler(id, status){
                     //remove this human from pending table
                     $('#'+ id).remove();
                 }
+                else{
+                    //set new human info into approvd table
+                    var new_info = chi_name + "," + eng_name + "," + birth_year + "-" + death_year;
+                    $('#'+ id).find('td:first-child').html(new_info);
+                }
 
                 //close edit modal
                 $('#editModal').modal("hide");
