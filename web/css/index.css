@@ -47,6 +47,7 @@ html, body, .container-table {
 }
 #options{
     list-style-type: none;
+    text-align: center;
 }
 #options li{
     margin-top: 20px;
@@ -108,4 +109,6 @@ ul{
     white-space:normal !important;
     word-wrap: break-word; 
 }
-
+#btns{
+    text-align: center;
+}
