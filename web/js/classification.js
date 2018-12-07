@@ -394,7 +394,7 @@ function option_handler(){
         //show human category with corresponding human
         $.ajax({
             type: "POST",
-            url: location.origin + "/getHumanCategory",
+            url: location.origin + "/getUsingHumanCategory",
             cache: false,
             contentType: "application/json",
             dataType: 'json',
