@@ -161,6 +161,14 @@ db.Group.findAll( { where: {status: 1} }).then(GroupList => {
     var group_count = 0,
         index;
 
+    //check there is no initial nameList (no using group)
+    if(GroupList.length == 0){
+        //start server
+        console.log('---server start with out using group---');
+        http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+        return;
+    }
+
     GroupList.forEach((GroupSetItem) => { 
         var GroupData = GroupSetItem.get({ plain: true });
 
@@ -296,6 +304,40 @@ app.get("/*", function(req, res){
 
 // post get Human Category API
 app.post("/getHumanCategory", function(req, res){
+    var humanCategory_list = [];
+
+    db.Class.findOne({ where: {name: 'human'} }).then(function(c){
+        if(c != null){
+            var count = 0;
+
+            db.Category.findAll({ 
+                where: { ClassId: c.id }
+            }).then(CategoryList => {
+                CategoryList.forEach((CategorySetItem) => {
+                    var CategoryData = CategorySetItem.get({ plain: true });
+
+                    count += 1;
+
+                    //push into list
+                    humanCategory_list.push({
+                        id : CategoryData.id,
+                        name : CategoryData.name
+                    });
+
+                    if(count == CategoryList.length){
+                        console.log(humanCategory_list);
+
+                        //response
+                        utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
+                    }
+                });
+            });
+        }
+    });
+});
+
+// post get Using Human Category API
+app.post("/getUsingHumanCategory", function(req, res){
     var humanCategory_list = [];
 
     db.Class.findOne({ where: {name: 'human'} }).then(function(c){
