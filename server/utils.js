@@ -72,50 +72,70 @@ var auth = function(req, res, next){
     }
 }
 
-var generateGame = function(nameList){
+var generateGame = function(preAnswerID, answerIDList, nameIDList, nameList){
     var option_info_list = [],
-        option_info, duplicate_flag;
+        option_info, duplicate_flag, index, answerID;
 
     if(nameList.length <= 5){
-        return [nameList, ""];
+        console.log("nameList less then 5");
+        return [nameList, "", ""];
     }
 
-    do{
-        //get randon nameList info
-        option_info = nameList[Math.floor(Math.random() * nameList.length)].info;
-        
-        //check if duplicate info
-        duplicate_flag = false;
-        for(var i = 0; i < option_info_list.length; i++){
-            if(option_info_list[i] == option_info){
-                duplicate_flag = true;
-                break;
-            }
-        }
-
-        //put randon nameList info into list
-        if(!duplicate_flag){
-            option_info_list.push(option_info);
-        }
-    }while(option_info_list.length <= 5);
     
-    //find answer picture path
-    var gameAnswerPicPathList = [];
-    for(var i = 0; i < nameList.length; i++){
-        if(nameList[i].info == option_info_list[0]){
-            var total_pic = Object.keys(nameList[i].path).length;
-            for(var j = 1; j <= total_pic; j++){
-                gameAnswerPicPathList.push(nameList[i].path[j]);
-            }
-            break;
+    //generate answerID
+    do{
+        answerID = answerIDList[Math.floor(Math.random() * answerIDList.length)];
+    } while(answerID == preAnswerID);
+
+    //check answer in the nameList
+    index = nameIDList.indexOf(answerID);
+    if(index > -1){ //exist
+        //get answer info
+        var answer_info = nameList[index].info;
+
+        //get answer path
+        var gameAnswerPicPathList = [];
+        var total_pic = Object.keys(nameList[index].path).length;
+        for(var j = 1; j <= total_pic; j++){
+            gameAnswerPicPathList.push(nameList[index].path[j]);
         }
+
+        do{
+            //get randon nameList info
+            option_info = nameList[Math.floor(Math.random() * nameList.length)].info;
+            if(option_info == answer_info){
+                continue;
+            }
+            
+            //check if duplicate info
+            duplicate_flag = false;
+            for(var i = 0; i < option_info_list.length; i++){
+                if(option_info_list[i] == option_info){
+                    duplicate_flag = true;
+                    break;
+                }
+            }
+
+            //put randon nameList info into list
+            if(!duplicate_flag){
+                option_info_list.push(option_info);
+            }
+        } while(option_info_list.length <= 4);
+
+        //append the answer info in option_info_list[0]
+        option_info_list.unshift(answer_info);
+
+        console.log("---game options---\n", option_info_list);
+        console.log("---game answer---\n", option_info_list[0]);
+        console.log("---game answer picture path---\n",gameAnswerPicPathList);
+
+        return [option_info_list, gameAnswerPicPathList, answerID];
+
     }
-
-    console.log("---game options---\n", option_info_list);
-    console.log("---game answer---\n", option_info_list[0]);
-    console.log("---game answer picture path---\n",gameAnswerPicPathList);
-
-    return [option_info_list, gameAnswerPicPathList];
+    else{
+        console.log("answerID is not in the nameList");
+        return [[], "", ""];
+    }
 }
 
 module.exports = {
