@@ -112,7 +112,7 @@ $(function () {
                 console.log(group_list);
 
                 $("#display").html(render_classification_div(render_classification_selector(group_list)));
-                option_handler();
+                option_handler(group_list);
             }
         });
     });
