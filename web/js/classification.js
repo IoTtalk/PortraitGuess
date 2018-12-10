@@ -6,8 +6,13 @@ function render_classification_selector(group_list){
     
     group_list.forEach((group) => {
         if(group.id != "none"){
+            var option_name = group.name;
+            if(group.status){
+                option_name += '(使用中)';
+            }
+
             classification_selector_str += '\
-                <option class="group_option" value="' + group.id + '">' + group.name + '</option>\
+                <option class="group_option" value="' + group.id + '">' + option_name + '</option>\
             ';
         }
     });
@@ -168,11 +173,20 @@ function updateOldGroup_btn_handler(){
     });
 }
 
-function deleteNow_btn_handler(){
+function deleteNow_btn_handler(group_list){
     $("#deleteNow_btn").on('click', function(){
+        var delete_group_id = $("#grouplist_select").val();
+
+        for(var i = 0; i < group_list.length; i++){
+            if(group_list[i].id == delete_group_id && 
+               group_list[i].status){
+                alert("該群組正在使用中，無法刪除\n請至'播放清單'將其取消勾選喔!");
+                return false;
+            }
+        }
+
         //popup confirm box
         if(confirm("確定要刪除嗎?")){
-            var delete_group_id = $("#grouplist_select").val();
 
             //ajax
             $.ajax({
@@ -333,7 +347,7 @@ function abortNow_btn_handler(){
     });
 }
 
-function option_handler(){
+function option_handler(group_list){
     $("#grouplist_select").on("change", function(){
         var option = $(this).val();
         // console.log($(this).val());
@@ -386,7 +400,7 @@ function option_handler(){
 
                     //[TODO] update and delete bun handler
                     updateOldGroup_btn_handler();
-                    deleteNow_btn_handler();
+                    deleteNow_btn_handler(group_list);
                 }
             });
         }
