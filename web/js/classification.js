@@ -258,31 +258,34 @@ function class_card_btn_handler(){
         var category_id = this.id;
         // console.log(this.id);
 
-        $.ajax({
-            type: "POST",
-            url: location.origin + "/getHumanByCategory",
-            cache: false,
-            data: JSON.stringify(
-            {
-                category_id : category_id
-            }),
-            contentType: "application/json",
-            error: function(e){
-                alert("something wrong");
-                console.log(e);
-            },
-            success: function(data){
-                var categoryHuman_list = JSON.parse(data);
-                console.log(categoryHuman_list);
+        // console.log($(this).hasClass("collapsed"));
+        if($(this).hasClass("collapsed")){
+            $.ajax({
+                type: "POST",
+                url: location.origin + "/getHumanByCategory",
+                cache: false,
+                data: JSON.stringify(
+                {
+                    category_id : category_id
+                }),
+                contentType: "application/json",
+                error: function(e){
+                    alert("something wrong");
+                    console.log(e);
+                },
+                success: function(data){
+                    var categoryHuman_list = JSON.parse(data);
+                    console.log(categoryHuman_list);
 
-                //append into table
-                var target_table = "#" + category_id + "_class_table";
-                $(target_table).html(render_categoryHuman_table(category_id, categoryHuman_list));
-                
-                //add_btn_handler
-                addhuman_btn_handler();
-            }
-        });
+                    //append into table
+                    var target_table = "#" + category_id + "_class_table";
+                    $(target_table).html(render_categoryHuman_table(category_id, categoryHuman_list));
+                    
+                    //add_btn_handler
+                    addhuman_btn_handler();
+                }
+            });
+        }
     });
 }
 
