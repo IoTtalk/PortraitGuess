@@ -59,7 +59,8 @@ function setupEditModal(humanData, status){
     for(var i = 0; i < picture_list.length; i++){
         picture_str += '\
             <tr>\
-                <td><img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail"></td>\
+                <td width="50%"><img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail"></td>\
+                <td width="30%"></td>\
                 <td>\
                     <ul class="list-group">\
                         <li class="list-group-item" onclick="picture_order_move(this, true)">&#9650;</li>\
@@ -156,8 +157,13 @@ function human_update_btn_handler(id, status){
             selected_category = [];
 
         //chech input
-        if($.trim(chi_name) == '' || $.trim(eng_name) == '' || $.trim(birth_year) == ''){
-            alert("必填欄位不得空白");
+        if($.trim(chi_name) == '' && $.trim(eng_name) == ''){
+            alert("中英文名字須至少填入一個");
+            return false;
+        }
+
+        if($.trim(birth_year) == ''){
+            alert("請填入出生年份");
             return false;
         }
 
