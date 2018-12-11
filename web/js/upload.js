@@ -23,15 +23,15 @@ function render_upload_div(category_table_str){
         <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
             <div class="form-group margin_center">\
                 <h3 class="required">輸入人物中文名字</h3>\
-                <input type="text" id="chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世" required/>\
+                <input type="text" id="chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世"/>\
             </div>\
             <div class="form-group margin_center">\
                 <h3 class="required">輸入人物英文名字</h3>\
-                <input type="text" id="eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I" required/>\
+                <input type="text" id="eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I"/>\
             </div>\
             <div class="form-group margin_center">\
                 <h3 class="required">輸入人物出生年份(西元)</h3>\
-                <input type="text" id="birth_year" class="form-control" size="35" placeholder="ex: 1533" required/>\
+                <input type="text" id="birth_year" class="form-control" size="35" placeholder="ex: 1533"/>\
             </div>\
             <div class="form-group margin_center">\
                 <h3>輸入人物逝世年份(西元)</h3>\
@@ -176,8 +176,12 @@ function uplaod_btn_handler(){
             selected_category = [];
 
         //chech input
-        if($.trim(chi_name) == '' || $.trim(eng_name) == '' || $.trim(birth_year) == ''){
-            alert("必填欄位不得空白");
+        if($.trim(chi_name) == '' && $.trim(eng_name) == ''){
+            alert("中英文名字須至少填入一個");
+            return false;
+        }
+        if($.trim(birth_year) == ''){
+            alert("請填入出生年份");
             return false;
         }
         else if(files.length < 6){ //check file input
