@@ -711,22 +711,21 @@ app.post('/getHumanByCategory', function(req,res){
                 where: {id: QuestionCategoryData.QuestionId, status: 1},
                 include: { model: db.Human },
             }).then(function(c){
+                count += 1;
+
                 if(c != null){
-                    if(c.status){
-                        humanCategory_list.push({
-                            id: c.id,
-                            info: c.Human.chi_name + "," + c.Human.eng_name + "," + c.Human.birth_year + "-" + c.Human.death_year
-                        })
-                    }
+                    humanCategory_list.push({
+                        id: c.id,
+                        info: c.Human.chi_name + "," + c.Human.eng_name + "," + c.Human.birth_year + "-" + c.Human.death_year
+                    });
+                }
 
-                    count += 1;
-                    if(count == QuestionCategoryList.length){
-                        console.log(humanCategory_list);
-                        console.log("done");
+                if(count == QuestionCategoryList.length){
+                    console.log(humanCategory_list);
+                    console.log("done");
 
-                        //response
-                        utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
-                    }
+                    //response
+                    utils.sendResponse(res, 200, JSON.stringify(humanCategory_list));
                 }
             });
         });
@@ -945,57 +944,113 @@ app.post('/humanUpdate', function (req, res) {
 // post human delete API
 app.post('/humanDelete', function(req, res){
     var delete_human_id = req.body.delete_human_id,
-        index;
+        index, using_flag = false;
 
     /* delete this human from all related tables */
-    db.GroupMember.destroy({ //destroy this human from group
-        where: { question_id: delete_human_id }, 
-        force:true 
-    }).then(function(){
-        //destroy this human from picture
-        db.Picture.destroy({ //[TODO] unlink those file from server
-            where: { QuestionId: delete_human_id }, 
-            force:true 
-        }).then(function(){
-            //destroy this human from human
-            db.Human.destroy({ 
-                where: { QuestionId: delete_human_id }, 
-                force:true 
-            }).then(function(){
-                //destroy this human from category
-                db.QuestionCategory.destroy({ 
-                    where: { QuestionId: delete_human_id }, 
-                    force:true 
-                }).then(function(){
-                    //destroy this human from question
-                    db.Question.destroy({ 
-                        where: { id: delete_human_id }, 
-                        force:true 
-                    }).then(function(){
-                        console.log("---delete---")
-                        console.log("delete ", delete_human_id, " success");
-                        console.log("---delete---")
 
-                        //remove this human from nameIDList and nameList
-                        index = nameIDList.indexOf(delete_human_id);
-                        if(index > -1){ //exist
-                            nameIDList.splice(index, 1);
-                            nameList.splice(index, 1);
-                            console.log("delete this question_id from nameList, nameIDList");
-                            // console.log(nameList);
-                        }
+    //check this human using or not
+    db.Group.findAll({
+        where: {status: 1}
+    }).then(GroupList => { //get all using Group
+        var count = 0;
 
-                        //remove this human from answerIDList
-                        index = answerIDList.indexOf(delete_human_id);
-                        if(index > -1){ // exist
-                            answerIDList.splice(index, 1);
-                            console.log("delete this question_id from answerIDList");
-                        }
+        GroupList.forEach((GroupSetItem) => {
+            var GroupData = GroupSetItem.get({ plain: true });
+            
+            //find this human in those using Group
+            db.GroupMember.findOne({
+                where:{ 
+                    question_id: delete_human_id, 
+                    GroupId: GroupData.id
+                }
+            }).then(function(c){
+                count += 1;
 
-                        //send response
-                        utils.sendResponse(res, 200, "success!");
-                    });
-                });
+                if(c != null){
+                    //this question is using now cannot be deleted
+                    using_flag = true;
+                }
+
+                if(count == GroupList.length){
+                    //search done
+                    if(using_flag){
+                        console.log(delete_human_id, "is using, cannot be deleted");
+
+                        //send response "OPERATION DENIED"
+                        utils.sendResponse(res, 200, JSON.stringify({using: 1}));
+                    }
+                    else{
+                        //delete, send response "SUCCESS"
+                        console.log(delete_human_id, "is safe to be deleted");
+                        
+                        //[TODO] unlink related picture files from server
+                        db.Picture.findAll({
+                            where: {QuestionId: delete_human_id}
+                        }).then(PictureList => {
+                            var pic_count = 0;
+
+                            PictureList.forEach((PictureSetItem) => {
+                                var PictureData = PictureSetItem.get({ plain: true });
+                                var path = '../web/img/' + PictureData.id;
+                                fs.unlink(path, (err) => {
+                                    if(err) throw err;
+                                    console.log(PictureData.id, ' was deleted');
+                                });
+
+                                pic_count += 1;
+                                if(pic_count == PictureList.length){
+                                    //delete all picture files from server storage+
+                                    console.log("all pictures have been successfully deleted from server storage");
+                                    db.Picture.destroy({ 
+                                        where: { QuestionId: delete_human_id }, 
+                                        force:true 
+                                    }).then(function(){
+                                        //destroy this human from human
+                                        db.Human.destroy({ 
+                                            where: { QuestionId: delete_human_id }, 
+                                            force:true 
+                                        }).then(function(){
+                                            //destroy this human from category
+                                            db.QuestionCategory.destroy({ 
+                                                where: { QuestionId: delete_human_id }, 
+                                                force:true 
+                                            }).then(function(){
+                                                //destroy this human from question
+                                                db.Question.destroy({ 
+                                                    where: { id: delete_human_id }, 
+                                                    force:true 
+                                                }).then(function(){
+                                                    console.log("---delete---")
+                                                    console.log("delete ", delete_human_id, " success");
+                                                    console.log("---delete---")
+
+                                                    //remove this human from nameIDList and nameList
+                                                    index = nameIDList.indexOf(delete_human_id);
+                                                    if(index > -1){ //exist
+                                                        nameIDList.splice(index, 1);
+                                                        nameList.splice(index, 1);
+                                                        console.log("delete this question_id from nameList, nameIDList");
+                                                        // console.log(nameList);
+                                                    }
+
+                                                    //remove this human from answerIDList
+                                                    index = answerIDList.indexOf(delete_human_id);
+                                                    if(index > -1){ // exist
+                                                        answerIDList.splice(index, 1);
+                                                        console.log("delete this question_id from answerIDList");
+                                                    }
+
+                                                    //[TODO] send response
+                                                    utils.sendResponse(res, 200, JSON.stringify({using: 0}));
+                                                });
+                                            });
+                                        });
+                                    });
+                                }
+                            });
+                        });
+                    }
+                }
             });
         });
     });
