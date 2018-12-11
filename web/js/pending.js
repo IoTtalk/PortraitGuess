@@ -58,9 +58,9 @@ function setupEditModal(humanData, status){
     var picture_list = humanData.picture;
     for(var i = 0; i < picture_list.length; i++){
         picture_str += '\
-            <tr>\
-                <td width="50%"><img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail"></td>\
-                <td width="30%"></td>\
+            <tr style="height:20px">\
+                <td width="40%"><img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail"></td>\
+                <td width="40%"></td>\
                 <td>\
                     <ul class="list-group">\
                         <li class="list-group-item" onclick="picture_order_move(this, true)">&#9650;</li>\
@@ -237,13 +237,14 @@ function human_delete_btn_handler(mode, id){
         event.stopPropagation();
 
         //popup confirm box
-        var warning_str;
-        if(mode == "pending"){
-            warning_str = "確定要刪除嗎?";
-        }
-        else{
-            warning_str = "如果該人物在播放清單中\n可能會導致人數不足的錯誤\n請先確認該人物是否使用中喔\n確定要刪除嗎?";
-        }
+        // var warning_str;
+        // if(mode == "pending"){
+        //     warning_str = "確定要刪除嗎?";
+        // }
+        // else{
+        //     warning_str = "如果該人物在播放清單中\n可能會導致人數不足的錯誤\n請先確認該人物是否使用中喔\n確定要刪除嗎?";
+        // }
+        var warning_str = "確定要刪除嗎?";
 
         if(confirm(warning_str)){
             //ajax
@@ -261,13 +262,21 @@ function human_delete_btn_handler(mode, id){
                     console.log(e);
                 },
                 success: function(data){
-                    //remove this human from pending table
-                    $('#'+ id).remove();
+                    var response = JSON.parse(data);
 
-                    //close edit modal
-                    $('#editModal').modal("hide");
+                    if(response.using){
+                        alert("該人物正在使用中,無法刪除\n請編輯使用中的群組!");
 
-                    alert("刪除成功!!");
+                    }
+                    else{
+                        //remove this human from pending table
+                        $('#'+ id).remove();
+
+                        //close edit modal
+                        $('#editModal').modal("hide");
+
+                        alert("刪除成功!!");
+                    }
                 }
             });
         }
