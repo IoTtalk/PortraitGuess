@@ -2,8 +2,10 @@ function render_pending_div(pendingHuman_list){
     var pending_table_str = '<table class="table table-hover">';
     pendingHuman_list.forEach((pendingHuman) => {
         var id = pendingHuman["id"],
-            info = pendingHuman["info"]["chi_name"] + " , " + pendingHuman["info"]["eng_name"] + " , " +
-                   pendingHuman["info"]["birth_year"] + " - " + pendingHuman["info"]["death_year"];
+            info;
+
+            info = getHumanInfoStr(pendingHuman["info"]["chi_name"], pendingHuman["info"]["eng_name"], 
+                                   pendingHuman["info"]["birth_year"], pendingHuman["info"]["death_year"]);
 
         pending_table_str += '\
             <tr id="' + id + '">\
@@ -218,7 +220,7 @@ function human_update_btn_handler(id, status){
                 }
                 else{
                     //set new human info into approvd table
-                    var new_info = chi_name + " , " + eng_name + " , " + birth_year + " - " + death_year;
+                    var new_info = getHumanInfoStr(chi_name, eng_name, birth_year, death_year);
                     $('#'+ id).find('td:first-child').html(new_info);
                 }
 
