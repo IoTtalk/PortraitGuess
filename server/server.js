@@ -716,7 +716,8 @@ app.post('/getHumanByCategory', function(req,res){
                 if(c != null){
                     humanCategory_list.push({
                         id: c.id,
-                        info: c.Human.chi_name + "," + c.Human.eng_name + "," + c.Human.birth_year + "-" + c.Human.death_year
+                        info: utils.getHumanInfoStr(c.Human.chi_name, c.Human.eng_name, 
+                                                    c.Human.birth_year, c.Human.death_year)
                     });
                 }
 
@@ -1179,6 +1180,7 @@ app.post('/getGroupMember', function(req, res){
             db.Human.findOne({ 
                 where: {QuestionId: GroupMemberData.question_id} 
             }).then(function(c){
+                count += 1;
                 if(c != null){
                     groupMember_list.push({
                         question_id: GroupMemberData.question_id,
@@ -1187,16 +1189,14 @@ app.post('/getGroupMember', function(req, res){
                         birth_year: c.birth_year,
                         death_year: c.death_year
                     });
-
-                    count += 1;
-                    if(count == GroupMemberList.length){
-                        console.log('---getGroupMember---');
-                        console.log(groupMember_list);
-                        console.log('---getGroupMember---');
-                        
-                        //send response
-                        utils.sendResponse(res, 200, JSON.stringify(groupMember_list));
-                    }
+                }
+                if(count == GroupMemberList.length){
+                    console.log('---getGroupMember---');
+                    console.log(groupMember_list);
+                    console.log('---getGroupMember---');
+                    
+                    //send response
+                    utils.sendResponse(res, 200, JSON.stringify(groupMember_list));
                 }
             });
         });
