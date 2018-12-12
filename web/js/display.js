@@ -35,7 +35,7 @@ function render_groupmember_table(groupMembertList){
         info = "";
 
     groupMembertList.forEach((content) => {
-        info = content.chi_name + ',' + content.eng_name + ',' + content.birth_year + '-' + content.death_year;
+        info = getHumanInfoStr(content.chi_name, content.eng_name, content.birth_year, content.death_year);
         groupmember_table_str += '\
             <tr><td><label>' + info + '</label></td></tr>\
         ';
