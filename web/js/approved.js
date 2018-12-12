@@ -2,8 +2,10 @@ function render_approved_div(approvedHuman_list){
     var approved_table_str = '<table class="table table-hover">';
     approvedHuman_list.forEach((approvedHuman) => {
         var id = approvedHuman["id"],
-            info = approvedHuman["info"]["chi_name"] + " , " + approvedHuman["info"]["eng_name"] + " , " +
-                   approvedHuman["info"]["birth_year"] + " - " + approvedHuman["info"]["death_year"];
+            info;
+
+            info = getHumanInfoStr(approvedHuman["info"]["chi_name"], approvedHuman["info"]["eng_name"],
+                                   approvedHuman["info"]["birth_year"], approvedHuman["info"]["death_year"]);
 
         approved_table_str += '\
             <tr id="' + id + '">\
