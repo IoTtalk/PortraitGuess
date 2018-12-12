@@ -148,8 +148,11 @@ function add_new_category_btn_handler(btnId, tableId,){
 }
 
 //upload success handler
-function handleUploadSuccess(photo_status) {
-    if(photo_status){
+function handleUploadSuccess(data) {
+    var res = JSON.parse(data);
+    console.log(res.photo_status);
+
+    if(res.photo_status){
         alert("上傳成功!!\n回首頁");
         location.reload();
     }
@@ -221,6 +224,12 @@ function uplaod_btn_handler(){
         for(var i = 0; i < files.length; i++){
             var file;
             file = files[i];
+
+            if(file.name == ".DS_Store"){
+                alert("上傳失敗QQ\n有檔案格式不合!!");
+                return false;
+            }
+
             formData.append('photos[]', file, file.name);
         }
 
