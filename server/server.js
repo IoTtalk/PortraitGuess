@@ -246,6 +246,14 @@ db.Class.findOne({ where: {name : "human"}}).then(function(c){
                 { model: db.Picture }
             ]
         }).then(QuestionList => {
+
+            //first server start case
+            if(QuestionList.length == 0){
+                //get answerIDList from using Group and start server
+                generateAnswerIDListAndThenStartServer();
+                return true;
+            }
+
             var count = 0
 
             QuestionList.forEach((QuestionSetItem) => {
@@ -571,10 +579,10 @@ app.post('/humanUpload', function (req, res) {
             photo_status = false;
             
             //delete failed file
-            fs.unlink(file.path, (err) => {
-                if(err) throw err;
-                console.log(file.name, ' was deleted');
-            });
+            // fs.unlink(file.path, (err) => {
+            //     if(err) throw err;
+            //     console.log(file.name, ' was deleted');
+            // });
         }
     });
 
@@ -608,46 +616,25 @@ app.post('/humanUpload', function (req, res) {
                     };
                     db.Question.create(data, {include: [db.QuestionCategory, db.Human, db.Picture]}).then(function(){
                         console.log(question_id, " create!!");
+                        //send success response
+                        utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
                     });
-
-                    // //append this human into nameIDList and nameList
-                    // var path_dict = {},
-                    //     info_str; //set pic path
-
-                    // for(var key in img_order) {
-                    //     path_dict[img_order[key]] = key;
-                    // }
-
-                    // //set question info
-                    // info_str = chi_name + "," + eng_name + "," + 
-                    //            birth_year + "-" + death_year;
-
-
-                    // nameIDList.push(question_id);
-                    // nameList.push({
-                    //     info: info_str,
-                    //     path: path_dict
-                    // });
-                    // console.log('---human add into nameList---');
-                    // console.log(info_str);
-                    // console.log(path_dict);
-                }
-                else{
-                    console.log("upload failed QQ");
                 }
             });
         }
         else{
             //delete all files
+            console.log(photo_path);
             for(var path in photo_path){
                 fs.unlink(path, (err) => {
-                    if(err) throw err;
+                    if(err){
+                        console.log(path, " cannot be delete Q");
+                    }
                 });
             }
+            //send failed response
+            utils.sendResponse(res, 200, JSON.stringify({photo_status: 0}));
         }
-
-        //response
-        utils.sendResponse(res, 200, JSON.stringify(photo_status));
     });
 });
 
@@ -994,8 +981,11 @@ app.post('/humanDelete', function(req, res){
                                 var PictureData = PictureSetItem.get({ plain: true });
                                 var path = '../web/img/' + PictureData.id;
                                 fs.unlink(path, (err) => {
-                                    if(err) throw err;
-                                    console.log(PictureData.id, ' was deleted');
+                                    if(err){
+                                        console.log(PictureData.id, ' cannot be deleted');
+                                    }else{
+                                        console.log(PictureData.id, ' was deleted');
+                                    }
                                 });
 
                                 pic_count += 1;
