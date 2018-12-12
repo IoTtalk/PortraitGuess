@@ -22,15 +22,15 @@ function render_upload_div(category_table_str){
         <br>\
         <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
             <div class="form-group margin_center">\
-                <h3 class="required">輸入人物中文名字</h3>\
+                <h3>輸入人物中文名字</h3>\
                 <input type="text" id="chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世"/>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">輸入人物英文名字</h3>\
+                <h3>輸入人物英文名字</h3>\
                 <input type="text" id="eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I"/>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">輸入人物出生年份(西元)</h3>\
+                <h3>輸入人物出生年份(西元)</h3>\
                 <input type="text" id="birth_year" class="form-control" size="35" placeholder="ex: 1533"/>\
             </div>\
             <div class="form-group margin_center">\
@@ -38,7 +38,7 @@ function render_upload_div(category_table_str){
                 <input type="text" id="death_year" class="form-control" size="35" placeholder="ex: 1603"/>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">選取資料夾</h3>\
+                <h3>選取資料夾</h3>\
                 <p class="help-block">支援檔案格式: jpg, jpeg, png</p>\
                 <p class="help-block">拉動圖片以排序(由左至右，由上至下)</p>\
                 <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple" webkitdirectory/>\
@@ -50,7 +50,7 @@ function render_upload_div(category_table_str){
             </div>\
             <div class="form-group margin_center">\
                 <div class="row">\
-                    <h3 class="required col-md-10" >選擇分類</h3>\
+                    <h3 class="col-md-10" >選擇分類</h3>\
                     <div class="col-md-2"><input type="button" value="新增" id="add_new_category" class="btn btn-secondary"></div>\
                 </div>\
                 <div id="category_table" class="category_table">\
