@@ -138,6 +138,22 @@ var generateGame = function(preAnswerID, answerIDList, nameIDList, nameList){
     }
 }
 
+var getHumanInfoStr = function(chi_name, eng_name, birth_year, death_year){
+    var info = "";
+
+    if(chi_name != ""){
+        info = info + chi_name + " , "
+    }
+
+    if(eng_name != ""){
+        info = info + eng_name + " , "
+    }
+
+    info = info + birth_year + " - " + death_year;
+
+    return info
+}
+
 module.exports = {
     createFolder: createFolder,
     sendResponse: sendResponse,
@@ -146,5 +162,6 @@ module.exports = {
     getPicIdbyOrder: getPicIdbyOrder,
     checkCategoryused: checkCategoryused,
     auth: auth,
-    generateGame: generateGame
+    generateGame: generateGame,
+    getHumanInfoStr: getHumanInfoStr
 };
