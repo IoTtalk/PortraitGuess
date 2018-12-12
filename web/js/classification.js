@@ -28,7 +28,7 @@ function render_groupinfo(group_title, groupContentList, old_group){
         info = "";
 
         groupContentList.forEach((content) => {
-            info = content.chi_name + ',' + content.eng_name + ',' + content.birth_year + '-' + content.death_year;
+            info = getHumanInfoStr(content.chi_name, content.eng_name, content.birth_year, content.death_year);
             groupContent_str += '\
                 <tr>\
                     <td width="90%"><label question_id="' + content.question_id + '">' + info + '</label></td>\
