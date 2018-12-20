@@ -1,11 +1,8 @@
-function render_approved_div(approvedHuman_list){
+function render_approved_div(class_item, approved_list){
     var approved_table_str = '<table class="table table-hover">';
-    approvedHuman_list.forEach((approvedHuman) => {
-        var id = approvedHuman["id"],
-            info;
-
-            info = getHumanInfoStr(approvedHuman["info"]["chi_name"], approvedHuman["info"]["eng_name"],
-                                   approvedHuman["info"]["birth_year"], approvedHuman["info"]["death_year"]);
+    approved_list.forEach((approved_item) => {
+        var id = approved_item.id,
+            info = approved_item.name + approved_item.description;
 
         approved_table_str += '\
             <tr id="' + id + '">\
@@ -16,9 +13,9 @@ function render_approved_div(approvedHuman_list){
     approved_table_str += "</table>";
 
     var approved_div = '\
-        <h2 class="center top">編輯已審檔案</h2>\
+        <h2 class="center top">已審' + class_item.name + '檔案</h2>\
         <br>\
-        <h3 class="center">請點選欲編輯的檔案</h3>\
+        <h3 class="center">請點選欲編輯的' + class_item.name + '檔案</h3>\
         <br>\
         <div class="margin_center approved_table">\
         ' + approved_table_str + ' \
@@ -27,36 +24,31 @@ function render_approved_div(approvedHuman_list){
     return approved_div;
 }
 
-function approvedbtn_handler(){
+function approvedbtn_handler(class_item){
     $(".approvedbtn").on("click", function(){
         var id = this.id.split("_")[0];
         console.log(id);
         
         $.ajax({
-            type: "POST",
-            url: location.origin + "/getHumanAllData",
+            type: "GET",
+            url: location.origin + "/getQuestion?mode=one&class_id=" + class_item.id + "&question_id=" + id,
             cache: false,
-            data: JSON.stringify(
-            {
-                questionId : id,
-                status : 1
-            }),
             contentType: "application/json",
             error: function(e){
                 alert("something wrong");
                 console.log(e);
             },
             success: function(data){
-                var humanData = JSON.parse(data)
-                console.log(humanData);
+                var questionData = JSON.parse(data)
+                console.log(questionData);
 
-                //set modal content by humanData
-                setupEditModal(humanData, 1);
+                //set modal content by questionData
+                setupEditModal(class_item, questionData, 1);
 
-                add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
+                add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
 
-                human_update_btn_handler(id, 1);
-                human_delete_btn_handler("approved", id);
+                question_update_btn_handler(id, 1);
+                question_delete_btn_handler(id);
 
                 //show edit modal
                 $('#editModal').modal("show");
