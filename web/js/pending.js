@@ -1,11 +1,8 @@
-function render_pending_div(pendingHuman_list){
+function render_pending_div(class_item, pending_list){
     var pending_table_str = '<table class="table table-hover">';
-    pendingHuman_list.forEach((pendingHuman) => {
-        var id = pendingHuman["id"],
-            info;
-
-            info = getHumanInfoStr(pendingHuman["info"]["chi_name"], pendingHuman["info"]["eng_name"], 
-                                   pendingHuman["info"]["birth_year"], pendingHuman["info"]["death_year"]);
+    pending_list.forEach((pending_item) => {
+        var id = pending_item.id,
+            info = pending_item.name + pending_item.description;
 
         pending_table_str += '\
             <tr id="' + id + '">\
@@ -16,9 +13,9 @@ function render_pending_div(pendingHuman_list){
     pending_table_str += "</table>";
 
     var pending_div = '\
-        <h2 class="center top">待審檔案</h2>\
+        <h2 class="center top">待審' + class_item.name + '檔案</h2>\
         <br>\
-        <h3 class="center">請點選欲審核的檔案</h3>\
+        <h3 class="center">請點選欲審核的' + class_item.name + '檔案</h3>\
         <br>\
         <div class="margin_center pending_table">\
         ' + pending_table_str + ' \
@@ -27,13 +24,13 @@ function render_pending_div(pendingHuman_list){
     return pending_div;
 }
 
-function setupEditModal(humanData, status){
+function setupEditModal(class_item, questionData, status){
     var editModal_body_str = "",
         category_str = "",
         picture_str = "";
 
     //render human category
-    var category_list = humanData.category;
+    var category_list = questionData.category;
     for(var i = 0; i < category_list.length; i++){
         var id = category_list[i].id,
             name = category_list[i].name,
@@ -57,7 +54,7 @@ function setupEditModal(humanData, status){
     }
 
     //render human picture
-    var picture_list = humanData.picture;
+    var picture_list = questionData.picture;
     for(var i = 0; i < picture_list.length; i++){
         picture_str += '\
             <tr style="height:20px">\
@@ -82,18 +79,16 @@ function setupEditModal(humanData, status){
 
     /* set modal title */
     if(status){
-        $("#editModalLabel").text("人物編輯");
+        $("#editModalLabel").text(class_item.name + "編輯");
     }
     else{
-        $("#editModalLabel").text("人物審核");
+        $("#editModalLabel").text(class_item.name + "審核");
     }
 
     /* set modal body */
     //set human info
-    $('#editModal_chi_name').val(humanData.human.chi_name);
-    $('#editModal_eng_name').val(humanData.human.eng_name);
-    $('#editModal_birth_year').val(humanData.human.birth_year);
-    $('#editModal_death_year').val(humanData.human.death_year);
+    $('#editModal_name').val(questionData.name);
+    $('#editModal_description').val(questionData.description);
 
     //set all category and mark those used
     $('#editModal_category_table').html(category_str);
@@ -105,36 +100,31 @@ function setupEditModal(humanData, status){
     $('#editModal_footer').html(footer_str);
 }
 
-function pendingbtn_handler(){
+function pendingbtn_handler(class_item){
     $(".pendingbtn").on("click", function(){
         var id = this.id.split("_")[0];
-        console.log(id);
+        console.log("checking: ", id);
         
         $.ajax({
-            type: "POST",
-            url: location.origin + "/getHumanAllData",
+            type: "GET",
+            url: location.origin + "/getQuestion?mode=one&class_id=" + class_item.id + "&question_id=" + id,
             cache: false,
-            data: JSON.stringify(
-            {
-                questionId : id,
-                status : 0
-            }),
             contentType: "application/json",
             error: function(e){
                 alert("something wrong");
                 console.log(e);
             },
             success: function(data){
-                var humanData = JSON.parse(data)
-                console.log(humanData);
+                var questionData = JSON.parse(data)
+                console.log(questionData);
 
                 //set modal content by humanData
-                setupEditModal(humanData, 0);
+                setupEditModal(class_item, questionData, 0);
 
-                add_new_category_btn_handler("editModal_add_new_category", "editModal_category_table");
+                add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
 
-                human_update_btn_handler(id, 0);
-                human_delete_btn_handler("pending", id);
+                question_update_btn_handler(id, 0);
+                question_delete_btn_handler(id);
 
                 //show edit modal
                 $('#editModal').modal("show");
@@ -143,35 +133,28 @@ function pendingbtn_handler(){
     });
 }
 
-function human_update_btn_handler(id, status){
+function question_update_btn_handler(id, status){
     $("#editModal_update").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
 
         // Get the data from input, create new FormData.
         var formData = new FormData(),
-            chi_name = $('#editModal_chi_name').val(),
-            eng_name = $('#editModal_eng_name').val(),
-            birth_year = $('#editModal_birth_year').val(),
-            death_year = $('#editModal_death_year').val(),
+            name = $('#editModal_name').val(),
+            description = $('#editModal_description').val(),
             img_order = {},
             data = {},
             selected_category = [];
 
         //chech input
-        if($.trim(chi_name) == '' && $.trim(eng_name) == ''){
-            alert("中英文名字須至少填入一個");
-            return false;
-        }
-
-        if($.trim(birth_year) == ''){
-            alert("請填入出生年份");
+        if($.trim(name) == ''){
+            alert("名字必需填入");
             return false;
         }
 
         var $selected_list = $('input[name=editModalcategory]:checked');
         if($selected_list.length < 1){
-            alert('至少選取 1 個人物分類');
+            alert('至少選取 1 個分類');
             return false;
         }
         else{
@@ -191,18 +174,15 @@ function human_update_btn_handler(id, status){
         data["id"] = id;
         data["img_order"] = img_order;
         data["selected_category"] = selected_category;
-        data["chi_name"] = chi_name;
-        data["eng_name"] = eng_name;
-        data["birth_year"] = birth_year;
-        data["death_year"] = death_year;
-        // formData.append("user_upload_data", JSON.stringify(data));
+        data["name"] = name;
+        data["description"] = description;
 
         console.log(data);
 
         //ajax
         $.ajax({
-            type: "POST",
-            url: location.origin + "/humanUpdate",
+            type: "PUT",
+            url: location.origin + "/questionUpdate",
             cache: false,
             data: JSON.stringify(
             {
@@ -215,48 +195,39 @@ function human_update_btn_handler(id, status){
             },
             success: function(data){
                 if(!status){
-                    //remove this human from pending table
+                    //remove this question from pending table
                     $('#'+ id).remove();
+                    alert(name + " 審核成功!!");
                 }
                 else{
-                    //set new human info into approvd table
-                    var new_info = getHumanInfoStr(chi_name, eng_name, birth_year, death_year);
-                    $('#'+ id).find('td:first-child').html(new_info);
+                    //set new question info into approvd table
+                    $('#'+ id).find('td:first-child').html(name + description);
+                    alert(name + " 編輯成功!!");
                 }
 
                 //close edit modal
                 $('#editModal').modal("hide");
-
-                alert("審核成功!!");
             }
         });
     });
 }
 
-function human_delete_btn_handler(mode, id){
+function question_delete_btn_handler(id){
     $("#editModal_delete").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
 
         //popup confirm box
-        // var warning_str;
-        // if(mode == "pending"){
-        //     warning_str = "確定要刪除嗎?";
-        // }
-        // else{
-        //     warning_str = "如果該人物在播放清單中\n可能會導致人數不足的錯誤\n請先確認該人物是否使用中喔\n確定要刪除嗎?";
-        // }
         var warning_str = "確定要刪除嗎?";
-
         if(confirm(warning_str)){
             //ajax
             $.ajax({
-                type: "POST",
-                url: location.origin + "/humanDelete",
+                type: "DELETE",
+                url: location.origin + "/questionDelete",
                 cache: false,
                 data: JSON.stringify(
                 {
-                    delete_human_id : id
+                    delete_question_id : id
                 }),
                 contentType: "application/json",
                 error: function(e){
@@ -267,11 +238,10 @@ function human_delete_btn_handler(mode, id){
                     var response = JSON.parse(data);
 
                     if(response.using){
-                        alert("該人物正在使用中,無法刪除\n請編輯使用中的群組!");
-
+                        alert("該檔案正在使用中，無法刪除\n請編輯使用中的群組!");
                     }
                     else{
-                        //remove this human from pending table
+                        //remove this question from table
                         $('#'+ id).remove();
 
                         //close edit modal
@@ -287,7 +257,6 @@ function human_delete_btn_handler(mode, id){
         }
     });
 }
-
 
 function picture_order_move(trigger, blnUp){
     let trigRow = $(trigger).parent().parent().parent();
