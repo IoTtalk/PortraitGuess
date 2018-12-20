@@ -3,27 +3,21 @@ function render_grouplist_table(group_list){
 
     var grouplist_table_str = "<table class='table table-hover'>";
     group_list.forEach((group) => {
-        var name = group.name,
-            id = group.id,
+        var id = group.id,
+            name = group.name,
             status = group.status;
 
-        //[TODO] checkbox value modify
+        //checkbox value modify
         if(status){
-            grouplist_table_str += "\
-                <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "' checked/></td>\
-                    <td><label for='" + id + "_display_checkbox'>" + name + "</label></td>\
-                    <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td>\
-                </tr>";
+            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "' checked/></td>";
         }
         else{
-            grouplist_table_str += "\
-                <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "' /></td>\
-                    <td><label for='" + id + "_display_checkbox'>" + name + "</label></td>\
-                    <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td>\
-                </tr>";
+            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "'/></td>";
         }
+
+        grouplist_table_str += "\
+            <td><label for='" + id + "_display_checkbox'>" + name + "</label></td>\
+            <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td></tr>";
     });
     grouplist_table_str += "</table>";
 
@@ -35,7 +29,7 @@ function render_groupmember_table(groupMembertList){
         info = "";
 
     groupMembertList.forEach((content) => {
-        info = getHumanInfoStr(content.chi_name, content.eng_name, content.birth_year, content.death_year);
+        info = content.name + content.description;
         groupmember_table_str += '\
             <tr><td><label>' + info + '</label></td></tr>\
         ';
@@ -55,13 +49,9 @@ function displayModal_btn_handler(){
 
         //ajax get this groupmember
         $.ajax({
-            type: "POST",
-            url: location.origin + "/getGroupMember",
+            type: "GET",
+            url: location.origin + "/getGroup?mode=one&group_id=" + display_group_id,
             cache: false,
-            data: JSON.stringify(
-            {
-                GroupId : display_group_id
-            }),
             contentType: "application/json",
             error: function(e){
                 alert("something wrong");
@@ -88,7 +78,7 @@ function render_display_div(grouplist_table_str){
     var display_div = '\
         <h2 class="center">播放名單</h2>\
         <br>\
-        <h3 class="center">請勾選欲播放的人物清單(可多選)</h3>\
+        <h3 class="center">請勾選欲播放的群組(可多選)</h3>\
         <br>\
         <div class="margin_center display_table">' + grouplist_table_str + '</div>\
         <br>\
@@ -118,7 +108,7 @@ function set_display_btn_handler(){
             console.log(selected_group_list);
 
             $.ajax({
-                type: "POST",
+                type: "PUT",
                 url: location.origin + "/setDisplayGroup",
                 cache: false,
                 data: JSON.stringify(
