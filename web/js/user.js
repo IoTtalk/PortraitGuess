@@ -1,3 +1,53 @@
+function render_dropdownlist_div(functiontype, class_list){
+    var dropdownlist_str = "";
+    class_list.forEach((class_item) => {
+        var id = "dropdown-" + functiontype + "-" + class_item.name;
+        dropdownlist_str += '\
+            <a class="dropdown-item" href="#" id="' + id + '">' + class_item.name + '</a>\
+            ';
+    });
+
+    if(functiontype == "upload"){
+        dropdownlist_str += '<a class="dropdown-item" href="#" id="dropdown-upload-add">新增</a>';
+    }
+
+    return dropdownlist_str;
+}
+
+function upload_dropdownlist_handler(class_list){
+    class_list.forEach((class_item) => {
+        var dropdownlist_id = "#dropdown-upload-" + class_item.name;
+
+        //render_upload_div
+        $(dropdownlist_id).on("click", function(){
+            $.ajax({
+                type: "GET",
+                url: location.origin + "/getCategory?mode=all&class_name=" + class_item.name,
+                cache: false,
+                contentType: "application/json",
+                error: function(e){
+                    alert("something wrong");
+                    console.log(e);
+                },
+                success: function(data){
+                    category_list = JSON.parse(data);
+                    console.log(category_list);
+                    
+                    $("#display").html(render_upload_div(class_item, render_category_table(category_list)));
+                    make_img_movable();
+                    add_new_category_btn_handler(class_item, "add_new_category", "category_table");
+                    uplaod_btn_handler(class_item);
+                }
+            });
+        });
+    });
+
+    //[TODO] add NEW class
+    $("#dropdown-upload-add").on("click", function(){
+        alert("尚未完成");
+    });
+}
+
 //main
 $(function () {
     //navbar-brand info
@@ -10,26 +60,27 @@ $(function () {
         $("#display").html(info);
     });
 
-    //render_upload_div
-    $("#dropdown-human-upload").on("click", function(){
-        $.ajax({
-            type: "POST",
-            url: location.origin + "/getHumanCategory",
-            cache: false,
-            contentType: "application/json",
-            dataType: 'json',
-            error: function(e){
-                alert("something wrong");
-                console.log(e);
-            },
-            success: function(humanCategory_list){
-                console.log(humanCategory_list);
-                
-                $("#display").html(render_upload_div(render_category_table(humanCategory_list)));
-                make_img_movable();
-                add_new_category_btn_handler("add_new_category", "category_table");
-                uplaod_btn_handler();
-            }
-        });
+    //navbar-upload-btn
+    $("#navbar-upload-btn").on("click", function(){
+        if($(this).attr("aria-expanded") == "false"){
+            //ajax get all classes
+            $.ajax({
+                type: "GET",
+                url: location.origin + "/getClass?mode=all",
+                cache: false,
+                contentType: "application/json",
+                dataType: 'json',
+                error: function(e){
+                    alert("something wrong");
+                    console.log(e);
+                },
+                success: function(class_list){
+                    console.log(class_list);
+
+                    $("#dropdown-menu-upload").html(render_dropdownlist_div("upload", class_list));
+                    upload_dropdownlist_handler(class_list);
+                }
+            });
+        }
     });
 });
