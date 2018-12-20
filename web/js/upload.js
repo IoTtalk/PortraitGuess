@@ -1,45 +1,42 @@
 function render_category_table(category_list){
     var category_table_str = '<table class="table table-hover">';
-    category_list.forEach((humanCategory_pair) => {
-        var humanCategory_id = humanCategory_pair["id"],
-            humanCategory_name = humanCategory_pair["name"];
-        // console.log(humanCategory_pair["id"]);
-        // console.log(humanCategory_pair["name"]);
-        category_table_str += "\
-            <tr>\
-                <td class='mycheckbox'><input type='checkbox' id='" + humanCategory_id + "_checkbox' name='category' value='" + humanCategory_id + "' /></td>\
-                <td><label for='" + humanCategory_id + "_checkbox'>" + humanCategory_name + "</label></td>\
-            </tr>";
-    });
+
+    if(category_list.length < 1){
+        category_table_str += "<tr><td>尚無分類，請點選由上方來新增</td></tr>"
+    }
+    else{
+        category_list.forEach((category) => {
+            var id = category.id,
+                name = category.name;
+
+            category_table_str += "\
+                <tr>\
+                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='category' value='" + id + "' /></td>\
+                    <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
+                </tr>";
+        });
+    }
+
     category_table_str += "</table>";
 
     return category_table_str;
 }
 
-function render_upload_div(category_table_str){
+function render_upload_div(class_item, category_table_str){
     var upload_div ='\
-        <h2 class="center">上傳人物檔案</h2>\
+        <h2 class="center">上傳' + class_item.name + '檔案</h2>\
         <br>\
         <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
             <div class="form-group margin_center">\
-                <h3>輸入人物中文名字</h3>\
-                <input type="text" id="chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世"/>\
+                <h3 class="required">輸入' + class_item.name + '名字</h3>\
+                <input type="text" id="name" class="form-control" size="35" placeholder="ex: ' + class_item.sample_name + '"/>\
             </div>\
             <div class="form-group margin_center">\
-                <h3>輸入人物英文名字</h3>\
-                <input type="text" id="eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I"/>\
+                <h3>輸入' + class_item.name + '描述</h3>\
+                <textarea class="form-control" id="description" placeholder="ex: ' + class_item.description + '"></textarea>\
             </div>\
             <div class="form-group margin_center">\
-                <h3>輸入人物出生年份(西元)</h3>\
-                <input type="text" id="birth_year" class="form-control" size="35" placeholder="ex: 1533"/>\
-            </div>\
-            <div class="form-group margin_center">\
-                <h3>輸入人物逝世年份(西元)</h3>\
-                <input type="text" id="death_year" class="form-control" size="35" placeholder="ex: 1603"/>\
-            </div>\
-            <div class="form-group margin_center">\
-                <h3>選取資料夾</h3>\
-                <p class="help-block">支援檔案格式: jpg, jpeg, png</p>\
+                <h3 class="required">選取資料夾</h3>\
                 <p class="help-block">拉動圖片以排序(由左至右，由上至下)</p>\
                 <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple" webkitdirectory/>\
             </div>\
@@ -50,7 +47,7 @@ function render_upload_div(category_table_str){
             </div>\
             <div class="form-group margin_center">\
                 <div class="row">\
-                    <h3 class="col-md-10" >選擇分類</h3>\
+                    <h3 class="col-md-10 required" >選擇分類</h3>\
                     <div class="col-md-2"><input type="button" value="新增" id="add_new_category" class="btn btn-secondary"></div>\
                 </div>\
                 <div id="category_table" class="category_table">\
@@ -92,16 +89,18 @@ function make_img_movable(){
     $( "#row" ).disableSelection();
 }
 
-function render_new_category_tablerow(table_id, category_list){
-    var newCategoryId = category_list[category_list.length-1]["id"],
-        newCategoryName = category_list[category_list.length-1]["name"],
+function render_new_category_tablerow(table_id, new_category_item){
+    //[TODO] if there is one new class created, first time adding category should clear table row
+    var new_id = new_category_item.id,
+        new_name = new_category_item.name,
         newCategoryTableRow = "";
 
+    console.log(new_id, new_name);
     newCategoryTableRow += "\
-            <tr>\
-                <td class='mycheckbox'><input type='checkbox' id='" + newCategoryId + "_checkbox' name='category' value='" + newCategoryId + "' /></td>\
-                <td><label for='" + newCategoryId + "_checkbox'>" + newCategoryName + "</label></td>\
-            </tr>";
+        <tr>\
+            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='category' value='" + new_id + "' /></td>\
+            <td><label for='" + new_id + "_checkbox'>" + new_name + "</label></td>\
+        </tr>";
 
     // console.log(newCategoryId, newCategoryName);
     if($("#" + table_id).find('tbody').length){
@@ -113,56 +112,68 @@ function render_new_category_tablerow(table_id, category_list){
 }
 
 //new category btn handler
-function add_new_category_btn_handler(btnId, tableId,){
+function add_new_category_btn_handler(class_item, btnId, tableId,){
     $("#" + btnId).on("click", function(){
         
         var new_category_name = prompt("輸入新分類");
-        if($.trim(new_category_name) == ''){
-            alert("欄位不得空白");
-            return false;
-        }
-        else{
-            //create new category in db
-            $.ajax({
-                type: "POST",
-                url: location.origin + "/addNewHumanCategory",
-                cache: false,
-                data: JSON.stringify(
-                {
-                    new_category_name : new_category_name
-                }),
-                contentType: "application/json",
-                error: function(e){
-                    alert("something wrong");
-                    console.log(e);
-                },
-                success: function(data){
-                    humanCategory_list = JSON.parse(data);
-                    console.log("new ",humanCategory_list);
-                    render_new_category_tablerow(tableId, JSON.parse(data));
-                    alert(new_category_name + " 新增成功!");
-                }
-            });
+        console.log(new_category_name);
+        if(new_category_name != null){
+            if($.trim(new_category_name) == ''){
+                alert("欄位不得空白");
+                return false;
+            }
+            else{
+                //create new category in db
+                $.ajax({
+                    type: "POST",
+                    url: location.origin + "/addNewCategory",
+                    cache: false,
+                    data: JSON.stringify(
+                    {
+                        class_id : class_item.id,
+                        class_name : class_item.name,
+                        new_category_name : new_category_name
+                    }),
+                    contentType: "application/json",
+                    error: function(e){
+                        alert("something wrong");
+                        console.log(e);
+                    },
+                    success: function(data){
+                        var new_category_item = JSON.parse(data);
+                        console.log("add: ", new_category_item);
+
+                        render_new_category_tablerow(tableId, new_category_item);
+                        alert(new_category_name + " 新增成功!");
+                    }
+                });
+            }
         }
     });
 }
 
 //upload success handler
-function handleUploadSuccess(data) {
+function handleUploadSuccess(data){
     var res = JSON.parse(data);
     console.log(res.photo_status);
 
     if(res.photo_status){
-        alert("上傳成功!!\n回首頁");
-        location.reload();
+        alert("上傳成功!!\n");
+
+        // clear all input
+        $('#upload_file').val('');
+        $('#name').val('');
+        $('#description').val('');
+        $('#row').html('');
+        $('input[name=category]:checked').prop("checked", false);
     }
     else{
-        alert("上傳失敗QQ\n有檔案格式不合!!");
+        alert("上傳失敗\n圖片檔案不支援!!\n僅限圖片為: png, jpeg, jpg");
     }
 }
 
 //upload btn handler
-function uplaod_btn_handler(){
+function uplaod_btn_handler(class_item){
     $('#upload-photos').on('submit', function (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -170,21 +181,15 @@ function uplaod_btn_handler(){
         // Get the data from input, create new FormData.
         var formData = new FormData(),
             files = $('#upload_file').get(0).files,
-            chi_name = $('#chi_name').val(),
-            eng_name = $('#eng_name').val(),
-            birth_year = $('#birth_year').val(),
-            death_year = $('#death_year').val(),
+            name = $('#name').val(),
+            description = $('#description').val(),
             img_order = {},
             data = {},
             selected_category = [];
 
         //chech input
-        if($.trim(chi_name) == '' && $.trim(eng_name) == ''){
-            alert("中英文名字須至少填入一個");
-            return false;
-        }
-        if($.trim(birth_year) == ''){
-            alert("請填入出生年份");
+        if($.trim(name) == ''){
+            alert("請填入名字");
             return false;
         }
         else if(files.length < 6){ //check file input
@@ -194,7 +199,7 @@ function uplaod_btn_handler(){
 
         var $selected_list = $('input[name=category]:checked');
         if($selected_list.length < 1){
-            alert('至少選取 1 個人物分類');
+            alert('至少選取 1 個分類');
             return false;
         }
         else{
@@ -213,12 +218,11 @@ function uplaod_btn_handler(){
         // console.log(img_order);
 
         //append data in formData
+        data["class_id"] = class_item.id;
+        data["name"] = name;
+        data["description"] = description;
         data["img_order"] = img_order;
         data["selected_category"] = selected_category;
-        data["chi_name"] = chi_name;
-        data["eng_name"] = eng_name;
-        data["birth_year"] = birth_year;
-        data["death_year"] = death_year;
         formData.append("user_upload_data", JSON.stringify(data));
 
         for(var i = 0; i < files.length; i++){
@@ -226,16 +230,18 @@ function uplaod_btn_handler(){
             file = files[i];
 
             if(file.name == ".DS_Store"){
-                alert("上傳失敗QQ\n有檔案格式不合!!");
+                alert("上傳失敗\n資料夾內有檔案格式不合!!\n請檢查是否有隱藏檔案");
                 return false;
             }
 
             formData.append('photos[]', file, file.name);
         }
 
+        console.log("upload:", data);
+
         //ajax
         $.ajax({
-            url: '/humanUpload',
+            url: '/questionUpload',
             method: 'post',
             data: formData,
             processData: false,
