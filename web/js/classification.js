@@ -28,7 +28,7 @@ function render_groupinfo(group_title, groupContentList, old_group){
         info = "";
 
         groupContentList.forEach((content) => {
-            info = getHumanInfoStr(content.chi_name, content.eng_name, content.birth_year, content.death_year);
+            info = content.name + content.description;
             groupContent_str += '\
                 <tr>\
                     <td width="90%"><label question_id="' + content.question_id + '">' + info + '</label></td>\
@@ -64,16 +64,16 @@ function render_groupinfo(group_title, groupContentList, old_group){
     return groupinfo_str;
 }
 
-function render_human_accordion(humanCategory_list){
-    var human_accordion_str = "",
-        human_accordion = "";
+function render_usingCategory_accordion(class_item, usingCategory_list){
+    var usingCategory_accordion_str = "",
+        usingCategory_accordion = "";
 
-    humanCategory_list.forEach((category) => {
+    usingCategory_list.forEach((category) => {
         var id = category.id,
             name = category.name;
 
         //create category card
-        human_accordion += '\
+        usingCategory_accordion += '\
             <div class="card">\
                 <div class="card-header" id="' + id +'_heading">\
                     <h5 class="mb-0">\
@@ -93,21 +93,21 @@ function render_human_accordion(humanCategory_list){
         ';
     });
 
-    human_accordion_str = '\
-        <h3 class="center">請勾選想要加入群組的人像</h3>\
+    usingCategory_accordion_str = '\
+        <h3 class="center">請勾選想要加入群組的' + class_item.name + '</h3>\
         <br>\
         <div id="accordion" class="accordion">\
-            ' + human_accordion + '\
+            ' + usingCategory_accordion + '\
         </div>\
         ';
-    return human_accordion_str;
+    return usingCategory_accordion_str;
 }
 
-function render_categoryHuman_table(category_id, categoryHuman_list){
-    var categoryHuman_table_str = "";
+function render_question_in_category_table(category_id, question_in_category_list){
+    var question_in_category_table_str = "";
 
-    categoryHuman_list.forEach((human) => {
-        categoryHuman_table_str += '\
+    question_in_category_list.forEach((human) => {
+        question_in_category_table_str += '\
             <tr>\
                 <td><button id="' + human.id + '" class="btn btn-outline-info addhuman_btn">添加</button>\
                 <td><label>' + human.info + '</label></td>\
@@ -115,12 +115,7 @@ function render_categoryHuman_table(category_id, categoryHuman_list){
         ';
     });
 
-    //no  human belongs to this category
-    if(categoryHuman_table_str == ""){
-        categoryHuman_table_str = "<tr><td>此分類尚無人物喔</td></tr>";
-    }
-
-    return categoryHuman_table_str;
+    return question_in_category_table_str;
 }
 
 function groupinfo_delete_handler(){
@@ -142,7 +137,7 @@ function updateOldGroup_btn_handler(){
         });
 
         if(newgroup_list.length <= 5){
-            alert("至少選取 6 位喔");
+            alert("至少選取 6 位");
             return false;
         }
 
@@ -151,8 +146,8 @@ function updateOldGroup_btn_handler(){
 
         //ajax
         $.ajax({
-            type: "POST",
-            url: location.origin + "/updateOldHumanGroup",
+            type: "PUT",
+            url: location.origin + "/updateGroup",
             cache: false,
             data: JSON.stringify(
             {
@@ -166,8 +161,9 @@ function updateOldGroup_btn_handler(){
             },
             success: function(){
                 //alert success and reload page
-                alert("更新成功!!\n 回首頁");
-                location.reload();
+                alert("更新成功!!");
+                // location.reload();
+                setpageToStartUp();
             }
         });
     });
@@ -178,20 +174,18 @@ function deleteNow_btn_handler(group_list){
         var delete_group_id = $("#grouplist_select").val();
 
         for(var i = 0; i < group_list.length; i++){
-            if(group_list[i].id == delete_group_id && 
-               group_list[i].status){
-                alert("該群組正在使用中，無法刪除\n請至'播放清單'將其取消勾選喔!");
+            if(group_list[i].id == delete_group_id && group_list[i].status){
+                alert("該群組正在使用中，無法刪除\n請至'播放清單'將其取消勾選");
                 return false;
             }
         }
 
         //popup confirm box
         if(confirm("確定要刪除嗎?")){
-
             //ajax
             $.ajax({
-                type: "POST",
-                url: location.origin + "/deleteOldGroup",
+                type: "DELETE",
+                url: location.origin + "/deleteGroup",
                 cache: false,
                 data: JSON.stringify(
                 {
@@ -203,8 +197,9 @@ function deleteNow_btn_handler(group_list){
                     console.log(e);
                 },
                 success: function(){
-                    alert("刪除成功!! \n 回首頁");
-                    location.reload();
+                    alert("刪除成功");
+                    // location.reload();
+                    setpageToStartUp();
                 }
             });
         }
@@ -214,7 +209,7 @@ function deleteNow_btn_handler(group_list){
     });
 }
 
-function addhuman_btn_handler(){
+function addquestion_btn_handler(){
     $(".addhuman_btn").on('click', function(){
         var question_id = this.id,
             info = $(this).parent().next().find('label').text();
@@ -234,7 +229,7 @@ function addhuman_btn_handler(){
         }
 
         //append to grouptable
-        var newHuman_tablerow_str = '\
+        var newQuestion_tablerow_str = '\
             <tr>\
                 <td width="90%"><label question_id="' + question_id + '">' + info + '</label></td>\
                 <td width="10%"><button class="btn btn-outline-danger grouplist_delete">移除</button></td>\
@@ -242,10 +237,10 @@ function addhuman_btn_handler(){
         ';
 
         if($("#groupContent_table").find('tbody').length){
-            $("#groupContent_table").find('tbody').append(newHuman_tablerow_str);
+            $("#groupContent_table").find('tbody').append(newQuestion_tablerow_str);
         }
         else{
-            $("#groupContent_table").append(newHuman_tablerow_str);
+            $("#groupContent_table").append(newQuestion_tablerow_str);
         }
 
         // add handler for new human
@@ -253,36 +248,31 @@ function addhuman_btn_handler(){
     });
 }
 
-function class_card_btn_handler(){
+function class_card_btn_handler(class_item){
     $(".class_card_btn").on("click", function(){
         var category_id = this.id;
         // console.log(this.id);
 
-        // console.log($(this).hasClass("collapsed"));
         if($(this).hasClass("collapsed")){
             $.ajax({
-                type: "POST",
-                url: location.origin + "/getHumanByCategory",
+                type: "GET",
+                url: location.origin + "/getQuestion?mode=category&class_id=" + class_item.id + "&category_id=" + category_id,
                 cache: false,
-                data: JSON.stringify(
-                {
-                    category_id : category_id
-                }),
                 contentType: "application/json",
                 error: function(e){
                     alert("something wrong");
                     console.log(e);
                 },
                 success: function(data){
-                    var categoryHuman_list = JSON.parse(data);
-                    console.log(categoryHuman_list);
+                    var question_in_category_list = JSON.parse(data);
+                    console.log(question_in_category_list);
 
                     //append into table
                     var target_table = "#" + category_id + "_class_table";
-                    $(target_table).html(render_categoryHuman_table(category_id, categoryHuman_list));
+                    $(target_table).html(render_question_in_category_table(category_id, question_in_category_list));
                     
                     //add_btn_handler
-                    addhuman_btn_handler();
+                    addquestion_btn_handler();
                 }
             });
         }
@@ -303,7 +293,7 @@ function addNewGroup_btn_handler(){
         });
 
         if(newgroup_list.length <= 5){
-            alert("至少選取 6 位喔");
+            alert("至少選取 6 個喔");
             return false;
         }
 
@@ -313,7 +303,7 @@ function addNewGroup_btn_handler(){
         //ajax
         $.ajax({
             type: "POST",
-            url: location.origin + "/addNewHumanGroup",
+            url: location.origin + "/addNewGroup",
             cache: false,
             data: JSON.stringify(
             {
@@ -326,9 +316,10 @@ function addNewGroup_btn_handler(){
                 console.log(e);
             },
             success: function(){
-                //alert success and reload page
-                alert("建立成功!!\n 回首頁");
-                location.reload();
+                //alert success
+                alert("群組建立成功!!");
+                // location.reload();
+                setpageToStartUp();
             }
         });
     });
@@ -337,20 +328,22 @@ function addNewGroup_btn_handler(){
 function setpageToStartUp(){
     $("#group_info").html("");
     $("#human_accordion").html("");
+
+    //reset option select
+    $("#grouplist_select").val("none");
 }
 
 //abortion for new group
 function abortNow_btn_handler(){
     $("#abortNow_btn").on('click',function(){
-        //remove all div
-        setpageToStartUp();
-
-        //reset option select
-        $("#grouplist_select").val("none");
+        if(confirm("確定要刪除嗎?")){
+            //remove all div
+            setpageToStartUp();
+        }
     });
 }
 
-function option_handler(group_list){
+function option_handler(class_item, group_list){
     $("#grouplist_select").on("change", function(){
         var option = $(this).val();
         // console.log($(this).val());
@@ -362,15 +355,23 @@ function option_handler(group_list){
         else if(option == "newgroup"){ // add new group
             //get new group name
             var new_group_name = prompt("輸入新群組名稱");
-            if($.trim(new_group_name) == ''){
-                alert("欄位不得空白");
-                return false;
+            console.log(new_group_name);
+            if(new_group_name != null){
+                if($.trim(new_group_name) == ''){
+                    alert("欄位不得空白");
+                    $(this).val("none");
+                    return false;
+                }
+                else{
+                    //render group-content
+                    $('#group_info').html(render_groupinfo(new_group_name, [], 0));
+                    addNewGroup_btn_handler();
+                    abortNow_btn_handler();
+                }
             }
             else{
-                //render group-content
-                $('#group_info').html(render_groupinfo(new_group_name, [], 0));
-                addNewGroup_btn_handler();
-                abortNow_btn_handler();
+                $(this).val("none");
+                return false;
             }
         }
         else{ //ajax get group info
@@ -379,13 +380,9 @@ function option_handler(group_list){
 
             //ajax
             $.ajax({
-                type: "POST",
-                url: location.origin + "/getGroupMember",
+                type: "GET",
+                url: location.origin + "/getGroup?mode=one&group_id=" + option,
                 cache: false,
-                data: JSON.stringify(
-                {
-                    GroupId : option
-                }),
                 contentType: "application/json",
                 error: function(e){
                     alert("something wrong");
@@ -401,17 +398,17 @@ function option_handler(group_list){
                     //let group member can be deleted
                     groupinfo_delete_handler();
 
-                    //[TODO] update and delete bun handler
-                    updateOldGroup_btn_handler();
+                    //[TODO] update and delete btn handler
+                    updateOldGroup_btn_handler(); //[TODO] checking
                     deleteNow_btn_handler(group_list);
                 }
             });
         }
 
-        //show human category with corresponding human
+        //show using category with corresponding class
         $.ajax({
-            type: "POST",
-            url: location.origin + "/getUsingHumanCategory",
+            type: "GET",
+            url: location.origin + "/getCategory?mode=using&class_name=" + class_item.name,
             cache: false,
             contentType: "application/json",
             dataType: 'json',
@@ -419,23 +416,22 @@ function option_handler(group_list){
                 alert("something wrong");
                 console.log(e);
             },
-            success: function(humanCategory_list){
-                console.log(humanCategory_list);
+            success: function(usingCategory_list){
+                console.log(usingCategory_list);
                 
-                $("#human_accordion").html(render_human_accordion(humanCategory_list));
-                class_card_btn_handler();
+                $("#human_accordion").html(render_usingCategory_accordion(class_item, usingCategory_list));
+                class_card_btn_handler(class_item);
             }
         });
     });
 }
 
-//collapse test
-function render_classification_div(classification_selector_str){
+function render_classification_div(class_item, classification_selector_str){
     var pending_div = '\
         <div class="row">\
             <div class="col-md-6">\
                 <div class="form-group">\
-                    <h2 class="center">建立群組</h2>\
+                    <h2 class="center">建立' + class_item.name + '群組</h2>\
                     <br>\
                     <h5>請點擊下拉選單</h5>\
                     ' + classification_selector_str + '\
