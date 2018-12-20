@@ -17,37 +17,29 @@
     <script type="text/javascript" src="../js/manage.js"></script>
 </head>
 <body>
-
     <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">管理頁面</a>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown0" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">上傳檔案</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown0">
-                        <a class="dropdown-item" href="#" id="dropdown-human-upload">人物</a>
-                    </div>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbar-upload-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">上傳檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbar-upload-btn" id="dropdown-menu-upload"></div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">待審檔案</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown1">
-                        <a class="dropdown-item" href="#" id="dropdown-human-pending">人物</a>
-                    </div>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbar-pending-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">待審檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbar-pending-btn" id="dropdown-menu-pending"></div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown2">
-                        <a class="dropdown-item" href="#" id="dropdown-human-approved">人物</a>
-                    </div>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbar-approved-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
+                    <div class="dropdown-menu" aria-labelledby="navbar-approved-btn" id="dropdown-menu-approved"></div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">建立群組</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown3">
-                        <a class="dropdown-item" href="#" id="dropdown-human-classification">人物</a>
-                    </div>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbar-classification-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">建立群組</a>
+                    <div class="dropdown-menu" aria-labelledby="navbar-classification-btn" id="dropdown-menu-classification">
+                    <div class="dropdown-menu" aria-labelledby="navbar-classification-btn" ></div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" id="dropdown-display">播放清單</a>
+                    <a class="nav-link" href="#" id="navbar-display-btn">播放清單</a>
                 </li>
             </ul>
         </div>
@@ -57,7 +49,36 @@
         <div class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-                <div id="display"></div>
+                <div id="display">
+                    <h2 class='top center'>管理頁面首頁</h2>
+                    <br>
+                    <h3 class='center'>For now only supports Google Chrome browser</h3>
+                    <br>
+                    <div class='margin_center'>
+                        <ul>
+                            <li><h3>上傳檔案</h3></li>
+                                <ul>
+                                    <li><h4>建立新人物畫像檔案</h4></li>
+                                </ul>
+                            <li><h3>待審檔案</h3></li>
+                                <ul>
+                                    <li><h4>審核使用者上傳的檔案</h4></li>
+                                </ul>
+                            <li><h3>已審檔案</h3></li>
+                                <ul>
+                                    <li><h4>瀏覽已審的檔案</h4></li>
+                                </ul>
+                            <li><h3>建立群組</h3></li>
+                                <ul>
+                                    <li><h4>根據主題可建立不同群組</h4></li>
+                                </ul>
+                            <li><h3>播放清單</h3></li>
+                                <ul>
+                                    <li><h4>列出所有群組並可搭配決定遊戲內容</h4></li>
+                                </ul>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="col-md-2"></div>
         </div>
@@ -79,38 +100,30 @@
                             <div class="col-md-6">
                                 <form>
                                     <div class="form-group">
-                                        <h4>編輯人物中文名字</h4>
-                                        <input type="text" id="editModal_chi_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世"/>
+                                        <h4 class="required">編輯人物名字</h4>
+                                        <input type="text" id="editModal_name" class="form-control" size="35" placeholder="ex: 伊麗莎白一世,Elizabeth I"/>
                                     </div>
                                     <div class="form-group">
-                                        <h4>編輯人物英文名字</h4>
-                                        <input type="text" id="editModal_eng_name" class="form-control" size="35" placeholder="ex: Elizabeth I"/>
+                                        <h4>編輯人物敘述</h4>
+                                        <textarea class="form-control" id="editModal_description"></textarea>
                                     </div>
                                     <div class="form-group">
-                                        <h4>編輯人物出生年份(西元)</h4>
-                                        <input type="text" id="editModal_birth_year" class="form-control" size="35" placeholder="ex: 1533"/>
-                                    </div>
-                                    <div class="form-group">
-                                        <h4>編輯人物逝世年份(西元)</h4>
-                                        <input type="text" id="editModal_death_year" class="form-control" size="35" placeholder="ex: 1603"/>
-                                    </div>
-                                        <div class="form-group">
-                                            <div class="row">
-                                                <h4 class="col-md-9">編輯分類</h4>
-                                                <div class="col-md-3">
-                                                    <button id="editModal_add_new_category" class="btn btn-secondary">新增</button>
-                                                </div>
-                                            </div>
-                                            <div class="editModal_category_table">
-                                                <table id="editModal_category_table" class="table table-hover"></table>
+                                        <div class="row">
+                                            <h4 class="col-md-9 required">編輯分類</h4>
+                                            <div class="col-md-3">
+                                                <button id="editModal_add_new_category" class="btn btn-secondary">新增</button>
                                             </div>
                                         </div>
+                                        <div class="editModal_category_table">
+                                            <table id="editModal_category_table" class="table table-hover"></table>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                             <div class="col-md-6 ml-auto">
                                 <form>
                                     <div class="form-group">
-                                        <h4>編輯圖片</h4>
+                                        <h4 class="required">編輯圖片</h4>
                                         <div class="editModal_picture_table">
                                             <table id="editModal_picture_table" class="table table-hover"></table>
                                         </div>
