@@ -29,6 +29,12 @@ const Class = sequelize.define('Class', {
     },
     name: {
         type: Sequelize.STRING
+    },
+    sample_name: {
+        type: Sequelize.STRING
+    },
+    description: {
+        type: Sequelize.STRING
     }
 });
 
@@ -47,6 +53,12 @@ const Question = sequelize.define('Question', {
     id: {
         type: Sequelize.STRING,
         primaryKey: true
+    },
+    name: {
+        type: Sequelize.STRING
+    },
+    description: {
+        type: Sequelize.STRING
     },
     status: {
         type: Sequelize.INTEGER
@@ -72,21 +84,6 @@ const Picture = sequelize.define('Picture', {
     }
 });
 
-const Human = sequelize.define('Human', {
-    chi_name: {
-        type: Sequelize.STRING
-    },
-    eng_name: {
-        type: Sequelize.STRING
-    },
-    birth_year: {
-        type: Sequelize.INTEGER
-    },
-    death_year: {
-        type: Sequelize.INTEGER
-    }
-});
-
 const Group = sequelize.define('Group', {
     id: {
         type: Sequelize.INTEGER,
@@ -109,7 +106,6 @@ const GroupMember = sequelize.define('GroupMember', {
 
 Question.hasMany(QuestionCategory);
 Question.hasMany(Picture);
-Question.hasOne(Human);
 Group.hasMany(GroupMember);
 Question.belongsTo(Class);
 Category.belongsTo(Class);
@@ -120,7 +116,6 @@ var db = {
     Category: Category,
     Question: Question,
     QuestionCategory: QuestionCategory,
-    Human: Human,
     GroupMember: GroupMember,
     Group: Group,
     Picture: Picture
