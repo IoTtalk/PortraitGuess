@@ -159,16 +159,13 @@ app.use(bodyParser.urlencoded({
 // process http body
 app.use(bodyParser.json());
 
-//[TODO]
 function generateAnswerIDListAndThenStartServer(){
     db.Group.findAll( { where: {status: 1} }).then(GroupList => {
-        var group_count = 0,
-            index;
+        var group_count = 0, index;
 
         //check there is no initial answerIDList (no using group)
         if(GroupList.length == 0){
             //start server
-
             //let default answerIDList to all approved question
             answerIDList = nameIDList;
 
@@ -190,17 +187,14 @@ function generateAnswerIDListAndThenStartServer(){
 
                     db.Question.findOne({ //for every single question get info and pic
                         where: { id: GroupMemberData.question_id },
-                        include: [
-                            { model: db.Human },
-                            { model: db.Picture }
-                        ]
+                        include: [ { model: db.Picture } ]
                     }).then(function(q){
                         if(q != null){
                             groupmember_count += 1;
 
                             var pic_dict = {},
-                                info = q.Human.chi_name + "," + q.Human.eng_name + "," + 
-                                       q.Human.birth_year + "-" + q.Human.death_year;
+                                info = q.name + q.description;
+
                             q.Pictures.forEach((picture) => {
                                 pic_dict[picture.order] = picture.id;
                             });
@@ -211,7 +205,7 @@ function generateAnswerIDListAndThenStartServer(){
 
                             index = answerIDList.indexOf(GroupMemberData.question_id);
                             if (index > -1) { //duplicate
-                                console.log("got duplicate question_id, pass it !");
+                                // console.log("got duplicate question_id, pass it !");
                             }
                             else{
                                 answerIDList.push(GroupMemberData.question_id);
@@ -237,60 +231,48 @@ function generateAnswerIDListAndThenStartServer(){
     });
 }
 
-//[TODO] get all question into nameList
-http.listen((process.env.PORT || config.webServerPort), '0.0.0.0')
-// db.Class.findOne({ where: {name : "human"}}).then(function(c){
-//     if(c != null){
-//         db.Question.findAll({ 
-//             where: {ClassId: c.id, status: 1},
-//             include: [
-//                 { model: db.Human },
-//                 { model: db.Picture }
-//             ]
-//         }).then(QuestionList => {
+//get all question into nameList
+db.Question.findAll({ 
+    where: {status: 1},
+    include: [ { model: db.Picture } ]
+}).then(QuestionList => {
+    //first server start case
+    if(QuestionList.length == 0){
+        //just start server
+        generateAnswerIDListAndThenStartServer();
+        return true;
+    }
 
-//             //first server start case
-//             if(QuestionList.length == 0){
-//                 //get answerIDList from using Group and start server
-//                 generateAnswerIDListAndThenStartServer();
-//                 return true;
-//             }
+    var count = 0
 
-//             var count = 0
+    QuestionList.forEach((QuestionSetItem) => {
+        count += 1;
 
-//             QuestionList.forEach((QuestionSetItem) => {
-//                 count += 1;
+        var QuestionData = QuestionSetItem.get({ plain: true });
+        var picture_data = QuestionData.Pictures,
+            info, pic_dict = {};
 
-//                 var QuestionData = QuestionSetItem.get({ plain: true });
-//                 var human_data = QuestionData.Human,
-//                     picture_data = QuestionData.Pictures,
-//                     info, pic_dict = {};
+        info = QuestionData.name + QuestionData.description;
 
-//                 info = human_data.chi_name + ',' + human_data.eng_name + ',' + 
-//                        human_data.birth_year + '-' + human_data.death_year;
-                
-//                 picture_data.forEach((picture) => {
-//                     pic_dict[picture.order] = picture.id;
-//                 });
+        picture_data.forEach((picture) => {
+            pic_dict[picture.order] = picture.id;
+        });
 
-//                 nameIDList.push(QuestionData.id);
-//                 nameList.push({
-//                     info: info,
-//                     path: pic_dict
-//                 });
+        nameIDList.push(QuestionData.id);
+        nameList.push({
+            info: info,
+            path: pic_dict
+        });
 
-//                 if(count == QuestionList.length){
-//                     console.log('---load all approved questions in server---');
-//                     console.log(nameIDList);
-//                     console.log(nameList);
+        if(count == QuestionList.length){
+            console.log('---load all approved questions in server---');
+            console.log(nameIDList);
 
-//                     //get answerIDList from using Group and start server
-//                     generateAnswerIDListAndThenStartServer();
-//                 }
-//             });
-//         });
-//     }
-// });
+            //get answerIDList from using Group and start server
+            generateAnswerIDListAndThenStartServer();
+        }
+    });
+});
 
 /* APIs */
 // authentication url API
