@@ -28,7 +28,8 @@ const Class = sequelize.define('Class', {
         primaryKey: true
     },
     name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: true
     },
     sample_name: {
         type: Sequelize.STRING
@@ -45,7 +46,8 @@ const Category = sequelize.define('Category', {
         primaryKey: true
     },
     name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: true
     }
 });
 
@@ -91,7 +93,11 @@ const Group = sequelize.define('Group', {
         primaryKey: true
     },
     name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: true
+    },
+    class_id: {
+        type: Sequelize.INTEGER
     },
     status: {
         type: Sequelize.INTEGER
