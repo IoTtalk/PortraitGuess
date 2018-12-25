@@ -200,6 +200,9 @@ function deleteNow_btn_handler(group_list){
                     alert("刪除成功");
                     // location.reload();
                     setpageToStartUp();
+
+                    //remove this group from select option
+                    $('#grouplist_select option[value="' + delete_group_id + '"]').remove();
                 }
             });
         }
@@ -280,7 +283,7 @@ function class_card_btn_handler(class_item){
 }
 
 //create new group ajax for new group
-function addNewGroup_btn_handler(){ 
+function addNewGroup_btn_handler(class_item){ 
     $("#addNewGroup_btn").on('click',function(){
         var newgroup_list = [],
             newgroup_name = $("#group_title").text();
@@ -308,14 +311,23 @@ function addNewGroup_btn_handler(){
             data: JSON.stringify(
             {
                 newgroup_name : newgroup_name,
-                group_list : newgroup_list
+                group_list : newgroup_list,
+                class_id : class_item.id
             }),
             contentType: "application/json",
             error: function(e){
                 alert("something wrong");
                 console.log(e);
             },
-            success: function(){
+            success: function(data){
+                var new_group_id = JSON.parse(data);
+                console.log(new_group_id);
+
+                //append this new group info to select option
+                var new_option_str = '\
+                    <option class="group_option" value="' + new_group_id + '">' + newgroup_name + '</option>'
+                $("#grouplist_select").append(new_option_str);
+
                 //alert success
                 alert("群組建立成功!!");
                 // location.reload();
@@ -362,10 +374,24 @@ function option_handler(class_item, group_list){
                     $(this).val("none");
                     return false;
                 }
+
+                var duplicate_flag = false;
+                for(var i = 0; i < group_list.length; i++){
+                    if(group_list[i].name == new_group_name){
+                        duplicate_flag = true;
+                        break;
+                    }
+                }
+
+                if(duplicate_flag == true){
+                    alert("群組名字不得重複");
+                    $(this).val("none");
+                    return false;
+                }
                 else{
                     //render group-content
                     $('#group_info').html(render_groupinfo(new_group_name, [], 0));
-                    addNewGroup_btn_handler();
+                    addNewGroup_btn_handler(class_item);
                     abortNow_btn_handler();
                 }
             }
@@ -398,8 +424,8 @@ function option_handler(class_item, group_list){
                     //let group member can be deleted
                     groupinfo_delete_handler();
 
-                    //[TODO] update and delete btn handler
-                    updateOldGroup_btn_handler(); //[TODO] checking
+                    //update and delete btn handler
+                    updateOldGroup_btn_handler(); //checking
                     deleteNow_btn_handler(group_list);
                 }
             });
@@ -408,7 +434,7 @@ function option_handler(class_item, group_list){
         //show using category with corresponding class
         $.ajax({
             type: "GET",
-            url: location.origin + "/getCategory?mode=using&class_name=" + class_item.name,
+            url: location.origin + "/getCategory?mode=using&class_id=" + class_item.id,
             cache: false,
             contentType: "application/json",
             dataType: 'json',
