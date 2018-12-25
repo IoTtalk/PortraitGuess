@@ -2,7 +2,7 @@ function render_approved_div(class_item, approved_list){
     var approved_table_str = '<table class="table table-hover">';
     approved_list.forEach((approved_item) => {
         var id = approved_item.id,
-            info = approved_item.name + approved_item.description;
+            info = approved_item.name;
 
         approved_table_str += '\
             <tr id="' + id + '">\
@@ -47,7 +47,7 @@ function approvedbtn_handler(class_item){
 
                 add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
 
-                question_update_btn_handler(id, 1);
+                question_update_btn_handler(class_item, id, 1);
                 question_delete_btn_handler(id);
 
                 //show edit modal
