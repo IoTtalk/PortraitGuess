@@ -1,8 +1,13 @@
 function render_pending_div(class_item, pending_list){
-    var pending_table_str = '<table class="table table-hover">';
+    var pending_table_str = '<table id="pending_table" class="table table-hover">';
+    
+    if(pending_list.length == 0){
+        pending_table_str += "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>"
+    }
+
     pending_list.forEach((pending_item) => {
         var id = pending_item.id,
-            info = pending_item.name + pending_item.description;
+            info = pending_item.name;
 
         pending_table_str += '\
             <tr id="' + id + '">\
@@ -123,7 +128,7 @@ function pendingbtn_handler(class_item){
 
                 add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
 
-                question_update_btn_handler(id, 0);
+                question_update_btn_handler(class_item, id, 0);
                 question_delete_btn_handler(id);
 
                 //show edit modal
@@ -133,7 +138,7 @@ function pendingbtn_handler(class_item){
     });
 }
 
-function question_update_btn_handler(id, status){
+function question_update_btn_handler(class_item, id, status){
     $("#editModal_update").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
@@ -197,6 +202,19 @@ function question_update_btn_handler(id, status){
                 if(!status){
                     //remove this question from pending table
                     $('#'+ id).remove();
+                    
+                    //display no more pending files in this class
+                    if($("#pending_table tbody").find('tr').length == 0){
+                        console.log('the last pending files');
+                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                        $("tbody").append(msg);
+                    }
+                    else if($("#pending_table table").find('tr').length == 0){
+                        console.log('the last pending files');
+                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                        $("table").append(msg);
+                    }
+                    
                     alert(name + " 審核成功!!");
                 }
                 else{
@@ -248,6 +266,7 @@ function question_delete_btn_handler(id){
                         $('#editModal').modal("hide");
 
                         alert("刪除成功!!");
+                        //[TODO]
                     }
                 }
             });
