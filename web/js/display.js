@@ -28,10 +28,13 @@ function render_groupmember_table(groupMembertList){
     var groupmember_table_str = '<table id="displayModal_table" class="table table-hover">',
         info = "";
 
+    groupmember_table_str += '<tr><th width="40%">名字</th><th>敘述</th></tr>';
     groupMembertList.forEach((content) => {
-        info = content.name + content.description;
         groupmember_table_str += '\
-            <tr><td><label>' + info + '</label></td></tr>\
+            <tr>\
+                <td><label>' + content.name + '</label></td>\
+                <td><label>' + content.description + '</label></td>\
+            </tr>\
         ';
     });
 
