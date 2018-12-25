@@ -2,7 +2,7 @@ function render_category_table(category_list){
     var category_table_str = '<table class="table table-hover">';
 
     if(category_list.length < 1){
-        category_table_str += "<tr><td>尚無分類，請點選由上方來新增</td></tr>"
+        category_table_str += "<tr><td class='none'>尚無分類，請點選由上方來新增</td></tr>"
     }
     else{
         category_list.forEach((category) => {
@@ -33,7 +33,7 @@ function render_upload_div(class_item, category_table_str){
             </div>\
             <div class="form-group margin_center">\
                 <h3>輸入' + class_item.name + '描述</h3>\
-                <textarea class="form-control" id="description" placeholder="ex: ' + class_item.description + '"></textarea>\
+                <textarea class="form-control" id="description" placeholder="' + class_item.description + '"></textarea>\
             </div>\
             <div class="form-group margin_center">\
                 <h3 class="required">選取資料夾</h3>\
@@ -47,7 +47,7 @@ function render_upload_div(class_item, category_table_str){
             </div>\
             <div class="form-group margin_center">\
                 <div class="row">\
-                    <h3 class="col-md-10 required" >選擇分類</h3>\
+                    <h3 class="col-md-10 required" >選擇' + class_item.name + '分類</h3>\
                     <div class="col-md-2"><input type="button" value="新增" id="add_new_category" class="btn btn-secondary"></div>\
                 </div>\
                 <div id="category_table" class="category_table">\
@@ -90,7 +90,6 @@ function make_img_movable(){
 }
 
 function render_new_category_tablerow(table_id, new_category_item){
-    //[TODO] if there is one new class created, first time adding category should clear table row
     var new_id = new_category_item.id,
         new_name = new_category_item.name,
         newCategoryTableRow = "";
@@ -103,51 +102,85 @@ function render_new_category_tablerow(table_id, new_category_item){
         </tr>";
 
     // console.log(newCategoryId, newCategoryName);
-    if($("#" + table_id).find('tbody').length){
-        $("#" + table_id).find('tbody').append(newCategoryTableRow);
+
+    //check if tbody is existed
+    var $table_id = "#" + table_id;
+    if($($table_id).find('tbody').length){
+        //check this is the first category for this new class
+        if($($table_id).find('tr').length == 1){
+            //it is the first category
+            if($($table_id).find('td').hasClass('none')){
+                console.log("this is first category");
+                console.log("should special deal with the IU");
+                //first time adding category should clear table row
+                $($table_id).find('tbody').html(newCategoryTableRow);
+            }
+            else{
+                $($table_id).find('tbody').append(newCategoryTableRow);
+            }
+        }
+        else{
+            $($table_id).find('tbody').append(newCategoryTableRow);
+        }
     }
     else{
-        $("#" + table_id).append(newCategoryTableRow);
+        if($($table_id).find('tr').length == 1){
+            //it is the first category
+            if($($table_id).find('td').hasClass('none')){
+                console.log("this is first category");
+                console.log("should special deal with the IU");
+                //first time adding category should clear table row
+                $($table_id).html(newCategoryTableRow);
+            }
+            else{
+                $($table_id).append(newCategoryTableRow);
+            }
+        }
+        else{
+            $($table_id).append(newCategoryTableRow);
+        }
     }
 }
 
 //new category btn handler
-function add_new_category_btn_handler(class_item, btnId, tableId,){
+function add_new_category_btn_handler(class_item, btnId, tableId){
     $("#" + btnId).on("click", function(){
         
         var new_category_name = prompt("輸入新分類");
         console.log(new_category_name);
-        if(new_category_name != null){
-            if($.trim(new_category_name) == ''){
-                alert("欄位不得空白");
-                return false;
-            }
-            else{
-                //create new category in db
-                $.ajax({
-                    type: "POST",
-                    url: location.origin + "/addNewCategory",
-                    cache: false,
-                    data: JSON.stringify(
-                    {
-                        class_id : class_item.id,
-                        class_name : class_item.name,
-                        new_category_name : new_category_name
-                    }),
-                    contentType: "application/json",
-                    error: function(e){
-                        alert("something wrong");
-                        console.log(e);
-                    },
-                    success: function(data){
-                        var new_category_item = JSON.parse(data);
-                        console.log("add: ", new_category_item);
+        if(new_category_name == null || $.trim(new_category_name) == ''){
+            alert("欄位不得空白");
+            return false;
+        }
+        else if($('#' + tableId + ' label:contains("' + new_category_name + '")').length){
+            alert("分類名稱不得重複");
+            return false;
+        }
+        else{
+            //create new category in db
+            $.ajax({
+                type: "POST",
+                url: location.origin + "/addNewCategory",
+                cache: false,
+                data: JSON.stringify(
+                {
+                    class_id : class_item.id,
+                    class_name : class_item.name,
+                    new_category_name : new_category_name
+                }),
+                contentType: "application/json",
+                error: function(e){
+                    alert("something wrong");
+                    console.log(e);
+                },
+                success: function(data){
+                    var new_category_item = JSON.parse(data);
+                    console.log("add: ", new_category_item);
 
-                        render_new_category_tablerow(tableId, new_category_item);
-                        alert(new_category_name + " 新增成功!");
-                    }
-                });
-            }
+                    render_new_category_tablerow(tableId, new_category_item);
+                    alert(new_category_name + " 新增成功!");
+                }
+            });
         }
     });
 }
