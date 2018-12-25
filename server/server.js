@@ -159,6 +159,7 @@ app.use(bodyParser.urlencoded({
 // process http body
 app.use(bodyParser.json());
 
+//[TODO] according to the class of this question, generate related options
 function generateAnswerIDListAndThenStartServer(){
     db.Group.findAll( { where: {status: 1} }).then(GroupList => {
         var group_count = 0, index;
@@ -231,6 +232,7 @@ function generateAnswerIDListAndThenStartServer(){
     });
 }
 
+//[TODO] according to the class of this question, generate related options
 //get all question into nameList
 db.Question.findAll({ 
     where: {status: 1},
@@ -380,20 +382,50 @@ app.get("/getClass", function(req, res){
     }
 });
 
+// addNewClass
+app.post("/addNewClass", function(req, res){
+    var new_class_name = req.body.new_class_name,
+        new_sample_name = req.body.new_sample_name,
+        new_sample_description = req.body.new_sample_description;
+
+    console.log("---addNewClass---");
+    console.log("new class name: ", new_class_name, 
+                "\nnew sample name: ", new_sample_name, 
+                "\nnew sample description: ", new_sample_description);
+    db.Class.create({
+        name: new_class_name,
+        sample_name: new_sample_name,
+        description: new_sample_description
+    }).then(function(){
+        db.Class.findOne({ where: {name: new_class_name}}).then(function(c){
+            if(c != null){
+                console.log("new class id:", c.id);
+
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({class_id: c.id}));
+            }
+        });
+    }).catch(function(err){ //duplicate category name
+        //response
+        console.log(err);
+        utils.sendResponse(res, 400, JSON.stringify(err));
+    });
+});
+
 // get Category API
 //mode: all, using
 app.get("/getCategory", function(req, res){
     console.log('---getCategory---');
     var mode = req.query.mode,
-        target_class_name = req.query.class_name;
+        target_class_id = req.query.class_id;
 
     console.log("mode: ", mode);
     if(mode == "all"){
         var category_list = [];
 
-        console.log("finding all category in Class:", target_class_name, "...");
+        console.log("finding all category in Class:", target_class_id, "...");
         db.Class.findOne({ 
-            where: { name: target_class_name} 
+            where: { id: target_class_id} 
         }).then(function(c){
             if(c != null){
                 var count = 0;
@@ -403,7 +435,16 @@ app.get("/getCategory", function(req, res){
                 }).then(CategoryList => {
                     if(CategoryList.length == 0){ //this class has no category
                         //response
-                        utils.sendResponse(res, 200, JSON.stringify(category_list));
+                        console.log("no category in class_id:", c.id);
+                        utils.sendResponse(res, 200, JSON.stringify({
+                            class_item : {
+                                id : c.id, 
+                                name : c.name,
+                                sample_name : c.sample_name,
+                                description : c.description
+                            },
+                            category_list : category_list
+                        }));
                     }
 
                     CategoryList.forEach((CategorySetItem) => {
@@ -420,7 +461,15 @@ app.get("/getCategory", function(req, res){
                             console.log(category_list);
 
                             //response
-                            utils.sendResponse(res, 200, JSON.stringify(category_list));
+                            utils.sendResponse(res, 200, JSON.stringify({
+                                class_item : {
+                                    id : c.id, 
+                                    name : c.name,
+                                    sample_name : c.sample_name,
+                                    description : c.description
+                                },
+                                category_list : category_list
+                            }));
                         }
                     });
                 });
@@ -430,8 +479,8 @@ app.get("/getCategory", function(req, res){
     else if(mode == "using"){
         var usingCategory_list = [];
 
-        console.log("finding used category in Class", target_class_name, " ...");
-        db.Class.findOne({ where: {name: target_class_name} }).then(function(c){
+        console.log("finding used category in Class", target_class_id, " ...");
+        db.Class.findOne({ where: {id: target_class_id} }).then(function(c){
             if(c != null){
                 var count = 0;
 
@@ -495,122 +544,15 @@ app.post('/addNewCategory', function(req, res){
                         utils.sendResponse(res, 200, JSON.stringify(data));
                     }
                 });
+            }).catch(function(err){ //duplicate category name
+                //response
+                console.log(err);
+                utils.sendResponse(res, 400, JSON.stringify(err));
             });
         }
     });
 });
 
-// post questionUpload API
-app.post('/questionUpload', function (req, res) {
-    console.log("---questionUpload---");
-    var question_id = utils.uuid().substring(0,16),
-        user_upload_data = {}, img_order = {},
-        qname = "", description = "", save_path = "",
-        pictures = [], questionCategories = [], photo_path = [],
-        photo_status = true, class_id,
-        form = new formidable.IncomingForm();
-
-    form.multiples = true;
-    form.uploadDir = path.join(__dirname, 'upload_cache');
-
-    form.on('field', function(name, field) {
-        if(name == "user_upload_data"){
-            user_upload_data = JSON.parse(field);
-            class_id = user_upload_data["class_id"];
-            qname = user_upload_data["name"];
-            description = user_upload_data["description"];
-            img_order = user_upload_data["img_order"];
-            questionCategories = user_upload_data["selected_category"];
-
-            console.log(user_upload_data);
-        }
-    });
-
-    form.on('file', function (name, file) {
-        var buffer = null, type = null, order = 0,
-            picture_id = utils.uuid().substring(0,16);
-
-        buffer = readChunk.sync(file.path, 0, 262);
-        type = fileType(buffer);
-        photo_path.push(file.path);
-
-        // Check the file type, must be either png, jpg or jpeg
-        if(type !== null && (type.ext === 'png' || type.ext === 'jpg' || type.ext === 'jpeg')) {
-            save_path = "../web/img/" + picture_id + "." + type.ext;
-            fs.rename(file.path, save_path, function(err, result) {
-                if(err) console.log('error', err);
-            });
-
-            //find corresponding index from img_order
-            if(img_order.hasOwnProperty(file.name)){
-                order = img_order[file.name];
-            }
-
-            //add to pictures list for db create
-            pictures.push({
-                id: picture_id + "." + type.ext,
-                order: order,
-                origin_name: file.name
-            });
-
-            console.log(file.name, picture_id, order);
-        }
-        else {
-            console.log(file.name, " suck");
-
-            //dirty file
-            photo_status = false;
-        }
-    });
-
-    form.on('error', function(err) {
-        console.log('Error occurred during processing - ' + err);
-    });
-
-    form.on('end', function() {
-        console.log('All the request fields have been processed.');
-    });
-
-    // Parse the incoming form fields.
-    form.parse(req, function (err, fields, files) {
-        if(photo_status){
-            //create this question to related db
-            console.log("start create this question...");
-            db.Class.findOne({ where: {id: class_id} }).then(function(c){
-                if(c != null){
-                    var data = {
-                        id : question_id,
-                        name : qname,
-                        description : description,
-                        status : 0,
-                        ClassId: c.id,
-                        QuestionCategories : questionCategories,
-                        Pictures : pictures
-                    };
-                    db.Question.create(data, {include: [db.QuestionCategory, db.Picture]}).then(function(){
-                        console.log(question_id, " created!!");
-
-                        //send success response
-                        utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
-                    });
-                }
-            });
-        }
-        else{
-            console.log("this question upload fail");
-            //delete all files
-            for(var path in photo_path){
-                fs.unlink(path, (err) => {
-                    if(err){
-                        console.log(path, " cannot be delete Q");
-                    }
-                });
-            }
-            //send failed response
-            utils.sendResponse(res, 200, JSON.stringify({photo_status: 0}));
-        }
-    });
-});
 
 // get getQuestion API
 //mode: all, one, category ; status: 0, 1
@@ -622,7 +564,7 @@ app.get("/getQuestion", function(req, res){
     console.log("mode: ", mode);
     if(mode == "all"){
         var status = req.query.status,
-            pending_list = [];
+            question_list = [];
 
         console.log("get question with class:", class_id, "and status:",status);
         db.Class.findOne({ where: {id: class_id} }).then(function(c){
@@ -636,16 +578,24 @@ app.get("/getQuestion", function(req, res){
                     QuestionList.forEach((QuestionSetItem) => {
                         var QuestionData = QuestionSetItem.get({ plain: true });
                         
-                        pending_list.push({
+                        question_list.push({
                             id : QuestionData.id,
                             name : QuestionData.name,
                             description : QuestionData.description
                         });
                     });
-                    console.log(pending_list);
+                    console.log(question_list);
                     
                     //response
-                    utils.sendResponse(res, 200, JSON.stringify(pending_list));
+                    utils.sendResponse(res, 200, JSON.stringify({
+                        class_item: {
+                            id: c.id,
+                            name: c.name,
+                            sample_name: c.sample_name,
+                            description: c.description
+                        },
+                        question_list: question_list
+                    }));
                 });
             }
         });
@@ -765,6 +715,118 @@ app.get("/getQuestion", function(req, res){
             });
         });
     }
+});
+
+// post questionUpload API
+app.post('/questionUpload', function (req, res) {
+    console.log("---questionUpload---");
+    var question_id = utils.uuid().substring(0,16),
+        user_upload_data = {}, img_order = {},
+        qname = "", description = "", save_path = "",
+        pictures = [], questionCategories = [], photo_path = [],
+        photo_status = true, class_id,
+        form = new formidable.IncomingForm();
+
+    form.multiples = true;
+    form.uploadDir = path.join(__dirname, 'upload_cache');
+
+    form.on('field', function(name, field) {
+        if(name == "user_upload_data"){
+            user_upload_data = JSON.parse(field);
+            class_id = user_upload_data["class_id"];
+            qname = user_upload_data["name"];
+            description = user_upload_data["description"];
+            img_order = user_upload_data["img_order"];
+            questionCategories = user_upload_data["selected_category"];
+
+            console.log(user_upload_data);
+        }
+    });
+
+    form.on('file', function (name, file) {
+        var buffer = null, type = null, order = 0,
+            picture_id = utils.uuid().substring(0,16);
+
+        buffer = readChunk.sync(file.path, 0, 262);
+        type = fileType(buffer);
+        photo_path.push(file.path);
+
+        // Check the file type, must be either png, jpg or jpeg
+        if(type !== null && (type.ext === 'png' || type.ext === 'jpg' || type.ext === 'jpeg')) {
+            save_path = "../web/img/" + picture_id + "." + type.ext;
+            fs.rename(file.path, save_path, function(err, result) {
+                if(err) console.log('error', err);
+            });
+
+            //find corresponding index from img_order
+            if(img_order.hasOwnProperty(file.name)){
+                order = img_order[file.name];
+            }
+
+            //add to pictures list for db create
+            pictures.push({
+                id: picture_id + "." + type.ext,
+                order: order,
+                origin_name: file.name
+            });
+
+            console.log(file.name, picture_id, order);
+        }
+        else {
+            console.log(file.name, " suck");
+
+            //dirty file
+            photo_status = false;
+        }
+    });
+
+    form.on('error', function(err) {
+        console.log('Error occurred during processing - ' + err);
+    });
+
+    form.on('end', function() {
+        console.log('All the request fields have been processed.');
+    });
+
+    // Parse the incoming form fields.
+    form.parse(req, function (err, fields, files) {
+        if(photo_status){
+            //create this question to related db
+            console.log("start create this question...");
+            db.Class.findOne({ where: {id: class_id} }).then(function(c){
+                if(c != null){
+                    var data = {
+                        id : question_id,
+                        name : qname,
+                        description : description,
+                        status : 0,
+                        ClassId: c.id,
+                        QuestionCategories : questionCategories,
+                        Pictures : pictures
+                    };
+                    db.Question.create(data, {include: [db.QuestionCategory, db.Picture]}).then(function(){
+                        console.log(question_id, " created!!");
+
+                        //send success response
+                        utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
+                    });
+                }
+            });
+        }
+        else{
+            console.log("this question upload fail");
+            //delete all files
+            for(var path in photo_path){
+                fs.unlink(path, (err) => {
+                    if(err){
+                        console.log(path, " cannot be delete Q");
+                    }
+                });
+            }
+            //send failed response
+            utils.sendResponse(res, 200, JSON.stringify({photo_status: 0}));
+        }
+    });
 });
 
 // put questionUpdate API
@@ -970,6 +1032,7 @@ app.delete('/questionDelete', function(req, res){
     });
 });
 
+
 // get getGroup API
 //mode: all, one
 app.get('/getGroup', function(req, res){
@@ -978,24 +1041,61 @@ app.get('/getGroup', function(req, res){
     console.log("---getGroup---");
     console.log("mode:", mode);
     if(mode == "all"){
-        var group_list = [];
+        var class_id = req.query.class_id,
+            group_list = [];
 
-        db.Group.findAll().then(GroupList => {
-            GroupList.forEach((GroupSetItem) => {
-                var GroupData = GroupSetItem.get({ plain: true });
+        if(class_id == "all"){
+            console.log("get all groups from all classes");
+            db.Group.findAll().then(GroupList => {
+                GroupList.forEach((GroupSetItem) => {
+                    var GroupData = GroupSetItem.get({ plain: true });
+                    
+                    group_list.push({
+                        id : GroupData.id,
+                        name : GroupData.name,
+                        class_id : GroupData.class_id,
+                        status : GroupData.status
+                    });
+                });
                 
-                group_list.push({
-                    id : GroupData.id,
-                    name : GroupData.name,
-                    status : GroupData.status
+                console.log(group_list);
+
+                //response
+                utils.sendResponse(res, 200, JSON.stringify({
+                    group_list: group_list
+                }));
+            });
+        }
+        else{
+            console.log("get all groups belongs to class_id:", class_id);
+            db.Group.findAll({where :{ class_id: class_id }}).then(GroupList => {
+                GroupList.forEach((GroupSetItem) => {
+                    var GroupData = GroupSetItem.get({ plain: true });
+                    
+                    group_list.push({
+                        id : GroupData.id,
+                        name : GroupData.name,
+                        class_id : GroupData.class_id,
+                        status : GroupData.status
+                    });
+                });
+                
+                console.log(group_list);
+
+                db.Class.findOne({where: {id: class_id}}).then(function(c){
+                    //response
+                    utils.sendResponse(res, 200, JSON.stringify({
+                        class_item: {
+                            id: c.id,
+                            name: c.name,
+                            sample_name: c.sample_name,
+                            description: c.description
+                        },
+                        group_list: group_list
+                    }));
                 });
             });
-            
-            console.log(group_list);
-
-            //response
-            utils.sendResponse(res, 200, JSON.stringify(group_list));
-        });
+        }
     }
     else if(mode == "one"){
         var target_group_id = req.query.group_id,
@@ -1032,24 +1132,33 @@ app.get('/getGroup', function(req, res){
     }
 });
 
-// psot addNewHumanGroup API
+// post addNewHumanGroup API
 app.post('/addNewGroup', function(req, res){
     var group_name = req.body.newgroup_name,
-        group_list = req.body.group_list;
+        group_list = req.body.group_list,
+        class_id = req.body.class_id;
 
     console.log("---addNewGroup---");
-    console.log("new group name:", group_name);
-    console.log("new group member:", group_list);
+    console.log("add new group name:", group_name);
+    console.log("add new group belongs to class_id:", class_id);
+    console.log("add new group member:", group_list);
 
     var data = {
         name : group_name,
         status : 0,
+        class_id : class_id,
         GroupMembers : group_list
     };
 
     db.Group.create(data, {include: [db.GroupMember]}).then(function(){
-        // response
-        utils.sendResponse(res, 200, "success!");
+        db.Group.findOne({where: {name: group_name}}).then(function(g){
+            if(g != null){
+                console.log("new group added success with group_id:", g.id);
+
+                // response
+                utils.sendResponse(res, 200, JSON.stringify(g.id));
+            }
+        });
     });
 });
 
@@ -1216,6 +1325,7 @@ app.get("/manage", utils.auth, function(req, res){
     fs.readFile("../web/html/manage.html", function (err, contents) {
         if (err){ console.log(err); }
         else{
+            //[TODO] using template send class_list to front end for home page
             contents = contents.toString('utf8');
             utils.sendResponse(res, 200, contents);
         }
