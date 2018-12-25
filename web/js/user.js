@@ -7,10 +7,6 @@ function render_dropdownlist_div(functiontype, class_list){
             ';
     });
 
-    if(functiontype == "upload"){
-        dropdownlist_str += '<a class="dropdown-item" href="#" id="dropdown-upload-add">新增</a>';
-    }
-
     return dropdownlist_str;
 }
 
@@ -40,11 +36,6 @@ function upload_dropdownlist_handler(class_list){
                 }
             });
         });
-    });
-
-    //[TODO] add NEW class
-    $("#dropdown-upload-add").on("click", function(){
-        alert("尚未完成");
     });
 }
 
