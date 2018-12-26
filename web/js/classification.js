@@ -28,7 +28,7 @@ function render_groupinfo(group_title, groupContentList, old_group){
         info = "";
 
         groupContentList.forEach((content) => {
-            info = content.name + content.description;
+            info = content.name;
             groupContent_str += '\
                 <tr>\
                     <td width="90%"><label question_id="' + content.question_id + '">' + info + '</label></td>\
@@ -106,11 +106,13 @@ function render_usingCategory_accordion(class_item, usingCategory_list){
 function render_question_in_category_table(category_id, question_in_category_list){
     var question_in_category_table_str = "";
 
-    question_in_category_list.forEach((human) => {
+    question_in_category_table_str += '<tr><th width="10%"></th><th  width="40%">名字</th><th  width="50%">敘述</th></tr>'
+    question_in_category_list.forEach((question) => {
         question_in_category_table_str += '\
             <tr>\
-                <td><button id="' + human.id + '" class="btn btn-outline-info addhuman_btn">添加</button>\
-                <td><label>' + human.info + '</label></td>\
+                <td><button id="' + question.id + '" class="btn btn-outline-info addhuman_btn">添加</button>\
+                <td><label>' + question.name + '</label></td>\
+                <td><label>' + question.description + '</label></td>\
             </tr>\
         ';
     });
@@ -455,7 +457,7 @@ function option_handler(class_item, group_list){
 function render_classification_div(class_item, classification_selector_str){
     var pending_div = '\
         <div class="row">\
-            <div class="col-md-6">\
+            <div class="col-md-5">\
                 <div class="form-group">\
                     <h2 class="center">建立' + class_item.name + '群組</h2>\
                     <br>\
@@ -465,7 +467,7 @@ function render_classification_div(class_item, classification_selector_str){
                 <br>\
                 <div id="group_info"></div>\
             </div>\
-            <div id="human_accordion" class="col-md-6"></div>\
+            <div id="human_accordion" class="col-md-7"></div>\
         </div>\
     ';
 
