@@ -26,7 +26,7 @@ function set_db_init_value(){
             {
                 name : "人物" ,
                 sample_name : "伊麗莎白一世,Elizabeth I",
-                description : "(出生,死亡) (1961,1988)"
+                description : "出生-死亡\nex: 1961-1988"
             }
         ];
 
