@@ -125,7 +125,7 @@ $(function () {
 				chance_count = chance;
 				$("#successAlert").html("You got it! I am");
 				$("#successAlert").show();
-				$("#successName").html(gameList[answerNameNumber]);
+				$("#successName").html(gameList[answerNameNumber] + "<br>" + game_description);
 				$("#successName").show();
 				$("#successImage").show();
 				$("#wrongAlert").hide();
