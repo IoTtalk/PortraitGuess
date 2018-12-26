@@ -1,17 +1,20 @@
 function render_pending_div(class_item, pending_list){
     var pending_table_str = '<table id="pending_table" class="table table-hover">';
-    
+    pending_table_str += "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>"
+
     if(pending_list.length == 0){
         pending_table_str += "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>"
     }
 
     pending_list.forEach((pending_item) => {
         var id = pending_item.id,
-            info = pending_item.name;
+            name = pending_item.name,
+            description = pending_item.description;
 
         pending_table_str += '\
             <tr id="' + id + '">\
-                <td>' + info + '</td>\
+                <td>' + name + '</td>\
+                <td>' + description + '</td>\
                 <td><button id="' + id + '_pendingbtn" class="btn btn-secondary pendingbtn">審核</button></td>\
             </tr>';
     });
@@ -22,7 +25,7 @@ function render_pending_div(class_item, pending_list){
         <br>\
         <h3 class="center">請點選欲審核的' + class_item.name + '檔案</h3>\
         <br>\
-        <div class="margin_center pending_table">\
+        <div class="margin_table pending_table">\
         ' + pending_table_str + ' \
         </div>\
         ';
@@ -82,15 +85,26 @@ function setupEditModal(class_item, questionData, status){
         <button type="button" id="editModal_update" class="btn btn-warning">完成</button>\
         ';
 
-    /* set modal title */
-    if(status){
-        $("#editModalLabel").text(class_item.name + "編輯");
+    /* check modal mode */
+    var mode;
+    if(status == 1){
+        mode = "編輯";
     }
     else{
-        $("#editModalLabel").text(class_item.name + "審核");
+        mode = "審核";
     }
 
-    /* set modal body */
+    /* set modal title and body */
+    $("#editModalLabel_title").text(class_item.name + mode);
+    $('#editModal_s_name').text(mode + class_item.name + "名字");
+    $('#editModal_s_description').text(mode + class_item.name + "敘述");
+    $('#editModal_s_category').text(mode + class_item.name + "分類");
+    $('#editModal_s_picture').text(mode + class_item.name + "圖片");
+
+    //set class default placeholder
+    $("#editModal_name").attr("placeholder", class_item.sample_name);
+    $("#editModal_description").attr("placeholder", class_item.description);
+
     //set human info
     $('#editModal_name').val(questionData.name);
     $('#editModal_description').val(questionData.description);
@@ -204,15 +218,11 @@ function question_update_btn_handler(class_item, id, status){
                     $('#'+ id).remove();
                     
                     //display no more pending files in this class
-                    if($("#pending_table tbody").find('tr').length == 0){
+                    var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                    if($("#pending_table tbody").find('tr').length == 1){
                         console.log('the last pending files');
-                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
                         $("tbody").append(msg);
-                    }
-                    else if($("#pending_table table").find('tr').length == 0){
-                        console.log('the last pending files');
-                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
-                        $("table").append(msg);
+                        $("#dropdown-menu-pending").html("");
                     }
                     
                     alert(name + " 審核成功!!");
