@@ -1,3 +1,9 @@
+.homepage_label {
+    font-size: 20px;
+}
+.homepage_link {
+    /*margin-left: 10%;*/
+}
 .mycheckbox {
     text-align: right;
 }
@@ -61,6 +67,10 @@
 .margin_center {
     margin-left: 25%;
     width: 50%;
+}
+.margin_table {
+    margin-left: 15%;
+    width: 70%;
 }
 .center {
     text-align: center;
