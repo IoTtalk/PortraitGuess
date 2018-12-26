@@ -118,12 +118,9 @@ ws2Painting.onopen = function(){
             //if user want to play game, generate game info for him
 
             //ganerate new gameinfo
-            gameInfo = utils.generateGame(preAnswerID, answerIDList, nameIDList, nameList);
-            gameList = gameInfo[0];
-            gameAnswerPicPath = gameInfo[1];
-            preAnswerID = gameInfo[2];
-
-            socket.emit("NewGameRes", {"gameList": gameList});
+            // generateGame();
+            // socket.emit("NewGameRes", {"gameList": game_list});
+            test("socket", socket, null, null);
 
             // dai.push("NextGame", [1]);
             console.log("NextGame");
@@ -132,19 +129,22 @@ ws2Painting.onopen = function(){
 };
 
 
-/* nameList structure
-    [   { info: '湯姆克魯斯,tom cruise,1951-',
-          path: { order: pic_path }
+/* answerList structure
+    [   { class_id:    87,
+          name:        '湯姆克魯斯,tom cruise',
+          description: ',1951-',
+          path: { order: pic_path },
         },
     ]
 */
-var nameList = [],
-    nameIDList = [],
-    answerIDList = [],
-    gameInfo,
-    gameList,
-    gameAnswerPicPath,
+var answerIDList = [],
+    answerList = [],
+    answerID = "",
+    gameAnswerPicPath = [],
     preAnswerID = "",
+    option_list = [],
+    game_list = [],
+    game_description = "",
     url = shortid.generate();
 
 console.log("----Game url----\n", url);
@@ -159,122 +159,253 @@ app.use(bodyParser.urlencoded({
 // process http body
 app.use(bodyParser.json());
 
-//[TODO] according to the class of this question, generate related options
-function generateAnswerIDListAndThenStartServer(){
-    db.Group.findAll( { where: {status: 1} }).then(GroupList => {
-        var group_count = 0, index;
+//[TODO] according to the groupmember of using groups, generate answerList
+db.Group.findAll( { where: {status: 1} }).then(GroupList => {
+    var group_count = 0, index;
 
-        //check there is no initial answerIDList (no using group)
-        if(GroupList.length == 0){
-            //start server
-            //let default answerIDList to all approved question
-            answerIDList = nameIDList;
+    //check there is no using group(no initial answerIDList)
+    if(GroupList.length == 0){
+        //[TODO] let default answerIDList to all approved question
+        // answerIDList = nameIDList;
+        // answerList = ???
 
-            console.log('---server start without any using group---');
-            http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
-            return;
-        }
+        //start server
+        console.log('---server start without any using group---');
+        http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+    }
 
-        GroupList.forEach((GroupSetItem) => { 
-            var GroupData = GroupSetItem.get({ plain: true });
+    GroupList.forEach((GroupSetItem) => { 
+        var GroupData = GroupSetItem.get({ plain: true });
 
-            db.GroupMember.findAll({ //find all questions in this selected group
-                where: { GroupId: GroupData.id }
-            }).then(GroupMemberList => {
-                var groupmember_count = 0;
+        db.GroupMember.findAll({ //find all questions in this selected group
+            where: { GroupId: GroupData.id }
+        }).then(GroupMemberList => {
+            var groupmember_count = 0;
 
-                GroupMemberList.forEach((GroupMemberSetItem) => { 
-                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+            GroupMemberList.forEach((GroupMemberSetItem) => { 
+                var GroupMemberData = GroupMemberSetItem.get({ plain: true });
 
-                    db.Question.findOne({ //for every single question get info and pic
-                        where: { id: GroupMemberData.question_id },
-                        include: [ { model: db.Picture } ]
-                    }).then(function(q){
-                        if(q != null){
-                            groupmember_count += 1;
+                db.Question.findOne({ //for every single question get info and pic
+                    where: { id: GroupMemberData.question_id },
+                    include: [ { model: db.Picture } ]
+                }).then(function(q){
+                    if(q != null){
+                        groupmember_count += 1;
 
-                            var pic_dict = {},
-                                info = q.name + q.description;
+                        var pic_dict = {};
+                        q.Pictures.forEach((picture) => {
+                            pic_dict[picture.order] = picture.id;
+                        });
 
-                            q.Pictures.forEach((picture) => {
-                                pic_dict[picture.order] = picture.id;
+                        //check answerIDList duplicate,
+                        //if false, push ID into answerIDList, answerList
+                        //if true, do nothing
+
+                        index = answerIDList.indexOf(GroupMemberData.question_id);
+                        if (index > -1) { //duplicate
+                            // console.log("got duplicate question_id, pass it !");
+                        }
+                        else{
+                            answerIDList.push(GroupMemberData.question_id);
+                            answerList.push({
+                                class_id: q.ClassId,
+                                name: q.name,
+                                description: q.description,
+                                path: pic_dict
                             });
+                        }
 
-                            //check answerIDList duplicate,
-                            //if false, push ID into answerIDList
-                            //if true, do nothing
+                        if(groupmember_count == GroupMemberList.length){
+                            group_count += 1;
+                            if(group_count == GroupList.length){
+                                console.log("---setting answerIDList---");
+                                console.log(answerIDList);
+                                console.log(answerList);
 
-                            index = answerIDList.indexOf(GroupMemberData.question_id);
-                            if (index > -1) { //duplicate
-                                // console.log("got duplicate question_id, pass it !");
-                            }
-                            else{
-                                answerIDList.push(GroupMemberData.question_id);
-                            }
-
-                            if(groupmember_count == GroupMemberList.length){
-                                group_count += 1;
-                                if(group_count == GroupList.length){
-                                    
-                                    console.log("---setting answerIDList---");
-                                    console.log(answerIDList);
-
-                                    //start server
-                                    console.log('---server start---');
-                                    http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
-                                }
+                                //start server
+                                console.log('---server start---');
+                                http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
                             }
                         }
-                    });
+                    }
                 });
             });
         });
     });
-}
+});
 
-//[TODO] according to the class of this question, generate related options
-//get all question into nameList
-db.Question.findAll({ 
-    where: {status: 1},
-    include: [ { model: db.Picture } ]
-}).then(QuestionList => {
-    //first server start case
-    if(QuestionList.length == 0){
-        //just start server
-        generateAnswerIDListAndThenStartServer();
-        return true;
-    }
+//according to the class of this question, generate related options
+// function generateGameOption(answerID, answerData){
+//     var random_index_list = [],
+//         option_name_list = [],
+//         index;
 
-    var count = 0
+//     db.Question.findAll({where: {
+//         status: 1, 
+//         ClassId: answerData.class_id
+//     }}).then(candidateQuestionList => {
+//         //check if game could play
+//         if(candidateQuestionList.length < 6){
+//             console.log("lack of question for playing");
+//             return [];
+//         }
 
-    QuestionList.forEach((QuestionSetItem) => {
-        count += 1;
+//         //random 6 index for candidate
+//         do{
+//             index = Math.floor(Math.random() * candidateQuestionList.length);
+//             //check if this random index has existed
+//             if(random_index_list.indexOf(index) <= -1){ 
+//                 random_index_list.push(index);
+//             }
+//         } while(random_index_list.length < 6);
+//         console.log("random_index_list: ", random_index_list);
+        
+//         //get name for random index list
+//         var random_option_duplicate_flag = false;
+//         for(var i = 0; i < random_index_list.length; i++){
+//             var questionData = candidateQuestionList[random_index_list[i]].get({ plain: true });
+//             if(questionData.id == answerID){
+//                 random_option_duplicate_flag = true;
+//             }
+//             else{
+//                 option_name_list.push(questionData.name);
+//             }
+//         }
 
-        var QuestionData = QuestionSetItem.get({ plain: true });
-        var picture_data = QuestionData.Pictures,
-            info, pic_dict = {};
+//         //if deplicate just return
+//         if(random_option_duplicate_flag){
+//             console.log(option_name_list);
+//             return option_name_list;
+//         }
+//         else{ //if no duplicate, drop the first one option
+//             console.log("random option duplicate, splice it");
+//             option_name_list.splice(0, 1);
+//             console.log(option_name_list);
+//             return option_name_list;
+//         }
+//     });
+// }
 
-        info = QuestionData.name + QuestionData.description;
+// function generateGame(){
+//     var index;
 
-        picture_data.forEach((picture) => {
-            pic_dict[picture.order] = picture.id;
-        });
+//     do{
+//         index = Math.floor(Math.random() * answerIDList.length);
+//         answerID = answerIDList[index];
+//     } while(preAnswerID == answerID);
+//     preAnswerID = answerID;
 
-        nameIDList.push(QuestionData.id);
-        nameList.push({
-            info: info,
-            path: pic_dict
-        });
+//     //set answer into game_list[0]
+//     game_list.push(answerList[index].name);
 
-        if(count == QuestionList.length){
-            console.log('---load all approved questions in server---');
-            console.log(nameIDList);
+//     //get option list
+//     option_list = generateGameOption(answerID, answerList[index]);
+    
+//     //concat answer and option
+//     game_list = game_list.concat(option_list);
 
-            //get answerIDList from using Group and start server
-            generateAnswerIDListAndThenStartServer();
+//     //set gameAnswerPicPath for pythonDA and processing
+//     gameAnswerPicPath = answerList[index].path;
+
+//     console.log("New Game :", game_list);
+// }
+
+function test(mode, socket, res, contents){
+    var index;
+
+    do{
+        index = Math.floor(Math.random() * answerIDList.length);
+        answerID = answerIDList[index];
+    } while(preAnswerID == answerID);
+    preAnswerID = answerID;
+
+    //set answer into game_list[0]
+    game_list = [];
+    game_list.push(answerList[index].name);
+    game_description = "";
+    game_description = answerList[index].description;
+
+    //get option list
+    // option_list = generateGameOption(answerID, answerList[index]);
+    var random_index_list = [],
+        option_name_list = [];
+
+    db.Question.findAll({where: {
+        status: 1, 
+        ClassId: answerList[index].class_id
+    }}).then(candidateQuestionList => {
+        //check if game could play
+        if(candidateQuestionList.length < 6){
+            console.log("lack of question for playing");
+            return [];
+        }
+
+        //random 6 index for candidate
+        do{
+            index = Math.floor(Math.random() * candidateQuestionList.length);
+            //check if this random index has existed
+            if(random_index_list.indexOf(index) <= -1){ 
+                random_index_list.push(index);
+            }
+        } while(random_index_list.length < 6);
+        console.log("random_index_list: ", random_index_list);
+        
+        //get name for random index list
+        var random_option_duplicate_flag = false;
+        for(var i = 0; i < random_index_list.length; i++){
+            var questionData = candidateQuestionList[random_index_list[i]].get({ plain: true });
+            if(questionData.id == answerID){
+                random_option_duplicate_flag = true;
+            }
+            else{
+                option_name_list.push(questionData.name);
+            }
+        }
+
+        //if deplicate just return
+        if(random_option_duplicate_flag){
+            console.log(option_name_list);
+            // return option_name_list;
+        }
+        else{ //if no duplicate, drop the first one option
+            console.log("random option duplicate, splice it");
+            option_name_list.splice(0, 1);
+            console.log(option_name_list);
+            // return option_name_list;
+        }
+        option_list = option_name_list;
+
+        //concat answer and option
+        game_list = game_list.concat(option_list);
+
+        //set gameAnswerPicPath for pythonDA and processing
+        index = answerIDList.indexOf(answerID);
+        gameAnswerPicPath = [];
+        var total_pic = Object.keys(answerList[index].path).length;
+        for(var j = 1; j <= total_pic; j++){
+            gameAnswerPicPath.push(answerList[index].path[j]);
+        }
+        // gameAnswerPicPath = answerList[index].path;
+
+        console.log("New Game :", game_list);
+        console.log("Game Description:", game_description);
+
+        //mode
+        if(mode == "socket"){
+            socket.emit("NewGameRes", {"gameList": game_list, "game_description": game_description});
+        }
+        else{
+            contents = contents.toString('utf8');
+            utils.sendEjsRenderResponse(res, 200, contents, {
+                gameList: game_list, 
+                game_description: game_description,
+                webSocketPort: config.webSocketPort, 
+                webServerPort: config.webServerPort,
+                paintingIP: config.paintingIP
+            });
         }
     });
-});
+}
 
 /* APIs */
 // authentication url API
@@ -289,6 +420,8 @@ app.post("/url",function(req, res){
         utils.sendResponse(res, 403, "permission denied");
     }
 });
+
+
 
 // get getClass API
 //mode: all, pending, approved
@@ -411,6 +544,8 @@ app.post("/addNewClass", function(req, res){
         utils.sendResponse(res, 400, JSON.stringify(err));
     });
 });
+
+
 
 // get Category API
 //mode: all, using
@@ -552,6 +687,7 @@ app.post('/addNewCategory', function(req, res){
         }
     });
 });
+
 
 
 // get getQuestion API
@@ -701,7 +837,8 @@ app.get("/getQuestion", function(req, res){
                     if(q != null){
                         question_list.push({
                             id: q.id,
-                            info: q.name + q.description
+                            name: q.name,
+                            description: q.description
                         });
                     }
 
@@ -836,8 +973,7 @@ app.put('/questionUpdate', function (req, res) {
         new_name = user_update_data.name,
         new_description = user_update_data.description,
         new_img_order = user_update_data.img_order,
-        new_selected_category = user_update_data.selected_category,
-        index;
+        new_selected_category = user_update_data.selected_category;
 
     console.log("---questionUpdate---");
     console.log(user_update_data);
@@ -873,43 +1009,6 @@ app.put('/questionUpdate', function (req, res) {
                             count += 1;
                             console.log(PictureData.id, " update success");
                             if(count == PictureList.length){
-                                var info_str = new_name + new_description;
-
-                                //update this human in nameList
-                                index = nameIDList.indexOf(question_id);
-                                if(index > -1){ //exist
-                                    //get new question path
-                                    nameList[index].path = {}; //flush old pic path
-                                    for(var key in new_img_order) {
-                                        nameList[index].path[new_img_order[key]] = key;
-                                    }
-
-                                    //set new question info
-                                    nameList[index].info = info_str;
-
-                                    //set new question path
-                                    console.log("---update", question_id, "in nameList---");
-                                    console.log(nameList[index].info);
-                                    console.log(nameList[index].path);
-                                    // console.log(nameList);
-                                }
-                                else{ //pending -> approved, append into nameList
-                                    var pic_dict = {};
-
-                                    for(var key in new_img_order) {
-                                        pic_dict[new_img_order[key]] = key;
-                                    }
-
-                                    nameIDList.push(question_id);
-                                    nameList.push({
-                                        info: info_str,
-                                        path: pic_dict
-                                    });
-                                    console.log('---add', question_id, 'into nameList---');
-                                    console.log(info_str);
-                                    console.log(pic_dict);
-                                }
-
                                 //send response
                                 utils.sendResponse(res, 200, "success!");
                             }
@@ -1001,19 +1100,11 @@ app.delete('/questionDelete', function(req, res){
                                             }).then(function(){
                                                 console.log("delete ", delete_question_id, " success");
 
-                                                //remove this question from nameIDList and nameList
-                                                index = nameIDList.indexOf(delete_question_id);
-                                                if(index > -1){ //exist
-                                                    nameIDList.splice(index, 1);
-                                                    nameList.splice(index, 1);
-                                                    console.log("delete this ", delete_question_id, " from nameList, nameIDList");
-                                                    // console.log(nameList);
-                                                }
-
-                                                //remove this question from answerIDList
+                                                //remove this question from answerIDList, answerList
                                                 index = answerIDList.indexOf(delete_question_id);
                                                 if(index > -1){ // exist
                                                     answerIDList.splice(index, 1);
+                                                    answerList.splice(index, 1);
                                                     console.log("delete this ", delete_question_id, " from answerIDList");
                                                 }
 
@@ -1031,6 +1122,7 @@ app.delete('/questionDelete', function(req, res){
         });
     });
 });
+
 
 
 // get getGroup API
@@ -1300,6 +1392,13 @@ app.put('/setDisplayGroup', function(req, res){
                         }
                         else{
                             answerIDList.push(GroupMemberData.question_id);
+                            //[TODO] get question path
+                            // answerList.push({
+                            //     class_id:,
+                            //     name:,
+                            //     description:,
+                            //     path:
+                            // });
                         }
 
                         groupmember_count += 1;
@@ -1319,15 +1418,77 @@ app.put('/setDisplayGroup', function(req, res){
     });
 });
 
+
+
 /* web page */
 // manage page
 app.get("/manage", utils.auth, function(req, res){
     fs.readFile("../web/html/manage.html", function (err, contents) {
         if (err){ console.log(err); }
         else{
-            //[TODO] using template send class_list to front end for home page
-            contents = contents.toString('utf8');
-            utils.sendResponse(res, 200, contents);
+            var class_list = [],
+                pendingClass_list = [],
+                approvedClass_list = [];
+
+            //using template send class_list to front end for home page
+            db.Class.findAll().then(ClassList => {
+                var count = 0;
+                ClassList.forEach((ClassSetItem) => { 
+                    var ClassData = ClassSetItem.get({ plain: true });
+                    //find pending class
+                    db.Question.findAll({ 
+                        where: {
+                            status: 0, 
+                            ClassId: ClassData.id}
+                    }).then(pendingQuestionList => {
+                        if(pendingQuestionList.length > 0){
+                            pendingClass_list.push({
+                                id: ClassData.id,
+                                name: ClassData.name,
+                                sample_name: ClassData.sample_name,
+                                description: ClassData.description
+                            });
+                        }
+                        //find approved class
+                        db.Question.findAll({
+                            where: {
+                                status: 1, 
+                                ClassId: ClassData.id}
+                        }).then(approvedClassList => {
+                            if(approvedClassList.length > 0){
+                                approvedClass_list.push({
+                                    id: ClassData.id,
+                                    name: ClassData.name,
+                                    sample_name: ClassData.sample_name,
+                                    description: ClassData.description
+                                });
+                            }
+                            //push class into class_list
+                            class_list.push({
+                                id: ClassData.id,
+                                name: ClassData.name,
+                                sample_name: ClassData.sample_name,
+                                description: ClassData.description
+                            });
+                            count += 1;
+                            if(count == ClassList.length){
+                                var data = {
+                                    test_list: class_list,
+                                    class_list: class_list,
+                                    pendingClass_list: pendingClass_list,
+                                    approvedClass_list: approvedClass_list
+                                };
+                                console.log(data);
+
+                                //send response
+                                contents = contents.toString('utf8');
+                                // utils.sendResponse(res, 200, contents);
+                                utils.sendEjsRenderResponse(res, 200, contents, data);
+                            }
+                        });
+                    });
+                });
+            });
         }
     });
 });
@@ -1381,20 +1542,18 @@ app.get("/*", function(req, res){
                 });
             }
             else{
-                // random generate at least 6 question info list to front-end webpage
-                // also decide the targeted answer
-                gameInfo = utils.generateGame(preAnswerID, answerIDList, nameIDList, nameList);
-                gameList = gameInfo[0];
-                gameAnswerPicPath = gameInfo[1];
-                preAnswerID = gameInfo[2];
+                // random generate 1 question for answer and
+                // 5 questions for option list list to front-end webpage
+                // generateGame();
+                test("web", null, res, contents);
 
-                contents = contents.toString('utf8');
-                utils.sendEjsRenderResponse(res, 200, contents, {
-                    gameList: gameList, 
-                    webSocketPort: config.webSocketPort, 
-                    webServerPort: config.webServerPort,
-                    paintingIP: config.paintingIP
-                });
+                // contents = contents.toString('utf8');
+                // utils.sendEjsRenderResponse(res, 200, contents, {
+                //     gameList: game_list, 
+                //     webSocketPort: config.webSocketPort, 
+                //     webServerPort: config.webServerPort,
+                //     paintingIP: config.paintingIP
+                // });
             }
         });
     }
