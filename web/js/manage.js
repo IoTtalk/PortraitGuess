@@ -335,7 +335,7 @@ function show_class_upload_management(class_id) {
     if(class_id != "new"){
         $.ajax({
             type: "GET",
-            url: location.origin + "/getCategory?mode=all&class_id=" + class_id,
+            url: location.origin + "/getGroup?mode=all&class_id=" + class_id,
             cache: false,
             contentType: "application/json",
             error: function(e){
@@ -346,9 +346,9 @@ function show_class_upload_management(class_id) {
                 data = JSON.parse(payload);
                 console.log(data);
                 
-                $("#display").html(render_upload_div(data.class_item, render_category_table(data.category_list)));
+                $("#display").html(render_upload_div(data.class_item, render_group_table(data.group_list)));
                 make_img_movable();
-                add_new_category_btn_handler(data.class_item, "add_new_category", "category_table");
+                add_new_group_btn_handler(data.class_item, "add_new_group", "group_table");
                 uplaod_btn_handler(data.class_item);
             }
         });
@@ -401,7 +401,7 @@ function show_class_pending_management(class_id) {
             console.log(data);
 
             $('#display').html(render_pending_div(data.class_item, data.question_list));
-            pendingbtn_handler(data.class_item);
+            pendingbtn_handler(data.class_item, "pending");
         }
     });
 }
@@ -432,7 +432,7 @@ function show_class_approved_management(class_id){
             console.log(data);
 
             $('#display').html(render_approved_div(data.class_item, data.question_list));
-            approvedbtn_handler(data.class_item);
+            approvedbtn_handler(data.class_item, "approved");
         }
     });
 }
@@ -483,7 +483,7 @@ function classification_dropdownlist_handler(class_list){
 function show_class_display_management(){
     $.ajax({
         type: "GET",
-        url: location.origin + "/getGroup?mode=all&class_id=all",
+        url: location.origin + "/getGroup?mode=approved&class_id=all",
         cache: false,
         contentType: "application/json",
         dataType: 'json',
