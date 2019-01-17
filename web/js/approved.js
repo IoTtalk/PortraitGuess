@@ -16,9 +16,9 @@ function render_approved_div(class_item, approved_list){
     approved_table_str += "</table>";
 
     var approved_div = '\
-        <h2 class="center top">已審' + class_item.name + '檔案</h2>\
+        <h2 class="center top">已審檔案</h2>\
         <br>\
-        <h3 class="center">請點選欲編輯的' + class_item.name + '檔案</h3>\
+        <h3 class="center">請點選欲編輯的檔案</h3>\
         <br>\
         <div class="margin_table approved_table">\
         ' + approved_table_str + ' \
@@ -27,7 +27,7 @@ function render_approved_div(class_item, approved_list){
     return approved_div;
 }
 
-function approvedbtn_handler(class_item){
+function approvedbtn_handler(class_item, mode){
     $(".approvedbtn").on("click", function(){
         var id = this.id.split("_")[0];
         console.log(id);
@@ -48,10 +48,10 @@ function approvedbtn_handler(class_item){
                 //set modal content by questionData
                 setupEditModal(class_item, questionData, 1);
 
-                add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
+                add_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_group_table");
 
-                question_update_btn_handler(class_item, id, 1);
-                question_delete_btn_handler(id);
+                question_update_btn_handler(class_item, id, mode);
+                question_delete_btn_handler(class_item, id, mode);
 
                 //show edit modal
                 $('#editModal').modal("show");
