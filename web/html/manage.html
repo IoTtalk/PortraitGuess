@@ -39,7 +39,7 @@
                     <div class="dropdown-menu" aria-labelledby="navbar-approved-btn" id="dropdown-menu-approved"></div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbar-classification-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">建立群組</a>
+                    <a class="nav-link dropdown-toggle" href="#" id="navbar-classification-btn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">編輯群組</a>
                     <div class="dropdown-menu" aria-labelledby="navbar-classification-btn" id="dropdown-menu-classification">
                     <div class="dropdown-menu" aria-labelledby="navbar-classification-btn" ></div>
                 </li>
@@ -56,37 +56,77 @@
             <div class="col-md-8">
                 <div id="display">
                     <div class="row">
-                        <div class="col-md-3 list-group">
-                            <h2 class='top center'>畫框管理系統</h2>
-                            <h5 class='center'>only supports Google Chrome</h5>
+                        <div class="col-md-6 offset-md-3 list-group">
+                            <div class="row">
+                                <div class="col-md-12 offset-md-2" style="display: flex;">
+                                    <div>
+                                        <h1 class='top center'>FrameTalk</h1>
+                                        <h4 class="center">powered by IoTtalk</h4>
+                                        <h5 class='center'>Google Chrome Version</h5>
+                                    </div>
+                                    <div>
+                                        <img class="img-thumbnail" style="width: 7rem;" src="/img/NCTU_logo.png">
+                                    </div>
+                                </div>
+                            </div>
                             <br>
-                            <label class="homepage_label">上傳檔案</label>
-                            <div id="homepage_upload_link">
-                                <!-- <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=upload&id=1">人物</a>
-                                <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=upload&id=new">新增</a> -->
+                            <div id="accordion">
+                                <div class="card">
+                                    <div class="card-header" id="headingUpload">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link homepage_label" data-toggle="collapse" data-target="#collpaseUpload" aria-expanded="true" aria-controls="collpaseUpload">上傳檔案</button>
+                                        </h5>
+                                    </div>
+                                    <div id="collpaseUpload" class="collapse" aria-labelledby="headingUpload" data-parent="#accordion">
+                                        <div id="homepage_upload_link" class="card-body"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header" id="headingPending">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link homepage_label" data-toggle="collapse" data-target="#collpasePending" aria-expanded="true" aria-controls="collpasePending">待審檔案</button>
+                                        </h5>
+                                    </div>
+                                    <div id="collpasePending" class="collapse" aria-labelledby="headingPending" data-parent="#accordion">
+                                        <div id="homepage_pending_link" class="card-body"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header" id="headingApproved">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link homepage_label" data-toggle="collapse" data-target="#collpaseApproved" aria-expanded="true" aria-controls="collpaseApproved">已審檔案</button>
+                                        </h5>
+                                    </div>
+                                    <div id="collpaseApproved" class="collapse" aria-labelledby="headingApproved" data-parent="#accordion">
+                                        <div id="homepage_approved_link" class="card-body"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header" id="headingClassification">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link homepage_label" data-toggle="collapse" data-target="#collpaseClassification" aria-expanded="true" aria-controls="collpaseClassification">編輯群組</button>
+                                        </h5>
+                                    </div>
+                                    <div id="collpaseClassification" class="collapse" aria-labelledby="headingClassification" data-parent="#accordion">
+                                        <div id="homepage_classification_link" class="card-body"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header" id="headingDisplay">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link homepage_label" data-toggle="collapse" data-target="#collpaseDisplay" aria-expanded="true" aria-controls="collpaseDisplay">播放清單</button>
+                                        </h5>
+                                    </div>
+                                    <div id="collpaseDisplay" class="collapse" aria-labelledby="headingDisplay" data-parent="#accordion">
+                                        <div id="homepage_display_link" class="card-body"></div>
+                                    </div>
+                                </div>
+
                             </div>
-                            <label class="homepage_label">待審檔案</label>
-                            <div id="homepage_pending_link">
-                                <!-- <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=pending&id=1">人物</a> -->
-                                <!-- <a href="#" class=" list-group-item-action">無</a> -->
-                            </div>
-                            <label class="homepage_label">已審檔案</label>
-                                <div id="homepage_approved_link">
-                                <!-- <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=approved&id=1">人物</a> -->
-                            </div>
-                            <label class="homepage_label">建立群組</label>
-                            <div id="homepage_classification_link">
-                                <!-- <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=classification&id=1">人物</a> -->
-                            </div>
-                            <label class="homepage_label">播放清單</label>
-                            <div id="homepage_display_link">
-                                <!-- <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=display">播放清單</a> -->
-                            </div>
-                        </div>
-                        <div class="col-md-2"></div>
-                        <div class="col-md-6 center">
-                            <h1>FrameTalk 智慧畫框</h1>
-                            <img class="img-thumbnail" src="/img/logo.png">
                         </div>
                     </div>
                 </div>
@@ -120,13 +160,13 @@
                                     </div>
                                     <div class="form-group">
                                         <div class="row">
-                                            <h4 id="editModal_s_category" class="col-md-9 required"></h4>
+                                            <h4 id="editModal_s_group" class="col-md-9"></h4>
                                             <div class="col-md-3">
-                                                <input type="button" id="editModal_add_new_category" class="btn btn-secondary" value="新增">
+                                                <input type="button" id="editModal_add_new_group" class="btn btn-secondary" value="新增">
                                             </div>
                                         </div>
-                                        <div class="editModal_category_table">
-                                            <table id="editModal_category_table" class="table table-hover"></table>
+                                        <div class="editModal_group_table">
+                                            <table id="editModal_group_table" class="table table-hover"></table>
                                         </div>
                                     </div>
                                 </form>
