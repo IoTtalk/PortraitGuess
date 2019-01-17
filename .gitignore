@@ -1,5 +1,6 @@
-server/config.js
 .DS_Store
+server/package-lock.json
+server/config.js
 server/node_modules
-web/img
 server/portraitguess.sqlite
+web/img
