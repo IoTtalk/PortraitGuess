@@ -1,43 +1,43 @@
-function render_category_table(category_list){
-    var category_table_str = '<table class="table table-hover">';
+function render_group_table(group_list){
+    var group_table_str = '<table class="table table-hover">';
 
-    if(category_list.length < 1){
-        category_table_str += "<tr><td class='none'>尚無分類，請點選由上方來新增</td></tr>"
+    if(group_list.length < 1){
+        group_table_str += "<tr><td class='none'>尚無群組，請點上方新增按鈕</td></tr>"
     }
     else{
-        category_list.forEach((category) => {
-            var id = category.id,
-                name = category.name;
+        group_list.forEach((group) => {
+            var id = group.id,
+                name = group.name;
 
-            category_table_str += "\
+            group_table_str += "\
                 <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='category' value='" + id + "' /></td>\
+                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='group' value='" + id + "' /></td>\
                     <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
                 </tr>";
         });
     }
 
-    category_table_str += "</table>";
+    group_table_str += "</table>";
 
-    return category_table_str;
+    return group_table_str;
 }
 
-function render_upload_div(class_item, category_table_str){
+function render_upload_div(class_item, group_table_str){
     var upload_div ='\
-        <h2 class="center">上傳' + class_item.name + '檔案</h2>\
+        <h2 class="center">上傳檔案</h2>\
         <br>\
         <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
             <div class="form-group margin_center">\
-                <h3 class="required">輸入' + class_item.name + '名字</h3>\
+                <h3 class="required">名字</h3>\
                 <input type="text" id="name" class="form-control" size="35" placeholder="ex: ' + class_item.sample_name + '"/>\
             </div>\
             <div class="form-group margin_center">\
-                <h3>輸入' + class_item.name + '描述</h3>\
+                <h3>描述</h3>\
                 <textarea class="form-control" id="description" placeholder="' + class_item.description + '"></textarea>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">選取資料夾</h3>\
-                <p class="help-block">拉動圖片以排序(由左至右，由上至下)</p>\
+                <h3 class="required">上傳資料夾</h3>\
+                <p class="help-block">可拉動圖片以排序(由左至右，由上至下)</p>\
                 <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple" webkitdirectory/>\
             </div>\
             <div class="form-group">\
@@ -47,11 +47,11 @@ function render_upload_div(class_item, category_table_str){
             </div>\
             <div class="form-group margin_center">\
                 <div class="row">\
-                    <h3 class="col-md-10 required" >選擇' + class_item.name + '分類</h3>\
-                    <div class="col-md-2"><input type="button" value="新增" id="add_new_category" class="btn btn-secondary"></div>\
+                    <h3 class="col-md-10" >選擇群組</h3>\
+                    <div class="col-md-2"><input type="button" value="新增" id="add_new_group" class="btn btn-secondary"></div>\
                 </div>\
-                <div id="category_table" class="category_table">\
-                    ' + category_table_str + '\
+                <div id="group_table" class="group_table">\
+                    ' + group_table_str + '\
                 </div>\
             </div>\
             <div class="form-group center">\
@@ -89,84 +89,84 @@ function make_img_movable(){
     $( "#row" ).disableSelection();
 }
 
-function render_new_category_tablerow(table_id, new_category_item){
-    var new_id = new_category_item.id,
-        new_name = new_category_item.name,
-        newCategoryTableRow = "";
+function render_new_group_tablerow(table_id, new_group_item){
+    var new_id = new_group_item.id,
+        new_name = new_group_item.name,
+        newGroupTableRow = "";
 
     console.log(new_id, new_name);
-    newCategoryTableRow += "\
+    newGroupTableRow += "\
         <tr>\
-            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='category' value='" + new_id + "' /></td>\
+            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='group' value='" + new_id + "' /></td>\
             <td><label for='" + new_id + "_checkbox'>" + new_name + "</label></td>\
         </tr>";
 
-    // console.log(newCategoryId, newCategoryName);
+    // console.log(newGroupId, newGroupName);
 
     //check if tbody is existed
     var $table_id = "#" + table_id;
     if($($table_id).find('tbody').length){
-        //check this is the first category for this new class
+        //check this is the first Group for this new class
         if($($table_id).find('tr').length == 1){
-            //it is the first category
+            //it is the first Group
             if($($table_id).find('td').hasClass('none')){
-                console.log("this is first category");
+                console.log("this is first Group");
                 console.log("should special deal with the IU");
-                //first time adding category should clear table row
-                $($table_id).find('tbody').html(newCategoryTableRow);
+                //first time adding Group should clear table row
+                $($table_id).find('tbody').html(newGroupTableRow);
             }
             else{
-                $($table_id).find('tbody').append(newCategoryTableRow);
+                $($table_id).find('tbody').append(newGroupTableRow);
             }
         }
         else{
-            $($table_id).find('tbody').append(newCategoryTableRow);
+            $($table_id).find('tbody').append(newGroupTableRow);
         }
     }
     else{
         if($($table_id).find('tr').length == 1){
-            //it is the first category
+            //it is the first Group
             if($($table_id).find('td').hasClass('none')){
-                console.log("this is first category");
+                console.log("this is first Group");
                 console.log("should special deal with the IU");
-                //first time adding category should clear table row
-                $($table_id).html(newCategoryTableRow);
+                //first time adding Group should clear table row
+                $($table_id).html(newGroupTableRow);
             }
             else{
-                $($table_id).append(newCategoryTableRow);
+                $($table_id).append(newGroupTableRow);
             }
         }
         else{
-            $($table_id).append(newCategoryTableRow);
+            $($table_id).append(newGroupTableRow);
         }
     }
 }
 
-//new category btn handler
-function add_new_category_btn_handler(class_item, btnId, tableId){
+//new group btn handler
+function add_new_group_btn_handler(class_item, btnId, tableId){
     $("#" + btnId).on("click", function(){
         
-        var new_category_name = prompt("輸入新分類");
-        console.log(new_category_name);
-        if(new_category_name == null || $.trim(new_category_name) == ''){
+        var new_group_name = prompt("輸入新群組名字");
+        console.log(new_group_name);
+        if(new_group_name == null || $.trim(new_group_name) == ''){
             alert("欄位不得空白");
             return false;
         }
-        else if($('#' + tableId + ' label:contains("' + new_category_name + '")').length){
-            alert("分類名稱不得重複");
+        else if($('#' + tableId + ' label:contains("' + new_group_name + '")').length){
+            alert("群組名稱不得重複");
             return false;
         }
         else{
             //create new category in db
             $.ajax({
                 type: "POST",
-                url: location.origin + "/addNewCategory",
+                url: location.origin + "/addNewGroup",
                 cache: false,
                 data: JSON.stringify(
                 {
+                    newgroup_name : new_group_name,
+                    group_list : [],
                     class_id : class_item.id,
-                    class_name : class_item.name,
-                    new_category_name : new_category_name
                 }),
                 contentType: "application/json",
                 error: function(e){
@@ -174,11 +174,11 @@ function add_new_category_btn_handler(class_item, btnId, tableId){
                     console.log(e);
                 },
                 success: function(data){
-                    var new_category_item = JSON.parse(data);
-                    console.log("add: ", new_category_item);
+                    var new_group_item = JSON.parse(data);
+                    console.log("add: ", new_group_item);
 
-                    render_new_category_tablerow(tableId, new_category_item);
-                    alert(new_category_name + " 新增成功!");
+                    render_new_group_tablerow(tableId, new_group_item);
+                    alert(new_group_name + " 新增成功!");
                 }
             });
         }
@@ -198,7 +198,7 @@ function handleUploadSuccess(data){
         $('#name').val('');
         $('#description').val('');
         $('#row').html('');
-        $('input[name=category]:checked').prop("checked", false);
+        $('input[name=group]:checked').prop("checked", false);
     }
     else{
         alert("上傳失敗\n圖片檔案不支援!!\n僅限圖片為: png, jpeg, jpg");
@@ -218,7 +218,7 @@ function uplaod_btn_handler(class_item){
             description = $('#description').val(),
             img_order = {},
             data = {},
-            selected_category = [];
+            selected_group = [];
 
         //chech input
         if($.trim(name) == ''){
@@ -230,19 +230,13 @@ function uplaod_btn_handler(class_item){
             return false;
         }
 
-        var $selected_list = $('input[name=category]:checked');
-        if($selected_list.length < 1){
-            alert('至少選取 1 個分類');
-            return false;
-        }
-        else{
-            $selected_list.each(function (){
-                selected_category.push({
-                    category_id : $(this).val()
-                });
-                // console.log($(this).val());
+        var $selected_list = $('input[name=group]:checked');
+        $selected_list.each(function(){
+            selected_group.push({
+                group_id : $(this).val()
             });
-        }
+            console.log($(this).val());
+        });
 
         //get img order
         $("img").each(function(index){
@@ -255,7 +249,7 @@ function uplaod_btn_handler(class_item){
         data["name"] = name;
         data["description"] = description;
         data["img_order"] = img_order;
-        data["selected_category"] = selected_category;
+        data["selected_group"] = selected_group;
         formData.append("user_upload_data", JSON.stringify(data));
 
         for(var i = 0; i < files.length; i++){
