@@ -21,9 +21,9 @@ function render_pending_div(class_item, pending_list){
     pending_table_str += "</table>";
 
     var pending_div = '\
-        <h2 class="center top">待審' + class_item.name + '檔案</h2>\
+        <h2 class="center top">待審檔案</h2>\
         <br>\
-        <h3 class="center">請點選欲審核的' + class_item.name + '檔案</h3>\
+        <h3 class="center">請點選欲審核的檔案</h3>\
         <br>\
         <div class="margin_table pending_table">\
         ' + pending_table_str + ' \
@@ -34,34 +34,34 @@ function render_pending_div(class_item, pending_list){
 
 function setupEditModal(class_item, questionData, status){
     var editModal_body_str = "",
-        category_str = "",
+        group_str = "",
         picture_str = "";
 
-    //render human category
-    var category_list = questionData.category;
-    for(var i = 0; i < category_list.length; i++){
-        var id = category_list[i].id,
-            name = category_list[i].name,
-            used = category_list[i].used;
+    //render question group
+    var group_list = questionData.group;
+    for(var i = 0; i < group_list.length; i++){
+        var id = group_list[i].id,
+            name = group_list[i].name,
+            used = group_list[i].used;
         
-        //mark this category checked
+        //mark this group checked
         if(used){
-            category_str += "\
+            group_str += "\
                 <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalcategory' value='" + id + "' checked/></td>\
+                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalgroup' value='" + id + "' checked/></td>\
                     <td><label for='editModal_" + id + "_checkbox'>" + name + "</label></td>\
                 </tr>";
         }
         else{
-            category_str += "\
+            group_str += "\
                 <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalcategory' value='" + id + "' /></td>\
+                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalgroup' value='" + id + "' /></td>\
                     <td><label for='editModal_" + id + "_checkbox'>" + name + "</label></td>\
                 </tr>";
         }
     }
 
-    //render human picture
+    //render question picture
     var picture_list = questionData.picture;
     for(var i = 0; i < picture_list.length; i++){
         picture_str += '\
@@ -96,10 +96,10 @@ function setupEditModal(class_item, questionData, status){
 
     /* set modal title and body */
     $("#editModalLabel_title").text(class_item.name + mode);
-    $('#editModal_s_name').text(mode + class_item.name + "名字");
-    $('#editModal_s_description').text(mode + class_item.name + "敘述");
-    $('#editModal_s_category').text(mode + class_item.name + "分類");
-    $('#editModal_s_picture').text(mode + class_item.name + "圖片");
+    $('#editModal_s_name').text("名字");
+    $('#editModal_s_description').text("描述");
+    $('#editModal_s_group').text("分類");
+    $('#editModal_s_picture').text("圖片");
 
     //set class default placeholder
     $("#editModal_name").attr("placeholder", class_item.sample_name);
@@ -110,7 +110,7 @@ function setupEditModal(class_item, questionData, status){
     $('#editModal_description').val(questionData.description);
 
     //set all category and mark those used
-    $('#editModal_category_table').html(category_str);
+    $('#editModal_group_table').html(group_str);
 
     //ser picture
     $('#editModal_picture_table').html(picture_str);
@@ -119,7 +119,7 @@ function setupEditModal(class_item, questionData, status){
     $('#editModal_footer').html(footer_str);
 }
 
-function pendingbtn_handler(class_item){
+function pendingbtn_handler(class_item, mode){
     $(".pendingbtn").on("click", function(){
         var id = this.id.split("_")[0];
         console.log("checking: ", id);
@@ -137,13 +137,13 @@ function pendingbtn_handler(class_item){
                 var questionData = JSON.parse(data)
                 console.log(questionData);
 
-                //set modal content by humanData
+                //set modal content by questionData
                 setupEditModal(class_item, questionData, 0);
 
-                add_new_category_btn_handler(class_item, "editModal_add_new_category", "editModal_category_table");
+                add_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_group_table");
 
-                question_update_btn_handler(class_item, id, 0);
-                question_delete_btn_handler(id);
+                question_update_btn_handler(class_item, id, mode);
+                question_delete_btn_handler(class_item, id, mode);
 
                 //show edit modal
                 $('#editModal').modal("show");
@@ -152,7 +152,7 @@ function pendingbtn_handler(class_item){
     });
 }
 
-function question_update_btn_handler(class_item, id, status){
+function question_update_btn_handler(class_item, id, mode){
     $("#editModal_update").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
@@ -163,7 +163,7 @@ function question_update_btn_handler(class_item, id, status){
             description = $('#editModal_description').val(),
             img_order = {},
             data = {},
-            selected_category = [];
+            selected_group = [];
 
         //chech input
         if($.trim(name) == ''){
@@ -171,17 +171,11 @@ function question_update_btn_handler(class_item, id, status){
             return false;
         }
 
-        var $selected_list = $('input[name=editModalcategory]:checked');
-        if($selected_list.length < 1){
-            alert('至少選取 1 個分類');
-            return false;
-        }
-        else{
-            $selected_list.each(function (){
-                selected_category.push($(this).val());
-                // console.log($(this).val());
-            });
-        }
+        var $selected_list = $('input[name=editModalgroup]:checked');
+        $selected_list.each(function (){
+            selected_group.push($(this).val());
+            // console.log($(this).val());
+        });
 
         //get img order
         $("#editModal_picture_table img").each(function(index){
@@ -192,7 +186,7 @@ function question_update_btn_handler(class_item, id, status){
         //append data in formData
         data["id"] = id;
         data["img_order"] = img_order;
-        data["selected_category"] = selected_category;
+        data["selected_group"] = selected_group;
         data["name"] = name;
         data["description"] = description;
 
@@ -213,7 +207,7 @@ function question_update_btn_handler(class_item, id, status){
                 console.log(e);
             },
             success: function(data){
-                if(!status){
+                if(mode == "pending"){
                     //remove this question from pending table
                     $('#'+ id).remove();
                     
@@ -227,10 +221,17 @@ function question_update_btn_handler(class_item, id, status){
                     
                     alert(name + " 審核成功!!");
                 }
-                else{
+                else if(mode == "approved"){
                     //set new question info into approvd table
-                    $('#'+ id).find('td:first-child').html(name + description);
+                    $('#'+ id).find('td:first-child').html(name);
+                    $('#'+ id).find('td:nth-child(2)').html(description);
                     alert(name + " 編輯成功!!");
+                }
+                else if(mode == "group"){
+                    alert(name + " 審核成功!!");
+                    //[TODO] make <label> with attr 'question_id'
+                    //and UI to 移除
+
                 }
 
                 //close edit modal
@@ -240,7 +241,7 @@ function question_update_btn_handler(class_item, id, status){
     });
 }
 
-function question_delete_btn_handler(id){
+function question_delete_btn_handler(class_item, id, mode){
     $("#editModal_delete").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
@@ -264,19 +265,36 @@ function question_delete_btn_handler(id){
                 },
                 success: function(data){
                     var response = JSON.parse(data);
-
-                    if(response.using){
-                        alert("該檔案正在使用中，無法刪除\n請編輯使用中的群組!");
+                    if(mode == "approved"){
+                        if(response.using){
+                            alert("該檔案正在播放清單中，無法刪除\n請編輯使用中的群組!");
+                        }
                     }
-                    else{
+                    else if(mode == "pending"){
                         //remove this question from table
                         $('#'+ id).remove();
 
-                        //close edit modal
-                        $('#editModal').modal("hide");
+                        //display no more pending files in this class
+                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                        if($("#pending_table tbody").find('tr').length == 1){
+                            console.log('the last pending files');
+                            $("tbody").append(msg);
+                            $("#dropdown-menu-pending").html("");
+                        }
 
                         alert("刪除成功!!");
-                        //[TODO]
+
+                        //close edit modal
+                        $('#editModal').modal("hide");
+                    }
+                    else if(mode == "group"){
+                        //remove this question from table
+                        $('#'+ id + "_pendingbtn").parent().parent().remove();
+
+                        alert("刪除成功!!");
+
+                        //close edit modal
+                        $('#editModal').modal("hide");
                     }
                 }
             });
