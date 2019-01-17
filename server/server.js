@@ -48,7 +48,6 @@ ws2Painting.onopen = function(){
             connectedCount--;
             console.log("connected count: " + connectedCount);
             if((isGamePlaying && playID == socket.id) || connectedCount == 0){
-                //ws2Painting.send("leaveGame");
                 ws2Painting.send(JSON.stringify({
                     "Command": "leaveGame"
                 }));
@@ -64,7 +63,6 @@ ws2Painting.onopen = function(){
                 socket.emit("checkUrlACK", {"urlCorrect": false});
             }
             else{
-                //ws2Painting.send("enterGame");
                 ws2Painting.send(JSON.stringify({
                     "Command": "enterGame"
                 }));
@@ -85,9 +83,7 @@ ws2Painting.onopen = function(){
         });
 
         socket.on("Name-I", function(msg){
-            //sand answer picture path list to preocess
-
-            //ws2Painting.send(msg);
+            //sand answer picture path list to processing
             ws2Painting.send(JSON.stringify({
                 "Command": "gameTarget",
                 "path" : gameAnswerPicPath
@@ -97,7 +93,6 @@ ws2Painting.onopen = function(){
         });
 
         socket.on("Correct", function(msg){
-            //ws2Painting.send("Correct");
             ws2Painting.send(JSON.stringify({
                 "Command": "Correct"
             }));
@@ -106,7 +101,6 @@ ws2Painting.onopen = function(){
         });
         
         socket.on("Wrong", function(msg){
-            //ws2Painting.send("Wrong");
             ws2Painting.send(JSON.stringify({
                 "Command": "Wrong"
             }));
@@ -114,14 +108,10 @@ ws2Painting.onopen = function(){
             console.log("Wrong");
         });
 
+        //if user want to play game, generate game info for him
         socket.on("NewGameReq", function(msg){
-            //if user want to play game, generate game info for him
-
             //ganerate new gameinfo
-            // generateGame();
-            // socket.emit("NewGameRes", {"gameList": game_list});
-            test("socket", socket, null, null);
-
+            generateGameInfo("socket", socket, null, null);
             // dai.push("NextGame", [1]);
             console.log("NextGame");
         });
@@ -235,82 +225,7 @@ db.Group.findAll( { where: {status: 1} }).then(GroupList => {
 });
 
 //according to the class of this question, generate related options
-// function generateGameOption(answerID, answerData){
-//     var random_index_list = [],
-//         option_name_list = [],
-//         index;
-
-//     db.Question.findAll({where: {
-//         status: 1, 
-//         ClassId: answerData.class_id
-//     }}).then(candidateQuestionList => {
-//         //check if game could play
-//         if(candidateQuestionList.length < 6){
-//             console.log("lack of question for playing");
-//             return [];
-//         }
-
-//         //random 6 index for candidate
-//         do{
-//             index = Math.floor(Math.random() * candidateQuestionList.length);
-//             //check if this random index has existed
-//             if(random_index_list.indexOf(index) <= -1){ 
-//                 random_index_list.push(index);
-//             }
-//         } while(random_index_list.length < 6);
-//         console.log("random_index_list: ", random_index_list);
-        
-//         //get name for random index list
-//         var random_option_duplicate_flag = false;
-//         for(var i = 0; i < random_index_list.length; i++){
-//             var questionData = candidateQuestionList[random_index_list[i]].get({ plain: true });
-//             if(questionData.id == answerID){
-//                 random_option_duplicate_flag = true;
-//             }
-//             else{
-//                 option_name_list.push(questionData.name);
-//             }
-//         }
-
-//         //if deplicate just return
-//         if(random_option_duplicate_flag){
-//             console.log(option_name_list);
-//             return option_name_list;
-//         }
-//         else{ //if no duplicate, drop the first one option
-//             console.log("random option duplicate, splice it");
-//             option_name_list.splice(0, 1);
-//             console.log(option_name_list);
-//             return option_name_list;
-//         }
-//     });
-// }
-
-// function generateGame(){
-//     var index;
-
-//     do{
-//         index = Math.floor(Math.random() * answerIDList.length);
-//         answerID = answerIDList[index];
-//     } while(preAnswerID == answerID);
-//     preAnswerID = answerID;
-
-//     //set answer into game_list[0]
-//     game_list.push(answerList[index].name);
-
-//     //get option list
-//     option_list = generateGameOption(answerID, answerList[index]);
-    
-//     //concat answer and option
-//     game_list = game_list.concat(option_list);
-
-//     //set gameAnswerPicPath for pythonDA and processing
-//     gameAnswerPicPath = answerList[index].path;
-
-//     console.log("New Game :", game_list);
-// }
-
-function test(mode, socket, res, contents){
+function generateGameInfo(mode, socket, res, contents){
     var index;
 
     do{
@@ -515,7 +430,7 @@ app.get("/getClass", function(req, res){
     }
 });
 
-// addNewClass
+// post addNewClass API
 app.post("/addNewClass", function(req, res){
     var new_class_name = req.body.new_class_name,
         new_sample_name = req.body.new_sample_name,
@@ -547,151 +462,8 @@ app.post("/addNewClass", function(req, res){
 
 
 
-// get Category API
-//mode: all, using
-app.get("/getCategory", function(req, res){
-    console.log('---getCategory---');
-    var mode = req.query.mode,
-        target_class_id = req.query.class_id;
-
-    console.log("mode: ", mode);
-    if(mode == "all"){
-        var category_list = [];
-
-        console.log("finding all category in Class:", target_class_id, "...");
-        db.Class.findOne({ 
-            where: { id: target_class_id} 
-        }).then(function(c){
-            if(c != null){
-                var count = 0;
-
-                db.Category.findAll({ 
-                    where: { ClassId: c.id }
-                }).then(CategoryList => {
-                    if(CategoryList.length == 0){ //this class has no category
-                        //response
-                        console.log("no category in class_id:", c.id);
-                        utils.sendResponse(res, 200, JSON.stringify({
-                            class_item : {
-                                id : c.id, 
-                                name : c.name,
-                                sample_name : c.sample_name,
-                                description : c.description
-                            },
-                            category_list : category_list
-                        }));
-                    }
-
-                    CategoryList.forEach((CategorySetItem) => {
-                        var CategoryData = CategorySetItem.get({ plain: true });
-
-                        //push into list
-                        category_list.push({
-                            id : CategoryData.id,
-                            name : CategoryData.name
-                        });
-
-                        count += 1;
-                        if(count == CategoryList.length){
-                            console.log(category_list);
-
-                            //response
-                            utils.sendResponse(res, 200, JSON.stringify({
-                                class_item : {
-                                    id : c.id, 
-                                    name : c.name,
-                                    sample_name : c.sample_name,
-                                    description : c.description
-                                },
-                                category_list : category_list
-                            }));
-                        }
-                    });
-                });
-            }
-        });
-    }
-    else if(mode == "using"){
-        var usingCategory_list = [];
-
-        console.log("finding used category in Class", target_class_id, " ...");
-        db.Class.findOne({ where: {id: target_class_id} }).then(function(c){
-            if(c != null){
-                var count = 0;
-
-                db.Category.findAll({ where: { ClassId: c.id } }).then(CategoryList => {
-                    CategoryList.forEach((CategorySetItem) => {
-                        var CategoryData = CategorySetItem.get({ plain: true });
-
-                        // make sure there are humans belong to this category
-                        db.QuestionCategory.findAll({ 
-                            where: { category_id: CategoryData.id }
-                        }).then(QuestionCategoryList => {
-                            count += 1;
-
-                            if(QuestionCategoryList.length != 0){
-                                //push into list
-                                usingCategory_list.push({
-                                    id : CategoryData.id,
-                                    name : CategoryData.name
-                                });
-                            }
-
-                            if(count == CategoryList.length){
-                                console.log(usingCategory_list);
-
-                                //response
-                                utils.sendResponse(res, 200, JSON.stringify(usingCategory_list));
-                            }
-                        });
-                    });
-                });
-            }
-        });
-    }
-});
-
-// post addNewCategory API
-app.post('/addNewCategory', function(req, res){
-    console.log('---addNewCategory---');
-    var class_id = req.body.class_id,
-        class_name = req.body.class_name,
-        new_category_name = req.body.new_category_name,
-        data = {};
-
-    db.Class.findOne({ where: {id: class_id} }).then(function(c){
-        if(c != null){
-            db.Category.create({ 
-                ClassId : c.id,
-                name : new_category_name
-            }).then(function(){
-                db.Category.findOne({ where: { 
-                        ClassId: c.id,
-                        name : new_category_name
-                }}).then(function(ca){
-                    if(ca != null){
-                        data["id"] = ca.id;
-                        data["name"] = ca.name;
-
-                        console.log(data);
-
-                        //response
-                        utils.sendResponse(res, 200, JSON.stringify(data));
-                    }
-                });
-            }).catch(function(err){ //duplicate category name
-                //response
-                console.log(err);
-                utils.sendResponse(res, 400, JSON.stringify(err));
-            });
-        }
-    });
-});
-
-
-
 // get getQuestion API
-//mode: all, one, category ; status: 0, 1
+//mode: all, one; status: 0, 1
 app.get("/getQuestion", function(req, res){
     console.log("---getQuestion---");
     var mode = req.query.mode,
@@ -738,29 +510,35 @@ app.get("/getQuestion", function(req, res){
     }
     else if(mode == "one"){
         var question_id = req.query.question_id,
-            usingCategory_dict = {},
+            allGroup_dict = {},
             questionData = {};
 
         console.log("get question:", question_id, "all data");
         db.Class.findOne({ where: {id: class_id} }).then(function(c){
             if(c != null){
-                //find all human category for check which this human has checked
-                db.Category.findAll({ where: { ClassId: c.id } }).then(CategoryList => {
-                    CategoryList.forEach((CategorySetItem) => {
-                        var CategoryData = CategorySetItem.get({ plain: true });
-                            usingCategory_dict[CategoryData.id.toString()] = CategoryData.name;
-                        });
+                //find all Group for check which this question has checked
+                db.Group.findAll({ where: { class_id: c.id } }).then(GroupList => {
+                    GroupList.forEach((GroupSetItem) => {
+                        var GroupData = GroupSetItem.get({ plain: true });
+                        allGroup_dict[GroupData.id.toString()] = GroupData.name;
+                    });
 
-                    //find pending human by id
+                    //create checked group list
+                    var checkedGroup_list = [];
+                    for(var groupId in allGroup_dict){
+                        if(allGroup_dict.hasOwnProperty(groupId)){
+                            checkedGroup_list.push({
+                                id: groupId,
+                                name: allGroup_dict[groupId],
+                                used: 0
+                            });
+                        }
+                    }
+
+                    //find question by id
                     db.Question.findOne({
-                        where: { 
-                            id: question_id,
-                            ClassId: c.id,
-                        },
-                        include: [
-                            { model: db.Picture },
-                            { model: db.QuestionCategory}
-                        ]
+                        where: { id: question_id, ClassId: c.id },
+                        include: [ { model: db.Picture } ]
                     }).then(QuestionObject => {
                         var QuestionData = QuestionObject.get({ plain: true });
 
@@ -773,83 +551,34 @@ app.get("/getQuestion", function(req, res){
                             }
                         }
 
-                        //mark checked category
-                        var checkedCategory_list = [];
-                        for(var categoryId in usingCategory_dict){
-                            if(usingCategory_dict.hasOwnProperty(categoryId)){
-                                //console.log(key, usingCategory_dict[categoryId]);
-                                var used = utils.checkCategoryused(QuestionData.QuestionCategories, categoryId);
-                                checkedCategory_list.push({
-                                    id: categoryId,
-                                    name: usingCategory_dict[categoryId],
-                                    used: used
+                        //find this question belongs to any group
+                        db.GroupMember.findAll({ where: {question_id: question_id}}).then(GroupMemberList => {
+                            if(GroupMemberList.length != 0){ //do has some groups for this question
+                                GroupMemberList.forEach((GroupMemberSetItem) => {
+                                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                                    
+                                    //mark those group for this question
+                                    for(var i = 0; i < checkedGroup_list.length; i++){
+                                        if(checkedGroup_list[i].id == GroupMemberData.GroupId){
+                                            checkedGroup_list[i].used = 1;
+                                        }
+                                    }
                                 });
                             }
-                        }
 
-                        //set human data
-                        questionData["name"] = QuestionData.name;
-                        questionData["description"] = QuestionData.description;
+                            //set question data
+                            questionData["name"] = QuestionData.name;
+                            questionData["description"] = QuestionData.description;
+                            questionData["picture"] = sortedPic_list;
+                            questionData["group"] = checkedGroup_list;
+                            console.log(questionData);
 
-                        //set sorted picture data
-                        questionData["picture"] = sortedPic_list;
-
-                        //set sorted picture data
-                        questionData["category"] = checkedCategory_list;
-
-                        console.log(questionData);
-
-                        //response
-                        utils.sendResponse(res, 200, JSON.stringify(questionData));
+                            //response
+                            utils.sendResponse(res, 200, JSON.stringify(questionData));
+                        });
                     });
                 });
             }
-        });
-    }
-    else if(mode == "category"){
-        var target_category_id = req.query.category_id,
-            question_list = [];
-
-        console.log("get question with class:", class_id, "and category_id:", target_category_id);
-        db.QuestionCategory.findAll({
-            where: { category_id: target_category_id }
-        }).then(QuestionCategoryList => {
-            //count for all search done
-            var count = 0;
-            
-            //if there is no human belongs to this category, return
-            if(QuestionCategoryList.length == 0){
-                console.log(question_list);
-                console.log("no human in this category");
-
-                //response
-                utils.sendResponse(res, 200, JSON.stringify(question_list));
-                return false;
-            }
-
-            QuestionCategoryList.forEach((QuestionCategorySetItem) => {
-                var QuestionCategoryData = QuestionCategorySetItem.get({ plain: true });
-                db.Question.findOne({
-                    where: {id: QuestionCategoryData.QuestionId, status: 1},
-                }).then(function(q){
-                    count += 1;
-
-                    if(q != null){
-                        question_list.push({
-                            id: q.id,
-                            name: q.name,
-                            description: q.description
-                        });
-                    }
-
-                    if(count == QuestionCategoryList.length){
-                        console.log(question_list);
-
-                        //response
-                        utils.sendResponse(res, 200, JSON.stringify(question_list));
-                    }
-                });
-            });
         });
     }
 });
@@ -860,7 +589,7 @@ app.post('/questionUpload', function (req, res) {
     var question_id = utils.uuid().substring(0,16),
         user_upload_data = {}, img_order = {},
         qname = "", description = "", save_path = "",
-        pictures = [], questionCategories = [], photo_path = [],
+        pictures = [], selected_group = [], photo_path = [],
         photo_status = true, class_id,
         form = new formidable.IncomingForm();
 
@@ -874,7 +603,7 @@ app.post('/questionUpload', function (req, res) {
             qname = user_upload_data["name"];
             description = user_upload_data["description"];
             img_order = user_upload_data["img_order"];
-            questionCategories = user_upload_data["selected_category"];
+            selected_group = user_upload_data["selected_group"];
 
             console.log(user_upload_data);
         }
@@ -938,14 +667,39 @@ app.post('/questionUpload', function (req, res) {
                         description : description,
                         status : 0,
                         ClassId: c.id,
-                        QuestionCategories : questionCategories,
                         Pictures : pictures
                     };
-                    db.Question.create(data, {include: [db.QuestionCategory, db.Picture]}).then(function(){
-                        console.log(question_id, " created!!");
+                    db.Question.create(data, {include: [db.Picture]}).then(function(){
+                        //create for selected_group
+                        if(selected_group.length < 1){ //no more group
+                            console.log(question_id, " created!!");
 
-                        //send success response
-                        utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
+                            //send success response
+                            utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
+                        }
+                        else{ //do have some group
+                            var count = 0;
+                            selected_group.forEach((group)=>{
+                                db.Group.findOne({ where: {id: group.group_id}}).then(function(g){
+                                    if(g != null){
+                                        db.GroupMember.create({
+                                            GroupId: g.id,
+                                            question_id: question_id
+                                        }).then(function(){
+                                            console.log("add into group:", g.id, "as one groupmember");
+
+                                            count += 1;
+                                            if(count == selected_group.length){
+                                                console.log(question_id, " created!!");
+
+                                                //send success response
+                                                utils.sendResponse(res, 200, JSON.stringify({photo_status: 1}));
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+                        }
                     });
                 }
             });
@@ -973,7 +727,7 @@ app.put('/questionUpdate', function (req, res) {
         new_name = user_update_data.name,
         new_description = user_update_data.description,
         new_img_order = user_update_data.img_order,
-        new_selected_category = user_update_data.selected_category;
+        new_selected_group = user_update_data.selected_group;
 
     console.log("---questionUpdate---");
     console.log(user_update_data);
@@ -984,19 +738,19 @@ app.put('/questionUpdate', function (req, res) {
           description: new_description },
         { where: { id: question_id }}
     ).then(function(){
-        //update question category
-        db.QuestionCategory.destroy({ //destroy old question category
-            where: { QuestionId: question_id }, 
-            force:true 
-        }).then(function(){ //create new question category
-            var new_selected_category_list = [];
-            new_selected_category.forEach((element)=>{
-                new_selected_category_list.push({
-                    category_id: element,
-                    QuestionId: question_id
+        //update question group
+        db.GroupMember.destroy({ //destroy old question group
+            where: { question_id: question_id }, force:true 
+        }).then(function(){ //create new question group
+            var new_selected_group_list = [];
+            new_selected_group.forEach((groupId)=>{
+                new_selected_group_list.push({
+                    GroupId: groupId,
+                    question_id: question_id
                 });
             });
-            db.QuestionCategory.bulkCreate(new_selected_category_list).then(function() {
+
+            db.GroupMember.bulkCreate(new_selected_group_list).then(function() {
                 //update picture order
                 db.Picture.findAll({ where: { QuestionId: question_id } }).then(PictureList => {
                     var count = 0;
@@ -1023,7 +777,7 @@ app.put('/questionUpdate', function (req, res) {
 // delete questionDelete API
 app.delete('/questionDelete', function(req, res){
     var delete_question_id = req.body.delete_question_id,
-        index, using_flag = false;
+        index, using_flag = false, approved_flag = false;
 
     /* delete this question from all related tables */
     console.log("---questionDelete---");
@@ -1060,63 +814,71 @@ app.delete('/questionDelete', function(req, res){
 
                 if(count == GroupList.length){
                     //search done
-                    if(using_flag){
-                        console.log(delete_question_id, "is using, cannot be deleted");
+                    db.Question.findOne({ where: {id: delete_question_id}}).then(function(q){
+                        if(q != null){
+                            if(q.status == 1){ //question is pending, always safe to be delete
+                                approved_flag = true;
+                            }
 
-                        //send response "OPERATION DENIED"
-                        utils.sendResponse(res, 200, JSON.stringify({using: 1}));
-                    }
-                    else{
-                        //delete, send response "SUCCESS"
-                        console.log(delete_question_id, "is safe to be deleted");
-                        
-                        //unlink related picture files from server
-                        db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
-                            var pic_count = 0;
+                            if(using_flag && approved_flag){
+                                console.log(delete_question_id, "is using, cannot be deleted");
 
-                            PictureList.forEach((PictureSetItem) => {
-                                var PictureData = PictureSetItem.get({ plain: true });
-                                var path = '../web/img/' + PictureData.id;
+                                //send response "OPERATION DENIED"
+                                utils.sendResponse(res, 200, JSON.stringify({using: 1}));
+                            }
+                            else{
+                                //delete, send response "SUCCESS"
+                                console.log(delete_question_id, "is safe to be deleted");
+                                
+                                //unlink related picture files from server
+                                db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
+                                    var pic_count = 0;
 
-                                fs.unlink(path, (err) => {
-                                    if(err) console.log(PictureData.id, ' cannot be deleted');
-                                    else    console.log(PictureData.id, ' deleted');
-                                });
+                                    PictureList.forEach((PictureSetItem) => {
+                                        var PictureData = PictureSetItem.get({ plain: true });
+                                        var path = '../web/img/' + PictureData.id;
 
-                                pic_count += 1;
-                                if(pic_count == PictureList.length){
-                                    //delete all picture files from server storage
-                                    console.log("all pictures have been successfully deleted from server storage");
-                                    db.Picture.destroy({
-                                        where: { QuestionId: delete_question_id }, force:true 
-                                    }).then(function(){
-                                        //destroy this question from category
-                                        db.QuestionCategory.destroy({ 
-                                            where: { QuestionId: delete_question_id }, force:true 
-                                        }).then(function(){
-                                            //destroy this question from question
-                                            db.Question.destroy({ 
-                                                where: { id: delete_question_id }, force:true 
-                                            }).then(function(){
-                                                console.log("delete ", delete_question_id, " success");
-
-                                                //remove this question from answerIDList, answerList
-                                                index = answerIDList.indexOf(delete_question_id);
-                                                if(index > -1){ // exist
-                                                    answerIDList.splice(index, 1);
-                                                    answerList.splice(index, 1);
-                                                    console.log("delete this ", delete_question_id, " from answerIDList");
-                                                }
-
-                                                //send response
-                                                utils.sendResponse(res, 200, JSON.stringify({using: 0}));
-                                            });
+                                        fs.unlink(path, (err) => {
+                                            if(err) console.log(PictureData.id, ' cannot be deleted');
+                                            else    console.log(PictureData.id, ' deleted');
                                         });
+
+                                        pic_count += 1;
+                                        if(pic_count == PictureList.length){
+                                            //delete all picture files from server storage
+                                            console.log("all pictures have been successfully deleted from server storage");
+                                            db.Picture.destroy({
+                                                where: { QuestionId: delete_question_id }, force:true 
+                                            }).then(function(){
+                                                //destroy this question from GroupMember
+                                                db.GroupMember.destroy({ 
+                                                    where: { question_id: delete_question_id }, force:true 
+                                                }).then(function(){
+                                                    //destroy this question from question
+                                                    db.Question.destroy({ 
+                                                        where: { id: delete_question_id }, force:true 
+                                                    }).then(function(){
+                                                        console.log("delete ", delete_question_id, " success");
+
+                                                        //remove this question from answerIDList, answerList
+                                                        index = answerIDList.indexOf(delete_question_id);
+                                                        if(index > -1){ // exist
+                                                            answerIDList.splice(index, 1);
+                                                            answerList.splice(index, 1);
+                                                            console.log("delete this ", delete_question_id, " from answerIDList");
+                                                        }
+
+                                                        //send response
+                                                        utils.sendResponse(res, 200, JSON.stringify({using: 0}));
+                                                    });
+                                                });
+                                            });
+                                        }
                                     });
-                                }
-                            });
-                        });
-                    }
+                                });
+                            }
+                        }
+                    });
                 }
             });
         });
@@ -1126,7 +888,7 @@ app.delete('/questionDelete', function(req, res){
 
 
 // get getGroup API
-//mode: all, one
+//mode: all, approved
 app.get('/getGroup', function(req, res){
     var mode = req.query.mode;
 
@@ -1189,37 +951,248 @@ app.get('/getGroup', function(req, res){
             });
         }
     }
-    else if(mode == "one"){
+    else if(mode == "approved"){
+        var class_id = req.query.class_id,
+            group_list = [];
+
+        console.log("get approved(filter those only contain pending questions) group from class_id:", class_id);
+        if(class_id == "all"){
+            db.Group.findAll().then(GroupList => {
+                if(GroupList.length == 0){
+                    //send response
+                    utils.sendResponse(res, 200, JSON.stringify({
+                        group_list: group_list
+                    }));
+                }
+                else{
+                    var count = 0;
+                    GroupList.forEach((GroupSetItem) => {
+                        var GroupData = GroupSetItem.get({ plain: true });
+                        // console.log("searching Group:", GroupData.name);
+                        db.GroupMember.findAll({ where: { GroupId: GroupData.id }}).then(GroupMemberList => {
+                            var groupMember_count = 0,
+                                thisGroup_check = false;
+
+                            if(GroupMemberList.length == 0){
+                                console.log("searching ", GroupData.name, "done");
+                                console.log("no groupmember, fail");
+
+                                count += 1;
+                                if(count == GroupList.length){ //search all group done
+                                    console.log(group_list);
+                                    //send response
+                                    utils.sendResponse(res, 200, JSON.stringify({
+                                        group_list: group_list
+                                    }));
+                                }
+                            }
+                            else{
+                                GroupMemberList.forEach((GroupMemberSetItem) => {
+                                    var GroupMemberData = GroupMemberSetItem.get({ plain: true});
+                                    db.Question.findOne({where: { id: GroupMemberData.question_id }}).then(function(q){
+                                        if(q != null){
+                                            if(q.status){ //yes this group do has useful question
+                                                thisGroup_check = true;
+                                            }
+                                            groupMember_count += 1;
+                                            if(groupMember_count == GroupMemberList.length){ //search this ghroup done
+                                                console.log("searching ", GroupData.name, "done");
+                                                if(thisGroup_check){ //push into group list
+                                                    console.log("pass !!");
+                                                    group_list.push({
+                                                        id : GroupData.id,
+                                                        name : GroupData.name,
+                                                        class_id : GroupData.class_id,
+                                                        status : GroupData.status
+                                                    });
+                                                }
+                                                else{
+                                                    console.log("no approved question, fail");
+                                                }
+
+                                                count += 1;
+                                                if(count == GroupList.length){ //search all group done
+                                                    console.log(group_list);
+
+                                                    //response
+                                                    utils.sendResponse(res, 200, JSON.stringify({
+                                                        group_list: group_list
+                                                    }));
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        else{
+            db.Group.findAll({ where: {class_id: class_id}}).then(GroupList => {
+                if(GroupList.length == 0){
+                    //send response
+                    utils.sendResponse(res, 200, JSON.stringify({
+                        group_list: group_list
+                    }));
+                }
+                else{
+                    var count = 0;
+                    GroupList.forEach((GroupSetItem) => {
+                        var GroupData = GroupSetItem.get({ plain: true });
+                        db.GroupMember.findAll({ where: { GroupId: GroupData.id }}).then(GroupMemberList => {
+                            var groupMember_count = 0,
+                                thisGroup_check = false;
+
+                            if(GroupMemberList.length == 0){
+                                console.log("searching ", GroupData.name, "done");
+                                console.log("fail");
+
+                                count += 1;
+                                if(count == GroupList.length){ //search all group done
+                                    console.log(group_list);
+                                    //send response
+                                    utils.sendResponse(res, 200, JSON.stringify({
+                                        group_list: group_list
+                                    }));
+                                }
+                            }
+                            else{
+                                GroupMemberList.forEach((GroupMemberSetItem) => {
+                                    var GroupMemberData = GroupMemberSetItem.get({ plain: true});
+                                    db.Question.findOne({where: { id: GroupMemberData.question_id }}).then(function(q){
+                                        if(q != null){
+                                            if(q.status){ //yes this group do has useful question
+                                                thisGroup_check = true;
+                                            }
+                                            groupMember_count += 1;
+                                            if(groupMember_count == GroupMemberList.length){ //search this ghroup done
+                                                console.log("searching ", GroupData.name, "done");
+                                                if(thisGroup_check){ //push into group list
+                                                    console.log("pass !!");
+                                                    group_list.push({
+                                                        id : GroupData.id,
+                                                        name : GroupData.name,
+                                                        class_id : GroupData.class_id,
+                                                        status : GroupData.status
+                                                    });
+                                                }
+                                                else{
+                                                    console.log("fail");
+                                                }
+
+                                                count += 1;
+                                                if(count == GroupList.length){ //search all group done
+                                                    console.log(group_list);
+
+                                                    //response
+                                                    utils.sendResponse(res, 200, JSON.stringify({
+                                                        group_list: group_list
+                                                    }));
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+    }
+});
+
+// get getGroupMember API
+//mode: all, approved
+app.get("/getGroupMember", function(req, res){
+    var mode = req.query.mode;
+
+    console.log("---getGroupMember---");
+    console.log("mode:", mode);
+    if(mode == "all"){
         var target_group_id = req.query.group_id,
             groupMember_list = [];
 
-        console.log("get all member from group_id:", target_group_id);
+        console.log("get all groupmember from group_id:", target_group_id);
         db.GroupMember.findAll({ where: { GroupId: target_group_id } }).then(GroupMemberList => {
             var count = 0;
 
-            GroupMemberList.forEach((GroupMemberSetItem) => {
-                var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+            if(GroupMemberList.length == 0){
+                console.log(groupMember_list);
                 
-                db.Question.findOne({ 
-                    where: { id: GroupMemberData.question_id } 
-                }).then(function(q){
-                    if(q != null){
-                        groupMember_list.push({
-                            question_id: q.id,
-                            name: q.name,
-                            description: q.description
-                        });
-                    }
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+            else{
+                GroupMemberList.forEach((GroupMemberSetItem) => {
+                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                    
+                    db.Question.findOne({ 
+                        where: { id: GroupMemberData.question_id} 
+                    }).then(function(q){
+                        if(q != null){
+                            groupMember_list.push({
+                                question_id: q.id,
+                                name: q.name,
+                                description: q.description,
+                                status: q.status
+                            });
+                        }
 
-                    count += 1;
-                    if(count == GroupMemberList.length){
-                        console.log(groupMember_list);
-                        
-                        //send response
-                        utils.sendResponse(res, 200, JSON.stringify(groupMember_list));
-                    }
+                        count += 1;
+                        if(count == GroupMemberList.length){
+                            console.log(groupMember_list);
+                            
+                            //send response
+                            utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+                        }
+                    });
                 });
-            });
+            }
+        });
+    }
+    else if(mode == "approved"){
+        var target_group_id = req.query.group_id,
+            groupMember_list = [];
+
+        console.log("get approved groupmember from group_id:", target_group_id);
+        db.GroupMember.findAll({ where: { GroupId: target_group_id } }).then(GroupMemberList => {
+            var count = 0;
+
+            if(GroupMemberList.length == 0){
+                console.log(groupMember_list);
+                
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+            else{
+                GroupMemberList.forEach((GroupMemberSetItem) => {
+                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                    
+                    db.Question.findOne({ 
+                        where: { id: GroupMemberData.question_id, status: 1} 
+                    }).then(function(q){
+                        if(q != null){
+                            groupMember_list.push({
+                                id: q.id,
+                                name: q.name,
+                                description: q.description,
+                                status: 1
+                            });
+                        }
+
+                        count += 1;
+                        if(count == GroupMemberList.length){
+                            console.log(groupMember_list);
+                            
+                            //send response
+                            utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+                        }
+                    });
+                });
+            }
         });
     }
 });
@@ -1248,7 +1221,10 @@ app.post('/addNewGroup', function(req, res){
                 console.log("new group added success with group_id:", g.id);
 
                 // response
-                utils.sendResponse(res, 200, JSON.stringify(g.id));
+                utils.sendResponse(res, 200, JSON.stringify({
+                    id: g.id,
+                    name: g.name
+                }));
             }
         });
     });
@@ -1362,6 +1338,8 @@ app.put('/setDisplayGroup', function(req, res){
 
     //flush answerIDList to null
     answerIDList = [];
+    answerList = [];
+    console.log("flush to empty answerIDList:", answerIDList, "and answerList:", answerList);
 
     console.log("---setDisplayGroup---");
     console.log("display group:", selected_group_list);
@@ -1386,31 +1364,46 @@ app.put('/setDisplayGroup', function(req, res){
                     GroupMemberList.forEach((GroupMemberSetItem) => { 
                         var GroupMemberData = GroupMemberSetItem.get({ plain: true });
 
-                        index = answerIDList.indexOf(GroupMemberData.question_id);
-                        if(index > -1){ //exist
-                            //do nothing
-                        }
-                        else{
-                            answerIDList.push(GroupMemberData.question_id);
-                            //[TODO] get question path
-                            // answerList.push({
-                            //     class_id:,
-                            //     name:,
-                            //     description:,
-                            //     path:
-                            // });
-                        }
+                        //for every single question get info and pic
+                        db.Question.findOne({
+                            where: {id: GroupMemberData.question_id},
+                            include: [ { model: db.Picture } ]
+                        }).then(function(q){
+                            if(q != null){
+                                //check if this question is approved, if yes push into answerList
+                                if(q.status){
+                                    index = answerIDList.indexOf(GroupMemberData.question_id);
+                                    if(index > -1){ //exist
+                                        //do nothing
+                                    }
+                                    else{
+                                        var pic_dict = {};
+                                        q.Pictures.forEach((picture) => {
+                                            pic_dict[picture.order] = picture.id;
+                                        });
 
-                        groupmember_count += 1;
-                        if(groupmember_count == GroupMemberList.length){
-                            group_count += 1;
-                            if(group_count == selected_group_list.length){
-                                console.log(answerIDList);
-                                
-                                //send response
-                                utils.sendResponse(res, 200, "success");
+                                        answerIDList.push(GroupMemberData.question_id);
+                                        answerList.push({
+                                            class_id: q.ClassId,
+                                            name: q.name,
+                                            description: q.description,
+                                            path: pic_dict
+                                        });
+                                    }
+                                }
                             }
-                        }
+
+                            groupmember_count += 1;
+                            if(groupmember_count == GroupMemberList.length){
+                                group_count += 1;
+                                if(group_count == selected_group_list.length){
+                                    console.log(answerIDList);
+                                    
+                                    //send response
+                                    utils.sendResponse(res, 200, "success");
+                                }
+                            }
+                        });
                     });
                 });
             });
@@ -1494,16 +1487,6 @@ app.get("/manage", utils.auth, function(req, res){
 });
 
 // user page
-// app.get("/:lang(ch|en)/user", function(req, res){
-//     fs.readFile("../web/html/user_" + req.params.lang + ".html", 
-//         function(err, contents){
-//             if (err){ console.log(err); }
-//             else{
-//                 contents = contents.toString('utf8');
-//                 utils.sendResponse(res, 200, contents);
-//             }
-//     });
-// });
 app.get("/user", function(req, res){
     fs.readFile("../web/html/user.html", 
         function(err, contents){
@@ -1544,16 +1527,7 @@ app.get("/*", function(req, res){
             else{
                 // random generate 1 question for answer and
                 // 5 questions for option list list to front-end webpage
-                // generateGame();
-                test("web", null, res, contents);
-
-                // contents = contents.toString('utf8');
-                // utils.sendEjsRenderResponse(res, 200, contents, {
-                //     gameList: game_list, 
-                //     webSocketPort: config.webSocketPort, 
-                //     webServerPort: config.webServerPort,
-                //     paintingIP: config.paintingIP
-                // });
+                generateGameInfo("web", null, res, contents);
             }
         });
     }
