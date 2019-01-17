@@ -7,7 +7,7 @@
 .mycheckbox {
     text-align: right;
 }
-.category_table {
+.group_table {
     border-top: 2px solid #ccc;
     border-bottom: 2px solid #ccc;
     height: 150px;
@@ -43,7 +43,7 @@
     height: 320px;
     overflow: auto;
 }
-.editModal_category_table {
+.editModal_group_table {
     border-top: 2px solid #ccc;
     border-bottom: 2px solid #ccc;
     height: 150px;
