@@ -39,18 +39,6 @@ const Class = sequelize.define('Class', {
     }
 });
 
-const Category = sequelize.define('Category', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    name: {
-        type: Sequelize.STRING
-        // unique: true
-    }
-});
-
 const Question = sequelize.define('Question', {
     id: {
         type: Sequelize.STRING,
@@ -63,12 +51,6 @@ const Question = sequelize.define('Question', {
         type: Sequelize.STRING
     },
     status: {
-        type: Sequelize.INTEGER
-    }
-});
-
-const QuestionCategory = sequelize.define('QuestionCategory', {
-    category_id: {
         type: Sequelize.INTEGER
     }
 });
@@ -110,21 +92,30 @@ const GroupMember = sequelize.define('GroupMember', {
     }
 });
 
-Question.hasMany(QuestionCategory);
+const Answer = sequelize.define('DisplayList', {
+    question_id: {
+        type: Sequelize.STRING
+    },
+    class_id: {
+        type: Sequelize.INTEGER
+    },
+    group_id: {
+        type: Sequelize.INTEGER
+    }
+});
+
 Question.hasMany(Picture);
 Group.hasMany(GroupMember);
 Question.belongsTo(Class);
-Category.belongsTo(Class);
 
 var db = {
     orm: sequelize,
     Class: Class,
-    Category: Category,
     Question: Question,
-    QuestionCategory: QuestionCategory,
     GroupMember: GroupMember,
     Group: Group,
-    Picture: Picture
+    Picture: Picture,
+    Answer: Answer
 };
 
 exports.db = db;
