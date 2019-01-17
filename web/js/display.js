@@ -53,22 +53,22 @@ function displayModal_btn_handler(){
         //ajax get this groupmember
         $.ajax({
             type: "GET",
-            url: location.origin + "/getGroup?mode=one&group_id=" + display_group_id,
+            url: location.origin + "/getGroupMember?mode=approved&group_id=" + display_group_id,
             cache: false,
             contentType: "application/json",
             error: function(e){
                 alert("something wrong");
                 console.log(e);
             },
-            success: function(data){
-                var groupMembertList = JSON.parse(data)
-                console.log(groupMembertList);
+            success: function(payload){
+                var data = JSON.parse(payload)
+                console.log(data);
 
                 //set moadl title by groupname
                 $('#displayModal_title').text(display_group_name);
 
                 //set modal content by groupMembertList
-                $('#displayModal_info').html(render_groupmember_table(groupMembertList));
+                $('#displayModal_info').html(render_groupmember_table(data.groupMember_list));
 
                 //show display modal
                 $('#displayModal').modal("show");
