@@ -185,6 +185,7 @@ function question_update_btn_handler(class_item, id, mode){
 
         //append data in formData
         data["id"] = id;
+        data["class_id"] = class_item.id;
         data["img_order"] = img_order;
         data["selected_group"] = selected_group;
         data["name"] = name;
@@ -268,6 +269,15 @@ function question_delete_btn_handler(class_item, id, mode){
                     if(mode == "approved"){
                         if(response.using){
                             alert("該檔案正在播放清單中，無法刪除\n請編輯使用中的群組!");
+                        }
+                        else{
+                            //remove this question from table
+                            $('#'+ id).remove();
+
+                            alert("刪除成功!!");
+
+                            //close edit modal
+                            $('#editModal').modal("hide");
                         }
                     }
                     else if(mode == "pending"){

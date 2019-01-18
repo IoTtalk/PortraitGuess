@@ -1,8 +1,9 @@
 /**
  * Created by kuan on 2017/5/21.
  */
-
 $(function () {
+    console.log(groupList);
+
     var bar = new ProgressBar.Circle(loadingIndicator, {
         color: '#3cb371',
         // This has to be the same size as the maximum width to
@@ -29,9 +30,9 @@ $(function () {
     	      }
         	}
       	});
-   bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif'; 
-   bar.text.style.fontSize = '5rem';
-   bar.animate(0.5);  // Number from 0.0 to 0.5
+    bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif'; 
+    bar.text.style.fontSize = '5rem';
+    bar.animate(0.5);  // Number from 0.0 to 0.5
 
 
     $("#successAlert").hide();  // 猜對頁 訊息
@@ -68,6 +69,7 @@ $(function () {
     var isMePlaying = false;
     var urlCorrect = false;
     var enterPlay = function(gameList){
+        //[TODO] remove this restriction
     	if(gameList.length <= 5){
 			alert("Can not play, lack of painting");
 			return;
@@ -100,14 +102,14 @@ $(function () {
 
 		for (var i = 0; i < optionLength; i++) {
 			if (i != answerOptionIndex) {
-				$("li").each(function (index) {
+				$("#options li").each(function (index) {
 					if (index == i) {
 						$(this).find("button").html(gameList[randomOptions[i]]);
 					}
 				});
 			}
 			else {
-				$("li").each(function (index) {
+				$("#options li").each(function (index) {
 					if (index == i) {
 						$(this).find("button").html(gameList[answerNameNumber]);
 					}
@@ -220,23 +222,46 @@ $(function () {
         $("#prompt2").show();
         $("#chance").html("<span class='badge' style='background-color:blue'>" + chance_count + "</span> chances left");
         $("#chance").show();
-
     };
+    //[TODO] finish group li buttons
+    var displayGroup = function(groupList){
+        $("#playButton").hide();
+        $("#endButton").hide();
+        $("#successAlert").hide();
+        $("#successName").hide();
+        $("#successImage").hide();
+        $("#wrongAlert").hide();
+
+        //show prompt3
+        $("#prompt3").show();
+
+        //generate group buttons
+        var group_list_item_str = "";
+        for(var i = 0; i < groupList.length; i++){
+            /*
+            <li><button class="groupBtn btn btn-primary center-block"></button></li>
+            */
+            group_list_item_str += '\
+                <li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-primary center-block">' + groupList[i].name + '</button></li>\
+            ';
+        }
+        $("#group_options").html(group_list_item_str);
+
+        //bind functions for group buttons
+        $(".groupBtn").unbind('click');
+        $(".groupBtn").click(function(){
+            //[TODO] get selected group_id, and then socket emit to server, and socket on receive gameList
+            var playingGroup = $(this).attr("group_id");
+            console.log("playingGroup: ", playingGroup);
+            //[TODO] let un click other groups btn disable
+            //6
+            socket.emit("playGroup", playingGroup);
+        });
+    }
 
 	$("#endButton").click(function(){
 		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
 	});
-	socket.on("isGamePlaying", function(msg){
-		console.log(msg);
-		if(msg.isGamePlaying){
-			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-		}
-		else{
-			isMePlaying = true;
-            playButton_first_play = false;
-			enterPlay(gameList);
-    	}
-    });
     window.onpageshow = function (event) {
         if (event.persisted) {
             window.location.reload();
@@ -247,11 +272,17 @@ $(function () {
             console.log('Reloading');
             window.location.reload(); // reload whole page
         }
+    //1
     socket.on("checkUrl", function(msg){
+        console.log("recv[checkUrl]");
         var url = window.location.href;
+        //2
+        console.log("send[checkUrl], msg:", url.substring(url.lastIndexOf('/')+1));
         socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
     });
+    //3
     socket.on("checkUrlACK", function(msg){
+        console.log("recv[checkUrlACK], msg.urlCorrect", msg.urlCorrect);
         urlCorrect = msg.urlCorrect;
         if(urlCorrect == false){
             window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
@@ -266,21 +297,20 @@ $(function () {
             },1000);
         }
     });
-    socket.on("NewGameRes", function(msg){
-        gameList = msg.gameList;
-        enterPlay(gameList);
-        console.log("get new game info");
-    });
+    //[TODO] add one websocket channel for playing group
     $("#playButton").click(function () {
         if(urlCorrect == false){
             return;
         }
         if(isMePlaying == false){
+            //4
             socket.emit("playACK", "");
         }
         else{
             if(playButton_first_play){
-                enterPlay(gameList);
+                //[TODO] show candidate groups
+                displayGroup(groupList);
+                // enterPlay(gameList);
                 playButton_first_play = false;
             }
             else{
@@ -288,35 +318,31 @@ $(function () {
             }
         }
     });
-    $("#voiceButton").click(function(){
-        if (!('webkitSpeechRecognition' in window)) {
-            console.log( "not support!" );
-        } 
-        else {
-            var recognition = new webkitSpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang="cmn-Hant-TW";
-            recognition.onstart=function(){
-                console.log("on start");
-            };
-            recognition.onend=function(){
-                console.log("on end");
-                recognition.start();
-            };
-            recognition.onresult=function(event){
-                console.log(event);
-            };
-            recognition.start();
+    //5
+    socket.on("isGamePlaying", function(msg){
+        console.log(msg);
+        if(msg.isGamePlaying){
+            window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+        }
+        else{
+            isMePlaying = true;
+            playButton_first_play = false;
+            displayGroup(groupList);
+            // enterPlay(gameList);
         }
     });
+    socket.on("NewGameRes", function(msg){
+        gameList = msg.gameList;
+        enterPlay(gameList);
+        console.log("get new game info");
+    });
 
-	var checkTimeout = setInterval(function(){
-		var now = new Date();
-		if( (now - lastClickTime)/1000 >= timeout ){
-			console.log("timeout");
-			clearInterval(checkTimeout);
-			window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-		}	
-	}, 1000);
+    var checkTimeout = setInterval(function(){
+        var now = new Date();
+        if( (now - lastClickTime)/1000 >= timeout ){
+            console.log("timeout");
+            clearInterval(checkTimeout);
+            window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+        }
+    }, 1000);
 });

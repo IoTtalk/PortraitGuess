@@ -6,14 +6,16 @@ function render_classification_selector(group_list){
     
     group_list.forEach((group) => {
         if(group.id != "none"){
-            var option_name = group.name;
             if(group.status){
-                option_name += '(使用中)';
+                classification_selector_str += '\
+                    <option class="group_option" using="1" value="' + group.id + '">' + group.name + '(使用中)</option>\
+                ';
             }
-
-            classification_selector_str += '\
-                <option class="group_option" value="' + group.id + '">' + option_name + '</option>\
-            ';
+            else{
+                classification_selector_str += '\
+                    <option class="group_option" using="0" value="' + group.id + '">' + group.name + '</option>\
+                ';
+            }
         }
     });
 
@@ -169,7 +171,7 @@ function groupinfo_delete_handler(){
     });
 }
 
-function updateOldGroup_btn_handler(){
+function updateOldGroup_btn_handler(class_item, using){
     $("#updateOldGroup_btn").on('click', function(){
         var update_group_id = $("#grouplist_select").val(),
             newgroup_list = [];
@@ -182,10 +184,12 @@ function updateOldGroup_btn_handler(){
             }
         });
 
-        // if(newgroup_list.length <= 0){
-        //     alert("至少選取 1 位");
-        //     return false;
-        // }
+        if(using == "1"){
+            if(newgroup_list.length <= 0){
+                alert("使用中的群組\n至少選取 1 位");
+                return false;
+            }
+        }
 
         console.log(update_group_id);
         console.log(newgroup_list);
@@ -198,7 +202,8 @@ function updateOldGroup_btn_handler(){
             data: JSON.stringify(
             {
                 update_group_id : update_group_id,
-                group_list : newgroup_list
+                group_list : newgroup_list,
+                class_id: class_item.id
             }),
             contentType: "application/json",
             error: function(e){
@@ -290,7 +295,8 @@ function addquestion_btn_handler(){
         //append to grouptable
         var newQuestion_tablerow_str = '\
             <tr>\
-                <td width="90%"><label question_id="' + question_id + '">' + info + '</label></td>\
+                <td width="70%"><label question_id="' + question_id + '">' + info + '</label></td>\
+                <td width="20%"></td>\
                 <td width="10%"><button class="btn btn-outline-danger grouplist_delete">移除</button></td>\
             </tr>\
         ';
@@ -372,7 +378,7 @@ function addNewGroup_btn_handler(class_item){
             // console.log($(this).attr("question_id"));
             if($(this).attr("question_id") != "none"){
                 newgroup_list.push({
-                    question_id: $(this).attr("question_id")
+                    QuestionId: $(this).attr("question_id")
                 });
             }
         });
@@ -439,8 +445,10 @@ function abortNow_btn_handler(){
 
 function option_handler(class_item, group_list){
     $("#grouplist_select").on("change", function(){
-        var option = $(this).val();
+        var option = $(this).val(),
+            using = $('option:selected', this).attr('using');
         // console.log($(this).val());
+        console.log(using);
         
         if(option == "none"){ //user doesn't choose
             setpageToStartUp();
@@ -509,7 +517,7 @@ function option_handler(class_item, group_list){
                     groupinfo_delete_handler();
 
                     //update and delete btn handler
-                    updateOldGroup_btn_handler();
+                    updateOldGroup_btn_handler(class_item, using);
                     deleteNow_btn_handler(group_list);
                 }
             });

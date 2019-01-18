@@ -6,8 +6,7 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/index.css">
     <script type="text/javascript">
-        var gameList = <%- JSON.stringify(gameList) %>;
-        var game_description = <%- JSON.stringify(game_description) %>;
+        var groupList = <%- JSON.stringify(groupList) %>;
         var webSocketPort = "<%- webSocketPort %>";
         var paintingIP = "<%- paintingIP %>";
         var webServerPort = "<%- webServerPort %>";
@@ -26,6 +25,7 @@
             <div class="center-block">
                 <div id="prompt" style="display:none">WHO AM I ?</div>
                 <div id="prompt2" style="display:none">Choose an answer</div>
+                <div id="prompt3" style="display:none">Choose a Group to play</div>
                 <div><img id="successImage" src="../img/success.png" style="display:none"></div>
                 <div id="successAlert" class="alert alert-success" role="alert" style="display:none">You got it! I am</div>
                 <div id="successName" class="alert alert-success" role="alert" style="display:none"></div>
@@ -39,6 +39,9 @@
                         <li><button class="optionBtn btn btn-danger center-block"></button></li>
                         <li><button class="optionBtn btn btn-danger center-block"></button></li>
                     </ul>
+                </div>
+                <div>
+                    <ul id="group_options"></ul>
                 </div>
                 <!-- <button id="voiceButton" class="btn btn-info center-block">Voice</button> -->
                 <div id="btns">

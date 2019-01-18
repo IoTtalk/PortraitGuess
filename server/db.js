@@ -22,11 +22,6 @@ var Sequelize = require('sequelize'),
     });
 
 const Class = sequelize.define('Class', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
     name: {
         type: Sequelize.STRING
         // unique: true
@@ -69,17 +64,9 @@ const Picture = sequelize.define('Picture', {
 });
 
 const Group = sequelize.define('Group', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
     name: {
         type: Sequelize.STRING
         // unique: true
-    },
-    class_id: {
-        type: Sequelize.INTEGER
     },
     status: {
         type: Sequelize.INTEGER
@@ -87,26 +74,28 @@ const Group = sequelize.define('Group', {
 });
 
 const GroupMember = sequelize.define('GroupMember', {
-    question_id: {
-        type: Sequelize.STRING
-    }
+    
 });
 
-const Answer = sequelize.define('DisplayList', {
-    question_id: {
-        type: Sequelize.STRING
-    },
-    class_id: {
-        type: Sequelize.INTEGER
-    },
-    group_id: {
-        type: Sequelize.INTEGER
-    }
-});
-
-Question.hasMany(Picture);
-Group.hasMany(GroupMember);
+// Class.id <-> Question.ClassId
+Class.hasMany(Question);
 Question.belongsTo(Class);
+
+// Class.id <-> Group.ClassId
+Class.hasMany(Group);
+Group.belongsTo(Class);
+
+// Group.id <-> GroupMember.GroupId
+Group.hasMany(GroupMember);
+GroupMember.belongsTo(Group, {onDelete: 'cascade', hooks:true});
+
+// Question.id <-> Picture.QuestionId
+Question.hasMany(Picture);
+Picture.belongsTo(Question, {onDelete: 'cascade', hooks:true});
+
+// Question.id <-> GroupMember.QuestionId
+Question.hasMany(GroupMember);
+GroupMember.belongsTo(Question, {onDelete: 'cascade', hooks:true});
 
 var db = {
     orm: sequelize,
@@ -114,8 +103,7 @@ var db = {
     Question: Question,
     GroupMember: GroupMember,
     Group: Group,
-    Picture: Picture,
-    Answer: Answer
+    Picture: Picture
 };
 
 exports.db = db;

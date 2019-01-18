@@ -4,10 +4,9 @@ var fs = require('fs'),
 function create_db(){
     db.Picture.sync({force: false}).then(function(){});
     db.GroupMember.sync({force: false}).then(function(){});
-    db.Class.sync({force: false}).then(function(){});
     db.Question.sync({force: false}).then(function(){});
     db.Group.sync({force: false}).then(function(){});
-    db.Answer.sync({force: false}).then(function(){});
+    db.Class.sync({force: false}).then(function(){});
 }
 
 function set_db_init_value(){
@@ -37,12 +36,12 @@ function set_db_init_value(){
             console.log(ClassData);
             if(ClassData.name == "人物"){
                 var default_human_category = [
-                    { class_id : ClassData.id, status : 0, name : "科學家" },
-                    { class_id : ClassData.id, status : 0, name : "作家" },
-                    { class_id : ClassData.id, status : 0, name : "音樂家" },
-                    { class_id : ClassData.id, status : 0, name : "畫家" },
-                    { class_id : ClassData.id, status : 0, name : "政治家" },
-                    { class_id : ClassData.id, status : 0, name : "演員" },
+                    { ClassId : ClassData.id, status : 0, name : "科學家" },
+                    { ClassId : ClassData.id, status : 0, name : "作家" },
+                    { ClassId : ClassData.id, status : 0, name : "音樂家" },
+                    { ClassId : ClassData.id, status : 0, name : "畫家" },
+                    { ClassId : ClassData.id, status : 0, name : "政治家" },
+                    { ClassId : ClassData.id, status : 0, name : "演員" },
                 ];
                 db.Group.bulkCreate(default_human_category).then(function() {
                     return db.Group.findAll();

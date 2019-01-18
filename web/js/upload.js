@@ -36,7 +36,7 @@ function render_upload_div(class_item, group_table_str){
                 <textarea class="form-control" id="description" placeholder="' + class_item.description + '"></textarea>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">上傳資料夾</h3>\
+                <h3 class="required">上傳資料夾(還沒做完ㄛ)</h3>\
                 <p class="help-block">可拉動圖片以排序(由左至右，由上至下)</p>\
                 <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple" webkitdirectory/>\
             </div>\

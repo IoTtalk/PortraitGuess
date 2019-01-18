@@ -5,14 +5,15 @@ function render_grouplist_table(group_list){
     group_list.forEach((group) => {
         var id = group.id,
             name = group.name,
-            status = group.status;
+            status = group.status,
+            class_id = group.class_id;
 
         //checkbox value modify
         if(status){
-            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "' checked/></td>";
+            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' class_id='" + class_id + "' value='" + id + "' checked/></td>";
         }
         else{
-            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' value='" + id + "'/></td>";
+            grouplist_table_str += "<tr><td class='mycheckbox'><input type='checkbox' id='" + id + "_display_checkbox' name='display' class_id='" + class_id + "' value='" + id + "'/></td>";
         }
 
         grouplist_table_str += "\
@@ -105,6 +106,7 @@ function set_display_btn_handler(){
             $selected_group.each(function (){
                 selected_group_list.push({
                     id : $(this).val(),
+                    class_id : $(this).attr("class_id")
                 });
             });
             
