@@ -48,102 +48,97 @@ ws2Painting.onopen = function(){
             connectedCount--;
             console.log("connected count: " + connectedCount);
             if((isGamePlaying && playID == socket.id) || connectedCount == 0){
-                ws2Painting.send(JSON.stringify({
-                    "Command": "leaveGame"
-                }));
-                console.log("leaveGame");
+                ws2Painting.send(JSON.stringify({ "Command": "leaveGame" }));
                 isGamePlaying = false;
                 playID = undefined;
             }
         });
         //1
-        console.log("send[checkUrl]");
+        console.log("1. ask player to send his url for checking");
         socket.emit("checkUrl", "");
         //2
         socket.on("checkUrl", function(msg){
-            console.log("recv[checkUrl]", msg);
+            console.log("2. receive player's url", msg);
             if(msg != url){
                 //3
-                console.log("send[checkUrl], urlCorrect: false");
+                console.log("3. send checking result: false");
                 socket.emit("checkUrlACK", {"urlCorrect": false});
             }
             else{
-                ws2Painting.send(JSON.stringify({
-                    "Command": "enterGame"
-                }));
-                console.log("enterGame");
+                ws2Painting.send(JSON.stringify({ "Command": "enterGame" }));
                 //3
-                console.log("send[checkUrl], urlCorrect: true");
+                console.log("3. send checking result: true");
                 socket.emit("checkUrlACK", {"urlCorrect": true});
             }
         });
         //4
         socket.on("playACK", function(msg){
-            console.log("recv[playACK], msg:", msg);
-            console.log("request to start the game");
+            console.log("4. receive player's play-game request");
             if(playID != socket.id){
                 //5
-                console.log("send[isGamePlaying], msg:", isGamePlaying);
+                console.log("5. send Frame's status");
                 socket.emit("isGamePlaying", {"isGamePlaying": isGamePlaying});
                 if(isGamePlaying == false){
                     isGamePlaying = true;
                     playID = socket.id;
+                    console.log("5.5 Frame is player:", socket.id,"'s turn now");
                     socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
                 }
             }
         });
         //6
         socket.on("playGroup", function(msg){
-            console.log("recv[playGroup], msg", msg);
-            //[TODO] use grou_id (msg) to generate gameList
-            // var gameList = ganerateGameListByGroupId(msg);
-            // //7
-            // socket.emit("GameStart", gameList);
+            console.log("6. receive playing group id:", msg);
+            var group_id = msg;
+            ganerateGameInfo(group_id, "play", socket);
+            //7
+            // socket.emit("GameStart", gameInfo);
         });
-
+        //8
         socket.on("Name-I", function(msg){
             //sand answer picture path list to processing
-            //[TODO] get gameAnswerPicPath
             ws2Painting.send(JSON.stringify({
                 "Command": "gameTarget",
-                // "path" : gameAnswerPicPath
+                "path" : answer_pic_list
             }));
             // dai.push("Name_I", [msg]);
-            // console.log("Name-I ", msg, "\n", gameAnswerPicPath);
+            console.log("8. receive game-ready signal, let processing to display answer picture");
         });
-
+        //9
         socket.on("Correct", function(msg){
-            ws2Painting.send(JSON.stringify({
-                "Command": "Correct"
-            }));
+            ws2Painting.send(JSON.stringify({ "Command": "Correct" }));
             // dai.push("Correct", [1]);
-            console.log("Correct");
+            console.log("9. player makes the Correct choice, let processing play all remained pictures");
         });
-        
+        //9
         socket.on("Wrong", function(msg){
-            ws2Painting.send(JSON.stringify({
-                "Command": "Wrong"
-            }));
+            ws2Painting.send(JSON.stringify({ "Command": "Wrong" }));
             // dai.push("Wrong", [1]);
-            console.log("Wrong");
+            console.log("9. player makes the Wrong choice, let processing play the next picture");
         });
-
-        //if user want to play game, generate game info for him
+        //10
         socket.on("NewGameReq", function(msg){
-            //ganerate new gameinfo
-            //[TODO]
-            // generateGameInfo("socket", socket, null, null);
+            console.log("10. receive player's play-again request");
+            var group_id = msg;
+            ganerateGameInfo(group_id, "replay", socket);
             // dai.push("NextGame", [1]);
-            console.log("NextGame");
+            // 11
+            // socket.emit("NewGameRes", gameInfo);
         });
-
-        //[TODO] get playing group from user
-        // should add a websocket channel
+        //12
+        socket.on("NewGroupReq", function(msg){
+            console.log("12. receive player's play-other-group request");
+            getGameGroup("socket", socket, null, null);
+            // dai.push("NewGame", [1]);
+            // 13
+            // socket.emit("NewGroupRes", gameInfo);
+        })
     });
 };
 
 
-var url = shortid.generate();
+var answer_pic_list = [],
+    url = shortid.generate();
 console.log("----Game url----\n", url);
 
 //static files
@@ -160,90 +155,130 @@ app.use(bodyParser.json());
 console.log('---server start---');
 http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
-var previousGameAnswerId = "";
+function ganerateGameInfo(group_id, mode, socket){
+    var answer_description = "",
+        answer_idx = 0,
+        game_list = [];
 
-//[TODO] write one function to get user playing group,
-// and then call the function generateGameInfo()
-// function ganerateGameListByGroupId(group_id){
-//     var gameInfo = {},
-//         gameList = [];
-    
-//     db.Answer.findAll({ where: {group_id: group_id}}).then(AnswerList => {
-//         //[TODO] if AnswerList length >= 6, random pick 6 answers
-//         //       if AnswerList length <  6, pick all answer
-//         if(AnswerList.length > 6){ //random pick 6 answers
+    console.log("---generating GameInfo for this game....---");
+    db.GroupMember.findAll({
+        where: {GroupId: group_id},
+        include: [{
+            model: db.Question,
+            where: {status: 1},
+            required: true }]
+    }).then(GameQuestionList => {
+        //check length of GameQuestionList to generate game_list and answer question
+        var answer_idx_in_list, answer_idx, answer_name, answer_questionid, answer_description;
+        if(GameQuestionList.length > 5){
+            //random pick 5 question for game
+            var index, random_idx_list = [];
+            do{
+                index = Math.floor(Math.random() * GameQuestionList.length);
+                //check if this random index has existed
+                if(random_idx_list.indexOf(index) <= -1){ 
+                    random_idx_list.push(index);
+                }
+            } while(random_idx_list.length < 5);
 
-//         }
-//         else{ //pick all answer
-//             var answer_idx,
-//                 answer_question_id,
-//                 count = 0;
+            for(var i = 0; i < 5; i++){
+                var GameQuestionData = GameQuestionList[random_idx_list[i]].get({plain: true});
+                game_list.push(GameQuestionData.Question.name);
+            }
 
-//             //randon pick answer index, should not be the same with previous game
-//             do{
-//                 answer_idx = Math.floor(Math.random() * AnswerList.length);
-//                 answer_question_id = AnswerList[answer_idx].get({plain: true}).question_id;
-//             } while(answer_question_id == previousGameAnswerId);
-//             previousGameAnswerId = answer_question_id;
+            //random generate answer_idx
+            var answer_idx = Math.floor(Math.random() * 5);
 
-//             AnswerList.forEach((AnswerSetItem) => {
-//                 var AnswerData = AnswerSetItem.get({plain : true});
-//                 //get Answer name
-//                 db.Question.findOne({where: {id, AnswerData.question_id}}).then(function(q){
-//                     if(q != null){
-//                         gameList.push(q.name);
+            //get answer_idx_in_list
+            answer_idx_in_list = random_idx_list[answer_idx];
+        }
+        else{ //pick all question for game
+            GameQuestionList.forEach((GameQuestionSetItem) => {
+                var GameQuestionData = GameQuestionSetItem.get({plain: true});
+                game_list.push(GameQuestionData.Question.name);
+            });
 
-//                         if(q.id == answer_question_id){ //get answer description and pic path
-//                             //set description into gameInfo
-//                             gameInfo[answer_description] = q.description;
+            //random generate answer_idx
+            var answer_idx = Math.floor(Math.random() * GameQuestionList.length);
 
-//                             //get pic path
-//                             db.Picture.findAll({where: {question_id: answer_question_id}}).then()
-//                         }
-//                     }
-//                     count += 1;
-//                     if(count == AnswerList.length){ //get all Answer done
+            //get answer_idx_in_list
+            answer_idx_in_list = answer_idx
+        }
+        console.log("game_list: ", game_list);
+        console.log("answer:", game_list[answer_idx], " in option:", answer_idx);
 
-//                     }
-//                 });
-//             });
-//         }
-//             // var count = 0;
-//             // AnswerList.forEach((AnswerSetItem) => {
-//             //     var AnswerData = AnswerSetItem.get({plain : true});
+        //get answer question for game
+        var AnswerData = GameQuestionList[answer_idx_in_list].get({plain: true});
+        answer_description = AnswerData.Question.description;
+        console.log("answer_description:", answer_description);
 
-//             // });
-//     });
-// }
+        db.Picture.findAll({where: {QuestionId: AnswerData.Question.id}}).then(AnswerPicList => {
+            //prepare pic_dict(key:order, value:filename)
+            var pic_dict = {};
+            AnswerPicList.forEach((AnswerPicSetItem => {
+                var AnswerPicData = AnswerPicSetItem.get({plain: true});
+                pic_dict[AnswerPicData.order] = AnswerPicData.id;
+            }));
 
-//[TODO]
-// generateGameGroup("web", null, res, contents);
-// function generateGameGroup(mode, socket, res, contents){
-//     var playGroup_list = [];
-//     console.log("receive Game request, generating playGroupList...");
-//     db.Group.findAll({where: {status: 1}}).then(GroupList => {
-//         GroupList.forEach((GroupSetItem) => {
-//             var GroupData = GroupSetItem.get({plain :true});
-//             playGroup_list.push({
-//                 id: GroupData.id,
-//                 class_id: GroupData.class_id,
-//                 name: GroupData.name,
-//             });
-//         });
-//         console.log(playGroup_list);
+            //according pic_order, generate answer_pic_list
+            answer_pic_list = [];
+            for(var i = 1; i <= AnswerPicList.length; i++){
+                answer_pic_list.push(pic_dict[i]);
+            }
+            console.log("answer_pic:", answer_pic_list);
 
-//         //according mode, send response
-//         if(mode == "web"){
-//             contents = contents.toString('utf8');
-//             utils.sendEjsRenderResponse(res, 200, contents, {
-//                 groupList: playGroup_list,
-//                 webSocketPort: config.webSocketPort, 
-//                 webServerPort: config.webServerPort,
-//                 paintingIP: config.paintingIP
-//             });
-//         }
-//     });
-// }
+            //send game info
+            console.log("---GameInfo generation has been done--");
+            var gameInfo = {};
+            gameInfo["game_list"] = game_list;
+            gameInfo["answer_description"] = answer_description;
+            gameInfo["answer_idx"] = answer_idx;
+
+            if(mode == "play"){
+                //7
+                console.log("7. send gameInfo:", gameInfo);
+                socket.emit("GameStart", gameInfo);
+            }
+            else if(mode == "replay"){
+                //11
+                console.log("11. send next gameInfo", gameInfo);
+                socket.emit("NewGameRes", gameInfo);
+            }
+        });
+    });
+}
+
+function getGameGroup(mode, socket, res, contents){
+    var playGroup_list = [];
+    console.log("receive Game request, generating playGroupList...");
+
+    db.Group.findAll({where: {status: 1}}).then(GroupList => {
+        GroupList.forEach((GroupSetItem) => {
+            var GroupData = GroupSetItem.get({plain :true});
+            playGroup_list.push({
+                id: GroupData.id,
+                class_id: GroupData.ClassId,
+                name: GroupData.name,
+            });
+        });
+        console.log(playGroup_list);
+        
+        if(mode == "web"){
+            contents = contents.toString('utf8');
+            utils.sendEjsRenderResponse(res, 200, contents, {
+                groupList: playGroup_list,
+                webSocketPort: config.webSocketPort, 
+                webServerPort: config.webServerPort,
+                paintingIP: config.paintingIP
+            });
+        }
+        else if(mode == "socket"){
+            // 13
+            console.log("13. send playGroup_list response", playGroup_list);
+            socket.emit("NewGroupRes", playGroup_list);
+        }
+    });
+}
 
 /* APIs */
 // authentication url API
@@ -833,86 +868,6 @@ app.get('/getGroup', function(req, res){
     }
 });
 
-// get getGroupMember API
-//mode: all, approved
-app.get("/getGroupMember", function(req, res){
-    var mode = req.query.mode;
-
-    console.log("---getGroupMember---");
-    console.log("mode:", mode);
-    if(mode == "all"){
-        var target_group_id = req.query.group_id,
-            groupMember_list = [];
-
-        console.log("get all groupmember from group_id:", target_group_id);
-        db.GroupMember.findAll({ 
-            where: { GroupId: target_group_id },
-            include: [{
-                model: db.Question,
-                required: true }]
-        }).then(GroupMemberList => {
-            if(GroupMemberList.length == 0){
-                console.log(groupMember_list);
-                
-                //send response
-                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
-            }
-            else{
-                GroupMemberList.forEach((GroupMemberSetItem) => {
-                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
-                    
-                    groupMember_list.push({
-                        question_id: GroupMemberData.Question.id,
-                        name: GroupMemberData.Question.name,
-                        description: GroupMemberData.Question.description,
-                        status: GroupMemberData.Question.status
-                    });
-                });
-                console.log(groupMember_list);
-                
-                //send response
-                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
-            }
-        });
-    }
-    else if(mode == "approved"){
-        var target_group_id = req.query.group_id,
-            groupMember_list = [];
-
-        console.log("get approved groupmember from group_id:", target_group_id);
-        db.GroupMember.findAll({ 
-            where: { GroupId: target_group_id },
-            include: [{
-                model: db.Question,
-                where: {status: 1},
-                required: true }]
-        }).then(GroupMemberList => {
-            if(GroupMemberList.length == 0){
-                console.log(groupMember_list);
-                
-                //send response
-                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
-            }
-            else{
-                GroupMemberList.forEach((GroupMemberSetItem) => {
-                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
-
-                    groupMember_list.push({
-                        id: GroupMemberData.Question.id,
-                        name: GroupMemberData.Question.name,
-                        description: GroupMemberData.Question.description,
-                        status: 1
-                    });
-                });
-                console.log(groupMember_list);
-                
-                //send response
-                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
-            }
-        });
-    }
-});
-
 // post addNewHumanGroup API
 app.post('/addNewGroup', function(req, res){
     var group_name = req.body.newgroup_name,
@@ -1018,6 +973,88 @@ app.put('/setDisplayGroup', function(req, res){
 
 
 
+// get getGroupMember API
+//mode: all, approved
+app.get("/getGroupMember", function(req, res){
+    var mode = req.query.mode;
+
+    console.log("---getGroupMember---");
+    console.log("mode:", mode);
+    if(mode == "all"){
+        var target_group_id = req.query.group_id,
+            groupMember_list = [];
+
+        console.log("get all groupmember from group_id:", target_group_id);
+        db.GroupMember.findAll({ 
+            where: { GroupId: target_group_id },
+            include: [{
+                model: db.Question,
+                required: true }]
+        }).then(GroupMemberList => {
+            if(GroupMemberList.length == 0){
+                console.log(groupMember_list);
+                
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+            else{
+                GroupMemberList.forEach((GroupMemberSetItem) => {
+                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                    
+                    groupMember_list.push({
+                        question_id: GroupMemberData.Question.id,
+                        name: GroupMemberData.Question.name,
+                        description: GroupMemberData.Question.description,
+                        status: GroupMemberData.Question.status
+                    });
+                });
+                console.log(groupMember_list);
+                
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+        });
+    }
+    else if(mode == "approved"){
+        var target_group_id = req.query.group_id,
+            groupMember_list = [];
+
+        console.log("get approved groupmember from group_id:", target_group_id);
+        db.GroupMember.findAll({ 
+            where: { GroupId: target_group_id },
+            include: [{
+                model: db.Question,
+                where: {status: 1},
+                required: true }]
+        }).then(GroupMemberList => {
+            if(GroupMemberList.length == 0){
+                console.log(groupMember_list);
+                
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+            else{
+                GroupMemberList.forEach((GroupMemberSetItem) => {
+                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+
+                    groupMember_list.push({
+                        id: GroupMemberData.Question.id,
+                        name: GroupMemberData.Question.name,
+                        description: GroupMemberData.Question.description,
+                        status: 1
+                    });
+                });
+                console.log(groupMember_list);
+                
+                //send response
+                utils.sendResponse(res, 200, JSON.stringify({groupMember_list: groupMember_list}));
+            }
+        });
+    }
+});
+
+
+
 /* web page */
 // manage page
 app.get("/manage", utils.auth, function(req, res){
@@ -1103,9 +1140,7 @@ app.get("/user", function(req, res){
 
 // other page
 app.get("/*", function(req, res){
-    if(req.originalUrl.substr(1) != url && 
-        req.originalUrl.substr(1) != "user" && 
-        req.originalUrl.substr(1) != "manage"){
+    if(req.originalUrl.substr(1) != url){
         fs.readFile("../web/html/endPage.html", function (err, contents) {
             if(err){ console.log(err); }
             else{
@@ -1128,8 +1163,7 @@ app.get("/*", function(req, res){
                 });
             }
             else{
-                generateGameGroup("web", null, res, contents);
-                // generateGameInfo("web", null, res, contents);
+                getGameGroup("web", null, res, contents)
             }
         });
     }
