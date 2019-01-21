@@ -26,26 +26,28 @@
                 <div id="prompt" style="display:none">WHO AM I ?</div>
                 <div id="prompt2" style="display:none">Choose an answer</div>
                 <div id="prompt3" style="display:none">Choose a Group to play</div>
-                <div><img id="successImage" src="../img/success.png" style="display:none"></div>
-                <div id="successAlert" class="alert alert-success" role="alert" style="display:none">You got it! I am</div>
-                <div id="successName" class="alert alert-success" role="alert" style="display:none"></div>
-                <div id="wrongAlert" class="alert alert-danger" role="alert" style="display:none">Incorrect answer. Try again!</div>
-                <div id="chance" style="display:none"> </div>
-                <div>
-                    <ul id="options" style="display:none">
-                        <li><button class="optionBtn btn btn-danger center-block"></button></li>
-                        <li><button class="optionBtn btn btn-danger center-block"></button></li>
-                        <li><button class="optionBtn btn btn-danger center-block"></button></li>
-                        <li><button class="optionBtn btn btn-danger center-block"></button></li>
-                        <li><button class="optionBtn btn btn-danger center-block"></button></li>
-                    </ul>
+                <div><img id="successImage" src="../img/success2.png" style="display:none"></div>
+                <div id="successAlert" class="alert alert-success" role="alert" style="display:none">
+                    You got it! I am
                 </div>
+                <div id="successName_wrapper">
+                    <div id="successName" class="alert alert-success" role="alert" style="display:none"></div>
+                </div>
+                <div id="wrongAlert" class="alert alert-danger" role="alert" style="display:none">
+                    Incorrect answer. Try again!
+                </div>
+                <div id="chance" style="display:none"></div>
                 <div>
+                    <ul id="options" style="display:none"></ul>
+                </div>
+                <div id="group_options_div" style="display: none;">
                     <ul id="group_options"></ul>
                 </div>
                 <!-- <button id="voiceButton" class="btn btn-info center-block">Voice</button> -->
                 <div id="btns">
                     <button id="playButton" class="btn btn-info center-block" style="display:none">Play</button>
+                    <br>
+                    <button id="playGroupButton" class="btn btn-secondary center-block" style="display:none">Choose Group</button>
                     <br>
                     <button id="endButton" class="btn btn-danger center-block" style="display:none">End</button>
                 </div>
