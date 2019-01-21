@@ -1,9 +1,7 @@
 /**
  * Created by kuan on 2017/5/21.
  */
-$(function () {
-    console.log(groupList);
-
+$(function(){
     var bar = new ProgressBar.Circle(loadingIndicator, {
         color: '#3cb371',
         // This has to be the same size as the maximum width to
@@ -19,17 +17,17 @@ $(function () {
         to: { color: '#3cb371', width: 4 },
         // Set default step function for all animate calls
         step: function(state, circle) {
-    	      circle.path.setAttribute('stroke', state.color);
-    	      circle.path.setAttribute('stroke-width', state.width);
+              circle.path.setAttribute('stroke', state.color);
+              circle.path.setAttribute('stroke-width', state.width);
 
-    	      var value = Math.round(circle.value() * 100);
-    	      if (value === 0) {
-    	        circle.setText('');
-    	      } else {
-    	        circle.setText(value);
-    	      }
-        	}
-      	});
+              var value = Math.round(circle.value() * 100);
+              if (value === 0) {
+                circle.setText('');
+              } else {
+                circle.setText(value);
+              }
+            }
+        });
     bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif'; 
     bar.text.style.fontSize = '5rem';
     bar.animate(0.5);  // Number from 0.0 to 0.5
@@ -44,188 +42,135 @@ $(function () {
     $("#chance").hide();
     $("#endButton").hide();
     $("#playButton").prop('disabled', true);
+    $("#playGroupButton").prop('disable', true);
     $("#endButton").prop('disabled', true);
     var lastClickTime = new Date(); //record last click optionBtn time
-    const timeout = 60; // if over 150 seconds not click optionBtn then disconnect WebSocket	
+    const timeout = 30; // if over 150 seconds not click optionBtn then disconnect WebSocket    
     const optionLength = 5;  // 選項數目
     const chance = 5;  // 猜錯機會
     var playButton_first_play = true;  // 檢查是不是第一次玩
     var chance_count = chance;
-    Array.prototype.contains = function(obj) {
-        var i = this.length;
-        while (i--) {
-            if (this[i] === obj) {
-                return true;
-            }
-        }
-        return false;
-    };
+    var playingGroup; // 玩家選好要玩的群組
 
-	var socket = io();
-	var playedNameNumber = [];
-    var answerNameNumber;
-    var answerOptionIndex;
-    var randomOptions;
+    var socket = io();
     var isMePlaying = false;
     var urlCorrect = false;
-    var enterPlay = function(gameList){
-        //[TODO] remove this restriction
-    	if(gameList.length <= 5){
-			alert("Can not play, lack of painting");
-			return;
-		}
-		$("#playButton").hide();
-		$("#endButton").hide();
-		$("#successAlert").hide();
-		$("#successName").hide();
-		$("#successImage").hide();
-		$("#wrongAlert").hide();
+    var enterPlay = function(gameInfo){
+        var game_list = gameInfo.game_list,
+            answer_description = gameInfo.answer_description,
+            answer_idx = parseInt(gameInfo.answer_idx, 10);
 
-		answerNameNumber = 0;
-		answerOptionIndex = Math.floor((Math.random() * optionLength));
-		// playedNameNumber.push(answerNameNumber);	
-		randomOptions = [];
+        $("#group_options_div").hide();
+        $("#playButton").hide();
+        $("#playGroupButton").hide();
+        $("#endButton").hide();
+        $("#successAlert").hide();
+        $("#successName").hide();
+        $("#successImage").hide();
+        $("#wrongAlert").hide();
 
-		// dan.push("Name-I",[answerNameNumber]);
-        socket.emit("Name-I", gameList[0]);
+        //8
+        // dan.push("Name-I",[answerNameNumber]);
+        console.log("8. game is ready to play and ask server to display answer pictures");
+        socket.emit("Name-I", game_list[answer_idx]);
 
-		for (var i = 0; i < optionLength; i++) {
-			var r = Math.floor((Math.random() * gameList.length));
-			// console.log(r);
-			while (randomOptions.contains(r) || r == answerNameNumber) {
-				r = Math.floor((Math.random() * gameList.length));
-			}
-			randomOptions.push(r);
-		}
+        var option_str = "";
+        for(var i = 0; i < game_list.length; i++){
+            /* <li><button class="optionBtn btn btn-danger center-block"></button></li> */
+            option_str += '<li><button class="optionBtn btn btn-danger center-block">' + game_list[i] + '</button></li>';
+        }
+        $("#options").html(option_str);
 
-        console.log(randomOptions);
+        $(".optionBtn").unbind('click');
+        $(".optionBtn").click(function () {
+            lastClickTime = new Date(); 
+            var index = $('.optionBtn').index(this);
+            if(index == answer_idx){  // 猜對
+                //9
+                console.log("9. choose correct answer");
+                socket.emit("Correct", "1");
+                // dan.push("Correct",[1]);
 
-		for (var i = 0; i < optionLength; i++) {
-			if (i != answerOptionIndex) {
-				$("#options li").each(function (index) {
-					if (index == i) {
-						$(this).find("button").html(gameList[randomOptions[i]]);
-					}
-				});
-			}
-			else {
-				$("#options li").each(function (index) {
-					if (index == i) {
-						$(this).find("button").html(gameList[answerNameNumber]);
-					}
-				});
-			}
-		}
-		$(".optionBtn").unbind('click');
-		$(".optionBtn").click(function () {
-			lastClickTime = new Date(); 
-			var index = $('.optionBtn').index(this);
-			if (index == answerOptionIndex) {  // 猜對
-				socket.emit("Correct", "1");
-				// dan.push("Correct",[1]);
-				// ws.send("Correct");
-				chance_count = chance;
-				$("#successAlert").html("You got it! I am");
-				$("#successAlert").show();
-				$("#successName").html(gameList[answerNameNumber] + "<br>" + game_description);
-				$("#successName").show();
-				$("#successImage").show();
-				$("#wrongAlert").hide();
-				$("#options").hide();
-				$("#prompt").hide();
-				$("#prompt2").hide();
-				$("#chance").hide();
-				$("#playButton").show().prop('disabled', true);
-				$("#playButton").html("Play in 1 sec.");
-				$("#playButton").css("font-size","30px");
-				$("#playButton").css("width","250px");
-				$("#playButton").css("height","80px");
-				$("#playButton").css("height","80px");
-				$("#endButton").show();
-				var count = 1; //count down 1 second
-				var countDown = function(){ 
-					if(count == 1){
-						$("#playButton").show().prop("disabled", false);
-						$("#playButton").css("font-size","50px");
-						$("#playButton").html("Play Again");
-						$("#playButton").css("width","300px");
-						$("#playButton").css("height","100px");
-					}
-					else{
-						count--;
-						$("#playButton").html("Play in " + count + " sec.");
-						setTimeout(countDown, 1000);
-					}
-				};
-				setTimeout(countDown, 1000);
-				console.log("correct!");
-			}
-			else {  // 猜錯                   
-				chance_count--;
+                chance_count = chance;
+                $("#successAlert").html("You got it! I am");
+                $("#successAlert").show();
+                $("#successName").html(game_list[answer_idx] + "<br>" + answer_description);
+                $("#successName").show();
+                $("#successImage").show();
+                $("#wrongAlert").hide();
+                $("#options").hide();
+                $("#prompt").hide();
+                $("#prompt2").hide();
+                $("#prompt3").hide();
+                $("#chance").hide();
 
-				if (chance_count <= 0) {  // 猜錯次數超過上限
-					// dan.push("Correct",[1]);
-					// ws.send("Correct");
-					socket.emit("Correct", "1");
-					chance_count = chance;
-					$("#successAlert").html("Oops... I am");
-					$("#successAlert").show();
-					$("#successName").html(gameList[answerNameNumber]);
-					$("#successName").show();
-					$("#wrongAlert").hide();
-					$("#options").hide();
-					$("#prompt").hide();
-					$("#prompt2").hide();
-					$("#chance").hide();
-					$("#playButton").show().prop('disabled', true);
-					$("#playButton").html("Play in 1 sec.");
-					$("#playButton").css("font-size","30px");
-					$("#playButton").css("width","250px");
-					$("#playButton").css("height","80px");
-					$("#playButton").css("height","80px");
-					$("#endButton").show();
-					var count = 1; //count down 1 second
-					var countDown = function(){ 
-						if(count == 1){
-							$("#playButton").show().prop("disabled", false);
-							$("#playButton").css("font-size","50px");
-							$("#playButton").html("Try Again");
-							$("#playButton").css("width","300px");
-							$("#playButton").css("height","100px");
-						}
-						else{
-							count--;
-							$("#playButton").html("Play in " + count + " sec.");
-							setTimeout(countDown, 1000);
-						}
-					};
-					setTimeout(countDown, 1000);
-					console.log("game over!");
-				}
-				else {  // 猜錯次數沒超過上限
-					socket.emit("Wrong", "1");
-					// dan.push("Wrong",[1]);
-					// ws.send("Wrong");
-					$("#wrongAlert").show();
-					$("#chance").html("<span class='badge' style='background-color:blue'>" + chance_count + "</span> chances left");
-					$("#chance").show();
-					$("#prompt2").hide();
-					$("#successAlert").hide();
-					$("#successName").hide();
-					$("#successImage").hide();
-					console.log("wrong answer!");
-				}           
-			}       
-		});
-		$("#options").show();
+                $("#playButton").show().prop("disabled", false);
+                $("#playButton").css("font-size","35px");
+                $("#playButton").html("Play Again");
+                $("#playButton").css("width","275px");
+                // $("#playButton").css("height","100px");
+                $("#playGroupButton").show();
+                $("#endButton").show();
+                console.log("correct!");
+            }
+            else {  // 猜錯                   
+                chance_count--;
+
+                if(chance_count <= 0){  // 猜錯次數超過上限
+                    // dan.push("Correct",[1]);
+                    //9
+                    console.log("9. choose correct answer");
+                    socket.emit("Correct", "1");
+
+                    chance_count = chance;
+                    $("#successAlert").html("Oops... I am");
+                    $("#successAlert").show();
+                    $("#successName").html(game_list[answer_idx] + '<br>' + answer_description);
+                    $("#successName").show();
+                    $("#wrongAlert").hide();
+                    $("#options").hide();
+                    $("#prompt").hide();
+                    $("#prompt2").hide();
+                    $("#prompt3").hide();
+                    $("#chance").hide();
+
+                    $("#playButton").show().prop("disabled", false);
+                    $("#playButton").css("font-size","35px");
+                    $("#playButton").html("Play Again");
+                    $("#playButton").css("width","275px");
+                    // $("#playButton").css("height","100px");
+                    $("#playGroupButton").show();
+                    $("#endButton").show();
+                    console.log("game over!");
+                }
+                else {  // 猜錯次數沒超過上限
+                    // dan.push("Wrong",[1]);
+                    //9
+                    console.log("9. choose wrong answer");
+                    socket.emit("Wrong", "1");
+                    
+                    $("#wrongAlert").show();
+                    $("#chance").html("<span class='badge' style='background-color:blue;color:white'>" + chance_count + "</span> chances left");
+                    $("#chance").show();
+                    $("#prompt2").hide();
+                    $("#prompt3").hide();
+                    $("#successAlert").hide();
+                    $("#successName").hide();
+                    $("#successImage").hide();
+                    console.log("wrong answer!");
+                }
+            }
+        });
+        $("#options").show();
         $("#prompt").show();
         $("#prompt2").show();
-        $("#chance").html("<span class='badge' style='background-color:blue'>" + chance_count + "</span> chances left");
+        $("#chance").html("<span class='badge' style='background-color:blue;color:white'>" + chance_count + "</span> chances left");
         $("#chance").show();
     };
-    //[TODO] finish group li buttons
+    //display group li buttons
     var displayGroup = function(groupList){
         $("#playButton").hide();
+        $("#playGroupButton").hide();
         $("#endButton").hide();
         $("#successAlert").hide();
         $("#successName").hide();
@@ -234,15 +179,14 @@ $(function () {
 
         //show prompt3
         $("#prompt3").show();
+        $("#group_options_div").show();
 
         //generate group buttons
         var group_list_item_str = "";
         for(var i = 0; i < groupList.length; i++){
-            /*
-            <li><button class="groupBtn btn btn-primary center-block"></button></li>
-            */
+            /* <li><button class="groupBtn btn btn-primary center-block"></button></li> */
             group_list_item_str += '\
-                <li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-primary center-block">' + groupList[i].name + '</button></li>\
+                <li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-secondary center-block">' + groupList[i].name + '</button></li>\
             ';
         }
         $("#group_options").html(group_list_item_str);
@@ -250,18 +194,20 @@ $(function () {
         //bind functions for group buttons
         $(".groupBtn").unbind('click');
         $(".groupBtn").click(function(){
-            //[TODO] get selected group_id, and then socket emit to server, and socket on receive gameList
-            var playingGroup = $(this).attr("group_id");
+            lastClickTime = new Date(); 
+            //get selected group_id, and then socket emit to server, and socket on receive game_list
+            playingGroup = $(this).attr("group_id");
             console.log("playingGroup: ", playingGroup);
-            //[TODO] let un click other groups btn disable
+            //let other groups btn disable
+            $("#prompt3").hide();
+            $(".groupBtn").hide();
             //6
+            console.log("6. choose one group I want to play");
             socket.emit("playGroup", playingGroup);
         });
     }
 
-	$("#endButton").click(function(){
-		window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-	});
+    
     window.onpageshow = function (event) {
         if (event.persisted) {
             window.location.reload();
@@ -272,17 +218,44 @@ $(function () {
             console.log('Reloading');
             window.location.reload(); // reload whole page
         }
+    $("#playButton").click(function () {
+        if(urlCorrect == false){
+            return;
+        }
+        if(isMePlaying == false){
+            //4
+            console.log("4. send play-game request");
+            socket.emit("playACK", "");
+        }
+        else{
+            if(playButton_first_play == false){
+                console.log("playButton, playButton_first_play, false");
+                //10
+                console.log("10. send replay request");
+                socket.emit("NewGameReq", playingGroup);
+            }
+        }
+    });
+    //[TODO] player replay new group game
+    $("#playGroupButton").click(function(){
+        //12
+        console.log("12. send replay other group request");
+        socket.emit("NewGroupReq", "");
+    });
+    $("#endButton").click(function(){
+        window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+    });
     //1
     socket.on("checkUrl", function(msg){
-        console.log("recv[checkUrl]");
+        console.log("1. server ask for checking my-url");
         var url = window.location.href;
         //2
-        console.log("send[checkUrl], msg:", url.substring(url.lastIndexOf('/')+1));
+        console.log("2. send my-url to server for checking");
         socket.emit("checkUrl", url.substring(url.lastIndexOf('/')+1));
     });
     //3
     socket.on("checkUrlACK", function(msg){
-        console.log("recv[checkUrlACK], msg.urlCorrect", msg.urlCorrect);
+        console.log("3. receive the checking result from server");
         urlCorrect = msg.urlCorrect;
         if(urlCorrect == false){
             window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
@@ -290,37 +263,17 @@ $(function () {
         else{
             bar.animate(1.0);
             setTimeout(function(){
-               $("#playButton").show();
+                $("#playButton").show();
                 $("#loadingIndicator").hide();
-               $("#playButton").prop('disabled', false);
+                $("#playButton").prop('disabled', false);
+                $("#playGroupButton").prop('disabled', false);
                 $("#endButton").prop('disabled', false);
             },1000);
         }
     });
-    //[TODO] add one websocket channel for playing group
-    $("#playButton").click(function () {
-        if(urlCorrect == false){
-            return;
-        }
-        if(isMePlaying == false){
-            //4
-            socket.emit("playACK", "");
-        }
-        else{
-            if(playButton_first_play){
-                //[TODO] show candidate groups
-                displayGroup(groupList);
-                // enterPlay(gameList);
-                playButton_first_play = false;
-            }
-            else{
-                socket.emit("NewGameReq", "");
-            }
-        }
-    });
     //5
     socket.on("isGamePlaying", function(msg){
-        console.log(msg);
+        console.log("5. get Frame status which is playing by other");
         if(msg.isGamePlaying){
             window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
         }
@@ -328,21 +281,30 @@ $(function () {
             isMePlaying = true;
             playButton_first_play = false;
             displayGroup(groupList);
-            // enterPlay(gameList);
         }
     });
-    socket.on("NewGameRes", function(msg){
-        gameList = msg.gameList;
-        enterPlay(gameList);
-        console.log("get new game info");
+    //7
+    socket.on("GameStart", function(gameInfo){
+        console.log("7. receive gameInfo and generate game options");
+        enterPlay(gameInfo);
+    });
+    //11
+    socket.on("NewGameRes", function(gameInfo){
+        console.log("11. receive the next gameInfo and generate game options");
+        enterPlay(gameInfo);
+    });
+    //13
+    socket.on("NewGroupRes", function(groupList){
+        console.log("13. receive the new groupList and display group_options");
+        displayGroup(groupList);
     });
 
-    var checkTimeout = setInterval(function(){
-        var now = new Date();
-        if( (now - lastClickTime)/1000 >= timeout ){
-            console.log("timeout");
-            clearInterval(checkTimeout);
-            window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-        }
-    }, 1000);
+    // var checkTimeout = setInterval(function(){
+    //     var now = new Date();
+    //     if( (now - lastClickTime)/1000 >= timeout ){
+    //         console.log("timeout");
+    //         clearInterval(checkTimeout);
+    //         window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+    //     }
+    // }, 1000);
 });
