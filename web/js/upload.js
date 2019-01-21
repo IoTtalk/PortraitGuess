@@ -36,15 +36,20 @@ function render_upload_div(class_item, group_table_str){
                 <textarea class="form-control" id="description" placeholder="' + class_item.description + '"></textarea>\
             </div>\
             <div class="form-group margin_center">\
-                <h3 class="required">上傳資料夾(還沒做完ㄛ)</h3>\
-                <p class="help-block">可拉動圖片以排序(由左至右，由上至下)</p>\
-                <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple" webkitdirectory/>\
-            </div>\
-            <div class="form-group">\
-                <div name="form0" id="form0" >\
-                    <div class="row" id="row"></div>\
+                <h3 class="required">上傳圖片(還沒做完ㄛ)</h3>\
+                <p class="help-block">拉動圖片來排序(由左至右，由上至下)</p>\
+                <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple"/>\
+                <div id="pic_row" >\
+                    <div class="row" id="movable_pic_row"></div>\
                 </div>\
             </div>\
+        <!--\
+            <div class="form-group">\
+                <div id="pic_row" >\
+                    <div class="row" id="movable_pic_row"></div>\
+                </div> \
+            </div>\
+        -->\
             <div class="form-group margin_center">\
                 <div class="row">\
                     <h3 class="col-md-10" >選擇群組</h3>\
@@ -65,15 +70,17 @@ function render_upload_div(class_item, group_table_str){
 
 //show movable img
 function make_img_movable(){
-    //Preview upload image
     $("#upload_file").change(function(){
+        //flush old files
+        $(".preview_img").remove();
+
+        //Preview upload image
         Array.from(this.files).forEach((file, idx) => {
-            let div = $("<div>", {"class": "col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"});
-            div.append($("<img>", {
-                "id": "img" + idx, 
-                "class": "img-thumbnail", 
-                "oriname": file.name}));
-            $("#row").append(div);
+            let div = $("<div>", {"class": "preview_img col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"});
+            div.append($("<img>", {"id": "img" + idx, 
+                    "class": "img-thumbnail", 
+                    "oriname": file.name}));
+            $("#movable_pic_row").append(div);
 
             //load image
             let reader = new FileReader();
@@ -85,8 +92,8 @@ function make_img_movable(){
     });
     
     //make image moable
-    $( "#row" ).sortable();
-    $( "#row" ).disableSelection();
+    $( "#movable_pic_row" ).sortable();
+    $( "#movable_pic_row" ).disableSelection();
 }
 
 function render_new_group_tablerow(table_id, new_group_item){
@@ -225,8 +232,8 @@ function uplaod_btn_handler(class_item){
             alert("請填入名字");
             return false;
         }
-        else if(files.length < 6){ //check file input
-            alert('至少需要上傳 6 張圖片');
+        else if(files.length < 1){ //check file input
+            alert('至少需要上傳 1 張圖片');
             return false;
         }
 
