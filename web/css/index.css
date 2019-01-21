@@ -1,4 +1,5 @@
 html, body, .container-table {
+    width: 100%;
     height: 100%;
     background-color: #f7e1b5;
 }
@@ -20,80 +21,93 @@ html, body, .container-table {
     color: green;
 }
 #playButton{
-    margin-top: 15px;
-    width:300px;
-    height:100px;
+    margin-top: 5px;
+    width:275px;
+    /*height:100px;*/
     border-radius: 25px;
     font-size: 50px;
+    font-weight: bold;
+}
+#playGroupButton{
+    margin-top: 5px;
+    width:275px;
+    /*height:100px;*/
+    border-radius: 25px;
+    font-size: 35px;
     font-weight: bold;
 }
 #endButton{
-    margin-top: 20px;
-    width:300px;
-    height:80px;
+    margin-top: 5px;
+    width:275px;
+    /*height:80px;*/
     border-radius: 25px;
-    font-size: 50px;
+    font-size: 35px;
     font-weight: bold;
 }
-
-
 #voiceButton{
-    margin-top: 20px;
-    width:300px;
+    margin-top: 5px;
+    width:275px;
     height:100px;
     border-radius: 25px;
     font-size: 50px;
     font-weight: bold;
+}
+#group_options_div{
+    overflow: hidden;
 }
 #group_options {
     list-style-type: none;
     text-align: center;
-}
-#options li{
-    margin-top: 20px;
+    height: 275px;
+    overflow-y: scroll;
 }
 .groupBtn{
-    width:350px;
+    width:300px;
     /*height:50px;*/
     border-radius: 10px;
     font-size: 25px;
+    margin-bottom: 10px;
 }
 #options{
     list-style-type: none;
     text-align: center;
 }
 #options li{
-    margin-top: 20px;
+    margin-top: 10px;
 }
 ul{
     padding: 0px;
 }
 .optionBtn{
-    width:350px;
+    width:300px;
     /*height:50px;*/
     border-radius: 10px;
     font-size: 20px;
 }
 .alert{
     text-align: center;
-    width: 300px;
+    width: 275px;
     margin: 0 auto;
     height: 30px;
     padding: 0px;
     font-size: 20px;
+}
+#successName_wrapper{
+    overflow: hidden;
 }
 #successName{
     text-align: center;
     font-size: 25px;
     font-weight: bold;
     height: 150px;
-    overflow:hidden;
+    /*overflow:auto;*/
+    overflow-y: scroll;
 }
 #successImage{
     display: block;
     margin: auto;
     width: 200px;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
 #prompt{
@@ -103,7 +117,7 @@ ul{
 }
 #prompt2{
     text-align: center;
-    width: 300px;
+    width: 275px;
     margin: 0 auto;
     height: 30px;
     padding: 0px;
@@ -117,7 +131,7 @@ ul{
 }
 #chance{
     text-align: center;
-    width: 300px;
+    width: 275px;
     margin: 0 auto;
     margin-bottom: 5px;
     height: 30px;
