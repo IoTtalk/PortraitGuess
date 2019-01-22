@@ -38,7 +38,7 @@ function render_upload_div(class_item, group_table_str){
             <div class="form-group margin_center">\
                 <h3 class="required">上傳圖片(還沒做完ㄛ)</h3>\
                 <p class="help-block">拉動圖片來排序(由左至右，由上至下)</p>\
-                <input id="upload_file" type="file" name="photos[]" accept="image/*" multiple="multiple"/>\
+                <input id="upload_file" type="file" name="photos[]" accept=".png,.jpg,.jpeg" multiple="multiple"/>\
                 <div id="pic_row" >\
                     <div class="row" id="movable_pic_row"></div>\
                 </div>\
@@ -80,6 +80,7 @@ function make_img_movable(){
             div.append($("<img>", {"id": "img" + idx, 
                     "class": "img-thumbnail", 
                     "oriname": file.name}));
+            // div.append($("<span>", {"src": "/img/cancel.png", "class": "remove_tag", "text": "✖️"}));
             $("#movable_pic_row").append(div);
 
             //load image
@@ -91,7 +92,7 @@ function make_img_movable(){
         });
     });
     
-    //make image moable
+    //make image movable
     $( "#movable_pic_row" ).sortable();
     $( "#movable_pic_row" ).disableSelection();
 }
@@ -204,7 +205,7 @@ function handleUploadSuccess(data){
         $('#upload_file').val('');
         $('#name').val('');
         $('#description').val('');
-        $('#row').html('');
+        $(".preview_img").remove();成功
         $('input[name=group]:checked').prop("checked", false);
     }
     else{
