@@ -1,7 +1,13 @@
-.remove_tag{
-   position:absolute;
-   top:0;
-   right:0;
+.preview_img {
+    position: relative;
+}
+.remove_tag {
+   position: absolute;
+   top: 0;
+   right: 1em;
+   height: 1em;
+   width: 1em;
+   z-index: 5;
 }
 #pic_row {
     margin-top: 10px;
