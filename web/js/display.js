@@ -84,6 +84,11 @@ function render_display_div(grouplist_table_str){
         <br>\
         <h3 class="center">請勾選欲播放的群組(可多選)</h3>\
         <br>\
+        <div class="center">\
+            <button id="select_all" class="btn btn-secondary">全選</button>\
+            <button id="cancal_all" class="btn btn-secondary">全不選</button>\
+        </div>\
+        <br>\
         <div class="margin_center display_table">' + grouplist_table_str + '</div>\
         <br>\
         <div class="center">\
@@ -133,29 +138,13 @@ function set_display_btn_handler(){
     });
 }
 
-//make db selection only one
-function checkbox_onlyone_handler(){
-    $("input:checkbox[name='db']").on('click', function(){
-        var $box = $(this);
-        if($box.is(":checked")){
-            var group = "input:checkbox[name='db']";
-            $(group).prop("checked", false);
-            $box.prop("checked", true);
-        }
-        else{
-            $box.prop("checked", false);
-        }
-    });
-}
-
 //make protrait selection all or none
-function checkbox_all_or_clear_handler(){
-    //TODO
-    $('#select_all_portrait_btn').on('click',function(){
-        $("input:checkbox[name='portrait']").prop("checked", true);
+function select_and_cancel_handler(){
+    $('#select_all').on('click',function(){
+        $("input:checkbox[name='display']").prop("checked", true);
     });
 
-    $('#select_clear_portrait_btn').on('click',function(){
-        $("input:checkbox[name='portrait']").prop("checked", false);
+    $('#cancal_all').on('click',function(){
+        $("input:checkbox[name='display']").prop("checked", false);
     });
 }
