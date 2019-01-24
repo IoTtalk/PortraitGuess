@@ -1,13 +1,32 @@
-function render_pending_div(class_item, pending_list){
-    var pending_table_str = '<table id="pending_table" class="table table-hover">';
-    pending_table_str += "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>"
+function render_pending_div(pending_table_str){
+    let pending_div = '\
+        <h2 class="center top">待審檔案</h2>\
+        <br>\
+        <h3 class="center">請點選欲審核的檔案</h3>\
+        <br>\
+        <div class="center">\
+            <button id="refresh" class="btn btn-secondary">&#8635;</button>\
+            <button id="ascending" class="btn btn-secondary">&#9650;</button>\
+            <button id="descending" class="btn btn-secondary">&#9660;</button>\
+        </div>\
+        <br>\
+        <div class="margin_table pending_table">\
+            <table id="pending_table" class="table table-hover">\
+                ' + pending_table_str + ' \
+            </table>\
+        </div>\
+        ';
+    return pending_div;
+}
 
+function render_pending_table(class_item, pending_list){
+    let pending_table_str = "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>";
     if(pending_list.length == 0){
         pending_table_str += "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>"
     }
 
     pending_list.forEach((pending_item) => {
-        var id = pending_item.id,
+        let id = pending_item.id,
             name = pending_item.name,
             description = pending_item.description;
 
@@ -18,29 +37,19 @@ function render_pending_div(class_item, pending_list){
                 <td><button id="' + id + '_pendingbtn" class="btn btn-secondary pendingbtn">審核</button></td>\
             </tr>';
     });
-    pending_table_str += "</table>";
 
-    var pending_div = '\
-        <h2 class="center top">待審檔案</h2>\
-        <br>\
-        <h3 class="center">請點選欲審核的檔案</h3>\
-        <br>\
-        <div class="margin_table pending_table">\
-        ' + pending_table_str + ' \
-        </div>\
-        ';
-    return pending_div;
+    return pending_table_str;
 }
 
 function setupEditModal(class_item, questionData, status){
-    var editModal_body_str = "",
+    let editModal_body_str = "",
         group_str = "",
         picture_str = "";
 
     //render question group
-    var group_list = questionData.group;
-    for(var i = 0; i < group_list.length; i++){
-        var id = group_list[i].id,
+    let group_list = questionData.group;
+    for(let i = 0; i < group_list.length; i++){
+        let id = group_list[i].id,
             name = group_list[i].name,
             used = group_list[i].used;
         
@@ -62,31 +71,24 @@ function setupEditModal(class_item, questionData, status){
     }
 
     //render question picture
-    var picture_list = questionData.picture;
-    for(var i = 0; i < picture_list.length; i++){
+    let picture_list = questionData.picture;
+    for(let i = 0; i < picture_list.length; i++){
         picture_str += '\
-            <tr style="height:20px">\
-                <td width="40%"><img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail"></td>\
-                <td width="40%"></td>\
-                <td>\
-                    <ul class="list-group">\
-                        <li class="list-group-item" onclick="picture_order_move(this, true)">&#9650;</li>\
-                        <li class="list-group-item" onclick="picture_order_move(this, false)">&#9660;</li>\
-                        <!-- <li class="list-group-item" onclick="picture_delete(this)"><a style="color: red">&#10005;</a></li> -->\
-                    </ul>\
-                </td>\
-            </tr>';
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">\
+                <img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail">\
+                </img>\
+            </div>';
     }
 
     //render footer btn
-    var footer_str = '\
+    let footer_str = '\
         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>\
         <button type="button" id="editModal_delete" class="btn btn-danger">刪除</button>\
         <button type="button" id="editModal_update" class="btn btn-warning">完成</button>\
         ';
 
     /* check modal mode */
-    var mode;
+    let mode;
     if(status == 1){
         mode = "編輯";
     }
@@ -113,7 +115,9 @@ function setupEditModal(class_item, questionData, status){
     $('#editModal_group_table').html(group_str);
 
     //ser picture
-    $('#editModal_picture_table').html(picture_str);
+    $('#editModal_picture_row').html(picture_str);
+    $("#editModal_picture_row").sortable();
+    $("#movable_pic_row").disableSelection();
 
     /* set modal footer */
     $('#editModal_footer').html(footer_str);
@@ -121,7 +125,7 @@ function setupEditModal(class_item, questionData, status){
 
 function pendingbtn_handler(class_item, mode){
     $(".pendingbtn").on("click", function(){
-        var id = this.id.split("_")[0];
+        let id = this.id.split("_")[0];
         console.log("checking: ", id);
         
         $.ajax({
@@ -134,7 +138,7 @@ function pendingbtn_handler(class_item, mode){
                 console.log(e);
             },
             success: function(data){
-                var questionData = JSON.parse(data)
+                let questionData = JSON.parse(data)
                 console.log(questionData);
 
                 //set modal content by questionData
@@ -158,7 +162,7 @@ function question_update_btn_handler(class_item, id, mode){
         event.stopPropagation();
 
         // Get the data from input, create new FormData.
-        var formData = new FormData(),
+        let formData = new FormData(),
             name = $('#editModal_name').val(),
             description = $('#editModal_description').val(),
             img_order = {},
@@ -171,17 +175,17 @@ function question_update_btn_handler(class_item, id, mode){
             return false;
         }
 
-        var $selected_list = $('input[name=editModalgroup]:checked');
+        let $selected_list = $('input[name=editModalgroup]:checked');
         $selected_list.each(function (){
             selected_group.push($(this).val());
             // console.log($(this).val());
         });
 
         //get img order
-        $("#editModal_picture_table img").each(function(index){
+        $("#editModal_picture_row img").each(function(index){
             img_order[$(this).attr('id')] = index + 1;
         });
-        // console.log(img_order);
+        console.log(img_order);
 
         //append data in formData
         data["id"] = id;
@@ -213,7 +217,7 @@ function question_update_btn_handler(class_item, id, mode){
                     $('#'+ id).remove();
                     
                     //display no more pending files in this class
-                    var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                    let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
                     if($("#pending_table tbody").find('tr').length == 1){
                         console.log('the last pending files');
                         $("tbody").append(msg);
@@ -248,7 +252,7 @@ function question_delete_btn_handler(class_item, id, mode){
         event.stopPropagation();
 
         //popup confirm box
-        var warning_str = "確定要刪除嗎?";
+        let warning_str = "確定要刪除嗎?";
         if(confirm(warning_str)){
             //ajax
             $.ajax({
@@ -265,7 +269,7 @@ function question_delete_btn_handler(class_item, id, mode){
                     console.log(e);
                 },
                 success: function(data){
-                    var response = JSON.parse(data);
+                    let response = JSON.parse(data);
                     if(mode == "approved"){
                         if(response.using){
                             alert("該檔案正在播放清單中，無法刪除\n請編輯使用中的群組!");
@@ -285,7 +289,7 @@ function question_delete_btn_handler(class_item, id, mode){
                         $('#'+ id).remove();
 
                         //display no more pending files in this class
-                        var msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                        let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
                         if($("#pending_table tbody").find('tr').length == 1){
                             console.log('the last pending files');
                             $("tbody").append(msg);
@@ -315,21 +319,65 @@ function question_delete_btn_handler(class_item, id, mode){
     });
 }
 
-function picture_order_move(trigger, blnUp){
-    let trigRow = $(trigger).parent().parent().parent();
+function refreshbtn_handler(class_item, mode){
+    $("#refresh").on("click", function(){
+        let status;
+        if(mode == "pending"){
+            status = 0;
+        }
+        else if(mode == "approved"){
+            status = 1;
+        }
 
-    if(blnUp){
-        trigRow.insertBefore(trigRow.prev());
-    }
-    else{
-        trigRow.insertAfter(trigRow.next());
-    }
+        $.ajax({
+            type: "GET",
+            url: location.origin + "/getQuestion?mode=all&class_id=" + class_item.id + "&status=" + status,
+            cache: false,
+            contentType: "application/json",
+            error: function(e){
+                alert("something wrong");
+                console.log(e);
+            },
+            success: function(payload){
+                let data = JSON.parse(payload);
+                console.log(data);
+
+                if(mode == "pending"){
+                    $('#pending_table').html(render_pending_table(data.class_item, data.question_list));
+                    pendingbtn_handler(data.class_item, "pending");
+                }
+                else{
+                    $('#approved_table').html(render_approved_table(data.class_item, data.question_list));
+                    approvedbtn_handler(data.class_item, "approved");
+                }
+            }
+        });
+    });
 }
 
-function picture_delete(trigger){
-    let trigRow = $(trigger).parent().parent().parent().addClass('d-none');
-    //[TODO] delete editModal picture, need to warning manager
-    //       and check total picture number
+function ascendingbtn_handler(class_item, question_list, mode){
+    $("#ascending").on("click", function(){
+        if(mode == "pending"){
+            $('#pending_table').html(render_pending_table(class_item, question_list));
+            pendingbtn_handler(class_item, "pending");
+        }
+        else if(mode == "approved"){
+            $('#approved_table').html(render_approved_table(class_item, question_list));
+            approvedbtn_handler(class_item, "pending");
+        }
+    });
+}
 
-    // console.log("delete picture: ", $(trigger).parent().parent().parent().children('td img').attr('id'));
+function descendingbtn_handler(class_item, question_list, mode){
+    $("#descending").on("click", function(){
+        let reverse_question_list = question_list.slice();
+        if(mode == "pending"){
+            $('#pending_table').html(render_pending_table(class_item, reverse_question_list.reverse()));
+            pendingbtn_handler(class_item, "pending");
+        }
+        else if(mode == "approved"){
+            $('#approved_table').html(render_approved_table(class_item, reverse_question_list.reverse()));
+            approvedbtn_handler(class_item, "approved");
+        }
+    });
 }
