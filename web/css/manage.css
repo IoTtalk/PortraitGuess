@@ -1,3 +1,17 @@
+.manually-show-modal {
+    display:block !important;
+    z-index: 1050;
+}
+.my_modal_backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+    opacity: 0.5;
+}
 .preview_img {
     position: relative;
 }
@@ -12,6 +26,9 @@
 #pic_row {
     margin-top: 10px;
 }
+.my_cursor {
+    cursor: pointer;
+}
 .homepage_label {
     font-size: 20px;
 }
@@ -24,7 +41,7 @@
 .group_table {
     border-top: 2px solid #ccc;
     border-bottom: 2px solid #ccc;
-    height: 150px;
+    height: 200px;
     overflow: auto;
 }
 .pending_table {
@@ -60,7 +77,7 @@
 .editModal_group_table {
     border-top: 2px solid #ccc;
     border-bottom: 2px solid #ccc;
-    height: 150px;
+    height: 200px;
     overflow: auto;
 }
 .editModal_picture_table {
