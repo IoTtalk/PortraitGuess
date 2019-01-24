@@ -236,7 +236,7 @@ $(function(){
             }
         }
     });
-    //[TODO] player replay new group game
+    //player replay new group game
     $("#playGroupButton").click(function(){
         //12
         console.log("12. send replay other group request");
@@ -299,12 +299,12 @@ $(function(){
         displayGroup(groupList);
     });
 
-    // var checkTimeout = setInterval(function(){
-    //     var now = new Date();
-    //     if( (now - lastClickTime)/1000 >= timeout ){
-    //         console.log("timeout");
-    //         clearInterval(checkTimeout);
-    //         window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
-    //     }
-    // }, 1000);
+    var checkTimeout = setInterval(function(){
+        var now = new Date();
+        if( (now - lastClickTime)/1000 >= timeout ){
+            console.log("timeout");
+            clearInterval(checkTimeout);
+            window.location = "http://" + paintingIP + ":" + webServerPort + "/endPage";
+        }
+    }, 1000);
 });
