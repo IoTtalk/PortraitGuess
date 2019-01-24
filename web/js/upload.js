@@ -26,43 +26,41 @@ function render_upload_div(class_item, group_table_str){
     var upload_div ='\
         <h2 class="center">上傳檔案</h2>\
         <br>\
-        <form id="upload-photos" method="post" action="/upload_photos" enctype="multipart/form-data">\
-            <div class="form-group margin_center">\
-                <h3 class="required">名字</h3>\
-                <input type="text" id="name" class="form-control" size="35" placeholder="ex: ' + class_item.sample_name + '"/>\
+        <form id="upload-photos" class="row" method="post" action="/upload_photos" enctype="multipart/form-data">\
+            <div class="col-md-6">\
+                <div class="form-group ">\
+                    <h3 class="required">名字</h3>\
+                    <input type="text" id="name" class="form-control" size="35" placeholder="ex: ' + class_item.sample_name + '"/>\
+                </div>\
+                <div class="form-group ">\
+                    <h3>描述</h3>\
+                    <textarea class="form-control" id="description" rows="4" placeholder="' + class_item.description + '"></textarea>\
+                </div>\
             </div>\
-            <div class="form-group margin_center">\
-                <h3>描述</h3>\
-                <textarea class="form-control" id="description" placeholder="' + class_item.description + '"></textarea>\
+            <div class="col-md-6">\
+                <div class="form-group ">\
+                    <div class="row">\
+                        <h3 class="col-md-8" >選擇群組</h3>\
+                        <div class="col-md-4"><input type="button" value="新增群組" id="add_new_group" class="btn btn-secondary"></div>\
+                    </div>\
+                    <div id="group_table" class="group_table">\
+                        ' + group_table_str + '\
+                    </div>\
+                </div>\
             </div>\
-            <div class="form-group margin_center">\
-                <h3 class="required">上傳圖片(還沒做完ㄛ)</h3>\
-                <p class="help-block">拉動圖片來排序(由左至右，由上至下)</p>\
-                <input id="upload_file" type="file" name="photos[]" accept=".png,.jpg,.jpeg" multiple="multiple"/>\
+            <div class="col-md-12">\
+                <div class="form-group ">\
+                        <h3 class="required">上傳圖片</h3>\
+                        <p class="help-block">拉動圖片來排序(由左至右，由上至下)</p>\
+                        <input id="upload_file" type="file" name="photos[]" accept=".png,.jpg,.jpeg" multiple="multiple"/>\
+                </div>\
                 <div id="pic_row" >\
                     <div class="row" id="movable_pic_row"></div>\
                 </div>\
-            </div>\
-        <!--\
-            <div class="form-group">\
-                <div id="pic_row" >\
-                    <div class="row" id="movable_pic_row"></div>\
-                </div> \
-            </div>\
-        -->\
-            <div class="form-group margin_center">\
-                <div class="row">\
-                    <h3 class="col-md-10" >選擇群組</h3>\
-                    <div class="col-md-2"><input type="button" value="新增" id="add_new_group" class="btn btn-secondary"></div>\
-                </div>\
-                <div id="group_table" class="group_table">\
-                    ' + group_table_str + '\
+                <div class="form-group center">\
+                    <input class="btn btn-warning" type="submit" value="上傳"/>\
                 </div>\
             </div>\
-            <div class="form-group center">\
-                <input class="btn btn-warning" type="submit" value="上傳" />\
-            </div>\
-            <br>\
         </form>\
         ';
     return upload_div;
@@ -105,7 +103,7 @@ function render_new_group_tablerow(table_id, new_group_item){
     console.log(new_id, new_name);
     newGroupTableRow += "\
         <tr>\
-            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='group' value='" + new_id + "' /></td>\
+            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='group' value='" + new_id + "' checked/></td>\
             <td><label for='" + new_id + "_checkbox'>" + new_name + "</label></td>\
         </tr>";
 
@@ -198,14 +196,21 @@ function handleUploadSuccess(data){
     var res = JSON.parse(data);
     console.log(res.photo_status);
 
+    console.log(new Date());
+    // $("#progressbarModal").removeClass("manually-show-modal");
+    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+    $("#progressbarModal").removeClass("manually-show-modal");
+
     if(res.photo_status){
-        alert("上傳成功!!\n");
+        console.log(new Date());
+        // alert("上傳成功!!\n");
+        $("#messageModal").modal("show");
 
         // clear all input
         $('#upload_file').val('');
         $('#name').val('');
         $('#description').val('');
-        $(".preview_img").remove();成功
+        $(".preview_img").remove();
         $('input[name=group]:checked').prop("checked", false);
     }
     else{
@@ -215,9 +220,14 @@ function handleUploadSuccess(data){
 
 //upload btn handler
 function uplaod_btn_handler(class_item){
-    $('#upload-photos').on('submit', function (event) {
+    $('#upload-photos').on('submit', function(event) {
         event.preventDefault();
         event.stopPropagation();
+
+        console.log("show");
+        // show_processingbarModal();
+        $("#my_modal_backdrop").addClass("my_modal_backdrop");
+        $("#progressbarModal").addClass("manually-show-modal");
 
         // Get the data from input, create new FormData.
         var formData = new FormData(),
@@ -282,6 +292,8 @@ function uplaod_btn_handler(class_item){
             processData: false,
             contentType: false,
         }).done(handleUploadSuccess).fail(function (xhr, status) {
+            console.log("hide");
+            // $("#progressbarModal").removeClass("manually-show-modal");
             alert(status);
         });
     });
