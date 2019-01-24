@@ -400,8 +400,11 @@ function show_class_pending_management(class_id) {
             var data = JSON.parse(payload);
             console.log(data);
 
-            $('#display').html(render_pending_div(data.class_item, data.question_list));
+            $('#display').html(render_pending_div(render_pending_table(data.class_item, data.question_list)));
             pendingbtn_handler(data.class_item, "pending");
+            refreshbtn_handler(data.class_item, "pending");
+            ascendingbtn_handler(data.class_item, data.question_list, "pending");
+            descendingbtn_handler(data.class_item, data.question_list, "pending");
         }
     });
 }
@@ -431,8 +434,11 @@ function show_class_approved_management(class_id){
             var data = JSON.parse(payload);
             console.log(data);
 
-            $('#display').html(render_approved_div(data.class_item, data.question_list));
+            $('#display').html(render_approved_div(render_approved_table(data.class_item, data.question_list)));
             approvedbtn_handler(data.class_item, "approved");
+            refreshbtn_handler(data.class_item, "approved");
+            ascendingbtn_handler(data.class_item, data.question_list, "approved");
+            descendingbtn_handler(data.class_item, data.question_list, "approved");
         }
     });
 }
@@ -502,6 +508,8 @@ function show_class_display_management(){
             
             // set using group
             set_display_btn_handler();
+
+            select_and_cancel_handler();
         }
     });
 }
