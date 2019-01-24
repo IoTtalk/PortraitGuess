@@ -81,18 +81,14 @@ function render_group_accordion(class_item, option, group_list){
     //default for "all question" in this class_id
     group_accordion += '\
         <div class="card">\
-            <div class="card-header" id="' + "all" +'_heading">\
-                <h5 class="mb-0">\
-                    <button id="' + "all" + '" class="btn btn-link collapsed class_card_btn" \
-                            data-toggle="collapse" data-target="#collapse_'+ "all" +'" \
-                            aria-expanded="false" aria-controls="collapse_'+ "all" +'">\
-                        ' + "所有" + class_item.name + '\
-                    </button>\
-                </h5>\
+            <div id="all_heading" class="card-header collapsed class_card_btn" group_id="all"\
+                data-toggle="collapse" data-target="#collapse_all" \
+                aria-expanded="false" aria-controls="collapse_all">\
+                <button class="btn btn-link">全部' + class_item.name + '</button>\
             </div>\
-            <div id="collapse_'+ "all" +'" class="collapse" aria-labelledby="' + "all" +'_heading" data-parent="#accordion">\
+            <div id="collapse_all" class="collapse" aria-labelledby="all_heading" data-parent="#accordion">\
                 <div class="card-body">\
-                    <table id="' + "all" + '_class_table" class="table table-hover"></table>\
+                    <table id="all_class_table" class="table table-hover"></table>\
                 </div>\
             </div>\
         </div>\
@@ -109,14 +105,10 @@ function render_group_accordion(class_item, option, group_list){
         //create group card
         group_accordion += '\
             <div class="card">\
-                <div class="card-header" id="' + id +'_heading">\
-                    <h5 class="mb-0">\
-                        <button id="' + id + '" class="btn btn-link collapsed class_card_btn" \
-                                data-toggle="collapse" data-target="#collapse_'+ id +'" \
-                                aria-expanded="false" aria-controls="collapse_'+ id +'">\
-                            ' + name + '\
-                        </button>\
-                    </h5>\
+                <div id="' + id +'_heading" class="card-header collapsed class_card_btn" group_id="' + id + '"\
+                    data-toggle="collapse" data-target="#collapse_'+ id +'" \
+                    aria-expanded="false" aria-controls="collapse_'+ id +'">\
+                    <button class="btn btn-link collapsed class_card_btn">' + name + '</button>\
                 </div>\
                 <div id="collapse_'+ id +'" class="collapse" aria-labelledby="' + id +'_heading" data-parent="#accordion">\
                     <div class="card-body">\
@@ -315,8 +307,8 @@ function addquestion_btn_handler(){
 
 function class_card_btn_handler(class_item){
     $(".class_card_btn").on("click", function(){
-        var group_id = this.id;
-        // console.log(this.id);
+        var group_id = $(this).attr("group_id");
+        console.log(group_id);
 
         if($(this).hasClass("collapsed")){
             if(group_id == "all"){
