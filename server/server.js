@@ -816,7 +816,7 @@ app.get('/getGroup', function(req, res){
                         group_list.push({
                             id : GroupData.id,
                             name : GroupData.name,
-                            class_id : GroupData.class_id,
+                            class_id : GroupData.ClassId,
                             status : GroupData.status
                         });
                     });
@@ -852,7 +852,7 @@ app.get('/getGroup', function(req, res){
                         group_list.push({
                             id : GroupData.id,
                             name : GroupData.name,
-                            class_id : GroupData.class_id,
+                            class_id : GroupData.ClassId,
                             status : GroupData.status
                         });
                     });
