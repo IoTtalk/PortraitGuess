@@ -1,8 +1,28 @@
-function render_approved_div(class_item, approved_list){
-    var approved_table_str = '<table class="table table-hover">';
-    approved_table_str += "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>"
+function render_approved_div(approved_table_str){
+    let approved_div = '\
+        <h2 class="center top">已審檔案</h2>\
+        <br>\
+        <h3 class="center">請點選欲編輯的檔案</h3>\
+        <br>\
+        <div class="center">\
+            <button id="refresh" class="btn btn-secondary">&#8635;</button>\
+            <button id="ascending" class="btn btn-secondary">&#9650;</button>\
+            <button id="descending" class="btn btn-secondary">&#9660;</button>\
+        </div>\
+        <br>\
+        <div class="margin_table approved_table">\
+            <table id="approved_table" class="table table-hover">\
+                ' + approved_table_str + ' \
+            </table>\
+        </div>\
+        ';
+    return approved_div;
+}
+
+function render_approved_table(class_item, approved_list){
+    let approved_table_str = "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>"
     approved_list.forEach((approved_item) => {
-        var id = approved_item.id,
+        let id = approved_item.id,
             name = approved_item.name,
             description = approved_item.description;
 
@@ -13,18 +33,8 @@ function render_approved_div(class_item, approved_list){
                 <td><button id="' + id + '_approvedbtn" class="btn btn-secondary approvedbtn">編輯</button></td>\
             </tr>';
     });
-    approved_table_str += "</table>";
 
-    var approved_div = '\
-        <h2 class="center top">已審檔案</h2>\
-        <br>\
-        <h3 class="center">請點選欲編輯的檔案</h3>\
-        <br>\
-        <div class="margin_table approved_table">\
-        ' + approved_table_str + ' \
-        </div>\
-        ';
-    return approved_div;
+    return approved_table_str;
 }
 
 function approvedbtn_handler(class_item, mode){
