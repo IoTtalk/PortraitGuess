@@ -1,9 +1,7 @@
 function render_grouplist_table(group_list){
-    var grouplist_table_str = "";
-
-    var grouplist_table_str = "<table class='table table-hover'>";
+    let grouplist_table_str = "<table class='table table-hover'>";
     group_list.forEach((group) => {
-        var id = group.id,
+        let id = group.id,
             name = group.name,
             status = group.status,
             class_id = group.class_id;
@@ -26,7 +24,7 @@ function render_grouplist_table(group_list){
 }
 
 function render_groupmember_table(groupMembertList){
-    var groupmember_table_str = '<table id="displayModal_table" class="table table-hover">',
+    let groupmember_table_str = '<table id="displayModal_table" class="table table-hover">',
         info = "";
 
     groupmember_table_str += '<tr><th width="40%">名字</th><th>敘述</th></tr>';
@@ -46,7 +44,7 @@ function render_groupmember_table(groupMembertList){
 
 function displayModal_btn_handler(){
     $(".displayModal_btn").on('click', function(req, res){
-        var display_group_id = $(this).parent().parent().find('input').attr('value'),
+        let display_group_id = $(this).parent().parent().find('input').attr('value'),
             display_group_name = $(this).parent().parent().find('label').text();
 
         console.log(display_group_id, display_group_name);
@@ -58,11 +56,12 @@ function displayModal_btn_handler(){
             cache: false,
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法取得群組資訊");
                 console.log(e);
             },
             success: function(payload){
-                var data = JSON.parse(payload)
+                let data = JSON.parse(payload)
                 console.log(data);
 
                 //set moadl title by groupname
@@ -79,7 +78,7 @@ function displayModal_btn_handler(){
 }
 
 function render_display_div(grouplist_table_str){
-    var display_div = '\
+    let display_div = '\
         <h2 class="center">播放名單</h2>\
         <br>\
         <h3 class="center">請勾選欲播放的群組(可多選)</h3>\
@@ -100,13 +99,14 @@ function render_display_div(grouplist_table_str){
 
 function set_display_btn_handler(){
     $('#set_display_btn').on('click', function(){
-        var $selected_group = $('input[name=display]:checked');
+        let $selected_group = $('input[name=display]:checked');
         if($selected_group.length < 1){
-            alert("至少勾選 1 個!");
+            //show msgModal
+            show_msgModal("系統訊息", "至少需勾選 1 個群組");
             return false;
         }
         else{
-            var selected_group_list = [];
+            let selected_group_list = [];
 
             $selected_group.each(function (){
                 selected_group_list.push({
@@ -127,11 +127,13 @@ function set_display_btn_handler(){
                 }),
                 contentType: "application/json",
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得群組列表");
                     console.log(e);
                 },
                 success: function(){
-                    alert("設定成功!!");
+                    //show msgModal
+                    show_msgModal("系統訊息", "建立播放清單成功");
                 }
             });
         }
