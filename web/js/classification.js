@@ -1,5 +1,5 @@
 function render_classification_selector(group_list){
-    var classification_selector_str = '<select class="form-control" id="grouplist_select">';
+    let classification_selector_str = '<select class="form-control" id="grouplist_select">';
 
     classification_selector_str += '<option value="none">---</option>'
     classification_selector_str += '<option value="newgroup">新增群組</option>'
@@ -25,13 +25,13 @@ function render_classification_selector(group_list){
 }
 
 function render_groupinfo(group_title, groupContentList, old_group){
-    var groupinfo_str = "",
+    let groupinfo_str = "",
         groupContent_str = "",
         info = "";
 
         if(typeof groupContentList !== 'undefined' && groupContentList.length > 0){
             groupContentList.forEach((content) => {
-                var status_str = "";
+                let status_str = "";
                 if(content.status == "0"){
                     status_str = '待審';
                 }
@@ -48,7 +48,7 @@ function render_groupinfo(group_title, groupContentList, old_group){
             groupContent_str += '<tr><td><label question_id="none">群組內尚無成員</label></td></tr>';
         }
 
-        var left_btn_id = "addNewGroup_btn",
+        let left_btn_id = "addNewGroup_btn",
             right_bth_id = "abortNow_btn";
 
         // check if those btn should change function for old/new group
@@ -75,7 +75,7 @@ function render_groupinfo(group_title, groupContentList, old_group){
 }
 
 function render_group_accordion(class_item, option, group_list){
-    var group_accordion_str = "",
+    let group_accordion_str = "",
         group_accordion = "";
 
     //default for "all question" in this class_id
@@ -95,7 +95,7 @@ function render_group_accordion(class_item, option, group_list){
     ';
 
     group_list.forEach((group) => {
-        var id = group.id,
+        let id = group.id,
             name = group.name;
 
         if(id == option){ //filter user selected option(group)
@@ -130,7 +130,7 @@ function render_group_accordion(class_item, option, group_list){
 }
 
 function render_question_in_group_table(category_id, question_in_group_list){
-    var question_in_group_table_str = "";
+    let question_in_group_table_str = "";
 
     question_in_group_table_str += '<tr><th width="10%"></th><th  width="40%">名字</th><th  width="50%">敘述</th></tr>'
     question_in_group_list.forEach((question) => {
@@ -151,7 +151,7 @@ function groupinfo_delete_handler(){
         console.log(this.id);
         
         //check if the last one question
-        var $tablerow_label = $('#groupContent_table').find('label');
+        let $tablerow_label = $('#groupContent_table').find('label');
         if($tablerow_label.length == 1){
             //add empty_str
             $(this).parent().parent().remove();
@@ -165,7 +165,7 @@ function groupinfo_delete_handler(){
 
 function updateOldGroup_btn_handler(class_item, using){
     $("#updateOldGroup_btn").on('click', function(){
-        var update_group_id = $("#grouplist_select").val(),
+        let update_group_id = $("#grouplist_select").val(),
             newgroup_list = [];
 
         $('#groupContent_table').find('label').each(function(){
@@ -178,7 +178,8 @@ function updateOldGroup_btn_handler(class_item, using){
 
         if(using == "1"){
             if(newgroup_list.length <= 0){
-                alert("使用中的群組\n至少選取 1 位");
+                //show msgModal
+                show_msgModal("系統訊息", "編輯'使用中'的群組<br>至少需選取 1 個");
                 return false;
             }
         }
@@ -199,12 +200,13 @@ function updateOldGroup_btn_handler(class_item, using){
             }),
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "更新群組失敗");
                 console.log(e);
             },
             success: function(){
-                //alert success and reload page
-                alert("更新成功!!");
+                //show msgModal
+                show_msgModal("系統訊息", "更新群組成功");
                 // location.reload();
                 setpageToStartUp();
             }
@@ -214,55 +216,68 @@ function updateOldGroup_btn_handler(class_item, using){
 
 function deleteNow_btn_handler(group_list){
     $("#deleteNow_btn").on('click', function(){
-        var delete_group_id = $("#grouplist_select").val();
+        let delete_group_id = $("#grouplist_select").val();
 
-        for(var i = 0; i < group_list.length; i++){
+        for(let i = 0; i < group_list.length; i++){
             if(group_list[i].id == delete_group_id && group_list[i].status){
-                alert("該群組正在使用中，無法刪除\n請至'播放清單'將其取消勾選");
+                //show msgModal
+                show_msgModal("系統訊息", "該群組正在'使用中'，無法刪除<br>請至'播放清單'頁面，將其取消勾選");
                 return false;
             }
         }
 
-        //popup confirm box
-        if(confirm("確定要刪除嗎?")){
-            //ajax
-            $.ajax({
-                type: "DELETE",
-                url: location.origin + "/deleteGroup",
-                cache: false,
-                data: JSON.stringify(
-                {
-                    delete_group_id : delete_group_id
-                }),
-                contentType: "application/json",
-                error: function(e){
-                    alert("something wrong");
-                    console.log(e);
-                },
-                success: function(){
-                    alert("刪除成功");
-                    // location.reload();
-                    setpageToStartUp();
+        confirmModal_confirm_btn_handler(delete_group_cb, {"delete_group_id": delete_group_id});
+        confirmModal_cancel_btn_handler();
 
-                    //remove this group from select option
-                    $('#grouplist_select option[value="' + delete_group_id + '"]').remove();
-                }
-            });
-        }
-        else{
-            return false;
+        //popup confirmModal
+        $("#my_modal_backdrop").addClass("my_modal_backdrop");
+        $("#confirmModal_title").text("確定要刪除嗎？");
+        $("#confirmModal").modal("show");
+    });
+}
+
+function delete_group_cb(args){
+    let delete_group_id = args.delete_group_id;
+    //ajax
+    $.ajax({
+        type: "DELETE",
+        url: location.origin + "/deleteGroup",
+        cache: false,
+        data: JSON.stringify(
+        {
+            delete_group_id : delete_group_id
+        }),
+        contentType: "application/json",
+        error: function(e){
+            $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+            $("#confirmModal").modal("hide");
+
+            //show msgModal
+            show_msgModal("系統錯誤", "刪除群組失敗");
+            console.log(e);
+        },
+        success: function(){
+            $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+            $("#confirmModal").modal("hide");
+
+            //show msgModal
+            show_msgModal("系統訊息", "刪除群組成功");
+            setpageToStartUp();
+
+            //remove this group from select option
+            $('#grouplist_select option[value="' + delete_group_id + '"]').remove();
         }
     });
 }
 
 function addquestion_btn_handler(){
     $(".addhuman_btn").on('click', function(){
-        var question_id = this.id,
+        let question_id = this.id,
             info = $(this).parent().next().find('label').text();
         console.log(question_id, info);
 
         //check the first added
-        var $tablerow_label = $('#groupContent_table').find('label');
+        let $tablerow_label = $('#groupContent_table').find('label');
         if($tablerow_label.length == 1){
             $tablerow_label.each(function(){
             if($(this).attr("question_id") == "none"){
@@ -272,42 +287,45 @@ function addquestion_btn_handler(){
         }
 
         // check duplicate added
-        var check_duplicate = false;
+        let check_duplicate = false;
         $tablerow_label.each(function(){
+            console.log($(this).text(), info);
             if($(this).text() == info){
                 check_duplicate = true;
             }
         });
 
         if(check_duplicate){
-            alert("已添加過了!!");
+            //show msgModal
+            show_msgModal("系統訊息", "已添加過了");
             return false;
         }
-
-        //append to grouptable
-        var newQuestion_tablerow_str = '\
-            <tr>\
-                <td width="70%"><label question_id="' + question_id + '">' + info + '</label></td>\
-                <td width="20%"></td>\
-                <td width="10%"><button class="btn btn-outline-danger grouplist_delete">移除</button></td>\
-            </tr>\
-        ';
-
-        if($("#groupContent_table").find('tbody').length){
-            $("#groupContent_table").find('tbody').append(newQuestion_tablerow_str);
-        }
         else{
-            $("#groupContent_table").append(newQuestion_tablerow_str);
-        }
+            //append to grouptable
+            let newQuestion_tablerow_str = '\
+                <tr>\
+                    <td width="70%"><label question_id="' + question_id + '">' + info + '</label></td>\
+                    <td width="20%"></td>\
+                    <td width="10%"><button class="btn btn-outline-danger grouplist_delete">移除</button></td>\
+                </tr>\
+            ';
 
-        // add handler for new human
-        groupinfo_delete_handler();
+            if($("#groupContent_table").find('tbody').length){
+                $("#groupContent_table").find('tbody').append(newQuestion_tablerow_str);
+            }
+            else{
+                $("#groupContent_table").append(newQuestion_tablerow_str);
+            }
+
+            // add handler for new human
+            groupinfo_delete_handler();
+        }
     });
 }
 
 function class_card_btn_handler(class_item){
     $(".class_card_btn").on("click", function(){
-        var group_id = $(this).attr("group_id");
+        let group_id = $(this).attr("group_id");
         console.log(group_id);
 
         if($(this).hasClass("collapsed")){
@@ -318,11 +336,12 @@ function class_card_btn_handler(class_item){
                     cache: false,
                     contentType: "application/json",
                     error: function(e){
-                        alert("something wrong");
+                        //show msgModal
+                        show_msgModal("系統錯誤", "無法取得檔案資料");
                         console.log(e);
                     },
                     success: function(payload){
-                        var data = JSON.parse(payload);
+                        let data = JSON.parse(payload);
                         console.log(data);
 
                         //append into table
@@ -340,15 +359,16 @@ function class_card_btn_handler(class_item){
                     cache: false,
                     contentType: "application/json",
                     error: function(e){
-                        alert("something wrong");
+                        //show msgModal
+                        show_msgModal("系統錯誤", "無法取得群組資料");
                         console.log(e);
                     },
                     success: function(payload){
-                        var data = JSON.parse(payload);
+                        let data = JSON.parse(payload);
                         console.log(data);
 
                         //append into table
-                        var target_table = "#" + group_id + "_class_table";
+                        let target_table = "#" + group_id + "_class_table";
                         $(target_table).html(render_question_in_group_table(group_id, data.groupMember_list));
                         
                         //add_btn_handler
@@ -363,7 +383,7 @@ function class_card_btn_handler(class_item){
 //create new group ajax for new group
 function addNewGroup_btn_handler(class_item){ 
     $("#addNewGroup_btn").on('click',function(){
-        var newgroup_list = [],
+        let newgroup_list = [],
             newgroup_name = $("#group_title").text();
 
         $('#groupContent_table').find('label').each(function(){
@@ -374,11 +394,6 @@ function addNewGroup_btn_handler(class_item){
                 });
             }
         });
-
-        // if(newgroup_list.length <= 0){
-        //     alert("至少選取 1 個喔");
-        //     return false;
-        // }
 
         console.log(newgroup_name);
         console.log(newgroup_list);
@@ -396,20 +411,21 @@ function addNewGroup_btn_handler(class_item){
             }),
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法新增群組");
                 console.log(e);
             },
-            success: function(data){
-                var new_group_id = JSON.parse(data);
-                console.log(new_group_id);
+            success: function(payload){
+                let data = JSON.parse(payload);
+                console.log(data);
 
                 //append this new group info to select option
-                var new_option_str = '\
-                    <option class="group_option" value="' + new_group_id + '">' + newgroup_name + '</option>'
+                let new_option_str = '\
+                    <option class="group_option" using="0" value="' + data.id + '">' + data.name + '</option>'
                 $("#grouplist_select").append(new_option_str);
 
-                //alert success
-                alert("群組建立成功!!");
+                //show msgModal
+                show_msgModal("系統訊息", "新增群組 " + newgroup_name +" 成功");
                 // location.reload();
                 setpageToStartUp();
             }
@@ -418,6 +434,9 @@ function addNewGroup_btn_handler(class_item){
 }
 
 function setpageToStartUp(){
+    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+    $("#confirmModal").modal("hide");
+
     $("#group_info").html("");
     $("#human_accordion").html("");
 
@@ -428,16 +447,20 @@ function setpageToStartUp(){
 //abortion for new group
 function abortNow_btn_handler(){
     $("#abortNow_btn").on('click',function(){
-        if(confirm("確定要刪除嗎?")){
-            //remove all div
-            setpageToStartUp();
-        }
+        
+        confirmModal_confirm_btn_handler(setpageToStartUp, null);
+        confirmModal_cancel_btn_handler();
+
+        //popup confirmModal
+        $("#my_modal_backdrop").addClass("my_modal_backdrop");
+        $("#confirmModal_title").text("確定要刪除嗎？");
+        $("#confirmModal").modal("show");
     });
 }
 
 function option_handler(class_item, group_list){
     $("#grouplist_select").on("change", function(){
-        var option = $(this).val(),
+        let option = $(this).val(),
             using = $('option:selected', this).attr('using');
         // console.log($(this).val());
         console.log(using);
@@ -448,7 +471,7 @@ function option_handler(class_item, group_list){
         }
         else if(option == "newgroup"){ // add new group
             //get new group name
-            var new_group_name = prompt("輸入新群組名稱");
+            let new_group_name = prompt("輸入新群組名稱");
             console.log(new_group_name);
             if(new_group_name != null){
                 if($.trim(new_group_name) == ''){
@@ -457,8 +480,8 @@ function option_handler(class_item, group_list){
                     return false;
                 }
 
-                var duplicate_flag = false;
-                for(var i = 0; i < group_list.length; i++){
+                let duplicate_flag = false;
+                for(let i = 0; i < group_list.length; i++){
                     if(group_list[i].name == new_group_name){
                         duplicate_flag = true;
                         break;
@@ -485,7 +508,7 @@ function option_handler(class_item, group_list){
             }
         }
         else{ //ajax get group info
-            var old_group_name = $("#grouplist_select option[value='" + option + "']").text();
+            let old_group_name = $("#grouplist_select option[value='" + option + "']").text();
             console.log(old_group_name);
 
             //ajax
@@ -495,11 +518,12 @@ function option_handler(class_item, group_list){
                 cache: false,
                 contentType: "application/json",
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得群組資料");
                     console.log(e);
                 },
                 success: function(payload){
-                    var data = JSON.parse(payload);
+                    let data = JSON.parse(payload);
                     console.log(data);
 
                     //render group content into table
@@ -523,7 +547,8 @@ function option_handler(class_item, group_list){
             contentType: "application/json",
             dataType: 'json',
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法取得其他群組資料");
                 console.log(e);
             },
             success: function(data){
@@ -537,7 +562,7 @@ function option_handler(class_item, group_list){
 }
 
 function render_classification_div(class_item, classification_selector_str){
-    var pending_div = '\
+    let pending_div = '\
         <div class="row">\
             <div class="col-md-6">\
                 <div class="form-group">\
