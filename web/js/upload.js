@@ -1,12 +1,12 @@
 function render_group_table(group_list){
-    var group_table_str = '<table class="table table-hover">';
+    let group_table_str = '<table class="table table-hover">';
 
     if(group_list.length < 1){
         group_table_str += "<tr><td class='none'>尚無群組，請點上方新增按鈕</td></tr>"
     }
     else{
         group_list.forEach((group) => {
-            var id = group.id,
+            let id = group.id,
                 name = group.name;
 
             group_table_str += "\
@@ -23,7 +23,7 @@ function render_group_table(group_list){
 }
 
 function render_upload_div(class_item, group_table_str){
-    var upload_div ='\
+    let upload_div ='\
         <h2 class="center">上傳檔案</h2>\
         <br>\
         <form id="upload-photos" class="row" method="post" action="/upload_photos" enctype="multipart/form-data">\
@@ -39,9 +39,20 @@ function render_upload_div(class_item, group_table_str){
             </div>\
             <div class="col-md-6">\
                 <div class="form-group ">\
+        <!--\
                     <div class="row">\
                         <h3 class="col-md-8" >選擇群組</h3>\
                         <div class="col-md-4"><input type="button" value="新增群組" id="add_new_group" class="btn btn-secondary"></div>\
+                    </div>\
+        -->\
+                    <div class="row">\
+                        <h3 style="width: 60%">選擇群組</h3>\
+                        <input type="button" id="add_new_group" class="btn btn-secondary" value="新增群組">\
+                    </div>\
+                    <div id="add_new_group_row" class="row" style="display: none;">\
+                        <input id="new_group_name" class="form-control" type="text" style="width: 50%" placeholder="新群組名字">\
+                        <input id="set_new_group" type="button" class="btn btn-outline-success" value="確定">\
+                        <input id="set_new_group_cancel" type="button" class="btn btn-outline-danger" value="取消">\
                     </div>\
                     <div id="group_table" class="group_table">\
                         ' + group_table_str + '\
@@ -95,22 +106,22 @@ function make_img_movable(){
     $( "#movable_pic_row" ).disableSelection();
 }
 
-function render_new_group_tablerow(table_id, new_group_item){
-    var new_id = new_group_item.id,
+function render_new_group_tablerow(table_id, new_group_item, checkboxname){
+    let new_id = new_group_item.id,
         new_name = new_group_item.name,
         newGroupTableRow = "";
 
     console.log(new_id, new_name);
     newGroupTableRow += "\
         <tr>\
-            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='group' value='" + new_id + "' checked/></td>\
+            <td class='mycheckbox'><input type='checkbox' id='" + new_id + "_checkbox' name='" + checkboxname + "' value='" + new_id + "' checked/></td>\
             <td><label for='" + new_id + "_checkbox'>" + new_name + "</label></td>\
         </tr>";
 
     // console.log(newGroupId, newGroupName);
 
     //check if tbody is existed
-    var $table_id = "#" + table_id;
+    let $table_id = "#" + table_id;
     if($($table_id).find('tbody').length){
         //check this is the first Group for this new class
         if($($table_id).find('tr').length == 1){
@@ -149,17 +160,29 @@ function render_new_group_tablerow(table_id, new_group_item){
 }
 
 //new group btn handler
-function add_new_group_btn_handler(class_item, btnId, tableId){
+function add_new_group_btn_handler(btnId, nameId, rowId){
+    $("#" + btnId).unbind("click");
     $("#" + btnId).on("click", function(){
-        
-        var new_group_name = prompt("輸入新群組名字");
+        //show input text
+        $("#" + rowId).show();
+        $("#" + btnId).hide();
+        $("#" + nameId).val("");
+    });
+}
+
+function set_new_group_btn_handler(class_item, btnId, setbtnId, nameId, tableId, rowId, checkboxname){
+    $("#" + setbtnId).unbind("click");
+    $("#" + setbtnId).on("click", function(){
+        let new_group_name = $("#" + nameId).val();
         console.log(new_group_name);
         if(new_group_name == null || $.trim(new_group_name) == ''){
-            alert("欄位不得空白");
+            //show msgModal
+            show_msgModal("系統訊息", "請輸入新群組名字");
             return false;
         }
         else if($('#' + tableId + ' label:contains("' + new_group_name + '")').length){
-            alert("群組名稱不得重複");
+            //show msgModal
+            show_msgModal("系統訊息", "群組名稱不得重複");
             return false;
         }
         else{
@@ -176,35 +199,46 @@ function add_new_group_btn_handler(class_item, btnId, tableId){
                 }),
                 contentType: "application/json",
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法新增群組");
                     console.log(e);
                 },
                 success: function(data){
-                    var new_group_item = JSON.parse(data);
+                    let new_group_item = JSON.parse(data);
                     console.log("add: ", new_group_item);
 
-                    render_new_group_tablerow(tableId, new_group_item);
-                    alert(new_group_name + " 新增成功!");
+                    render_new_group_tablerow(tableId, new_group_item, checkboxname);
+
+                    //show msgModal
+                    show_msgModal("系統訊息", "新增群組" + new_group_name + "成功");
+                    $("#" + btnId).show();
+                    $("#" + rowId).hide();
                 }
             });
         }
     });
 }
 
+function set_new_group_cancel_btn_handler(btnId, cancelbtnId, rowId){
+    $("#" + cancelbtnId).unbind("click");
+    $("#" + cancelbtnId).on("click", function(){
+        $("#" + rowId).hide();
+        $("#" + btnId).show();
+    });
+}
+
 //upload success handler
 function handleUploadSuccess(data){
-    var res = JSON.parse(data);
+    let res = JSON.parse(data);
     console.log(res.photo_status);
 
-    console.log(new Date());
-    // $("#progressbarModal").removeClass("manually-show-modal");
+    //close progressbar
     $("#my_modal_backdrop").removeClass("my_modal_backdrop");
     $("#progressbarModal").removeClass("manually-show-modal");
 
-    if(res.photo_status){
-        console.log(new Date());
-        // alert("上傳成功!!\n");
-        $("#messageModal").modal("show");
+    if(res.photo_status){;
+        //show msgModal
+        show_msgModal("系統訊息", "上傳檔案成功");
 
         // clear all input
         $('#upload_file').val('');
@@ -214,7 +248,8 @@ function handleUploadSuccess(data){
         $('input[name=group]:checked').prop("checked", false);
     }
     else{
-        alert("上傳失敗\n圖片檔案不支援!!\n僅限圖片為: png, jpeg, jpg");
+        //show msgModal
+        show_msgModal("系統訊息", "上傳檔案失敗<br>圖片檔案不支援<br>僅限圖片為: png, jpeg, jpg");
     }
 }
 
@@ -225,12 +260,9 @@ function uplaod_btn_handler(class_item){
         event.stopPropagation();
 
         console.log("show");
-        // show_processingbarModal();
-        $("#my_modal_backdrop").addClass("my_modal_backdrop");
-        $("#progressbarModal").addClass("manually-show-modal");
 
         // Get the data from input, create new FormData.
-        var formData = new FormData(),
+        let formData = new FormData(),
             files = $('#upload_file').get(0).files,
             name = $('#name').val(),
             description = $('#description').val(),
@@ -240,15 +272,17 @@ function uplaod_btn_handler(class_item){
 
         //chech input
         if($.trim(name) == ''){
-            alert("請填入名字");
+            //show msgModal
+            show_msgModal("系統訊息", "請填入名字");
             return false;
         }
         else if(files.length < 1){ //check file input
-            alert('至少需要上傳 1 張圖片');
+            //show msgModal
+            show_msgModal("系統訊息", "至少需要上傳 1 張圖片");
             return false;
         }
 
-        var $selected_list = $('input[name=group]:checked');
+        let $selected_list = $('input[name=group]:checked');
         $selected_list.each(function(){
             selected_group.push({
                 group_id : $(this).val()
@@ -270,19 +304,20 @@ function uplaod_btn_handler(class_item){
         data["selected_group"] = selected_group;
         formData.append("user_upload_data", JSON.stringify(data));
 
-        for(var i = 0; i < files.length; i++){
-            var file;
-            file = files[i];
-
+        for(let i = 0; i < files.length; i++){
+            let file = files[i];
             if(file.name == ".DS_Store"){
-                alert("上傳失敗\n資料夾內有檔案格式不合!!\n請檢查是否有隱藏檔案");
+                //show msgModal
+                show_msgModal("系統訊息", "無法上傳檔案<br>圖片檔案不支援<br>僅限圖片為: png, jpeg, jpg");
                 return false;
             }
-
             formData.append('photos[]', file, file.name);
         }
-
         console.log("upload:", data);
+
+        // show progressbar
+        $("#my_modal_backdrop").addClass("my_modal_backdrop");
+        $("#progressbarModal").addClass("manually-show-modal");
 
         //ajax
         $.ajax({
@@ -292,9 +327,12 @@ function uplaod_btn_handler(class_item){
             processData: false,
             contentType: false,
         }).done(handleUploadSuccess).fail(function (xhr, status) {
-            console.log("hide");
-            // $("#progressbarModal").removeClass("manually-show-modal");
-            alert(status);
+            //close progressbar
+            $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+            $("#progressbarModal").removeClass("manually-show-modal");
+            
+            //show msgModal
+            show_msgModal("系統錯誤", "無法上傳檔案");
         });
     });
 }
