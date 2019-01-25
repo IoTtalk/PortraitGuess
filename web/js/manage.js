@@ -29,7 +29,9 @@ $(function (){
                 contentType: "application/json",
                 dataType: 'json',
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得下拉式選單內容");
+
                     console.log(e);
                 },
                 success: function(data){
@@ -55,14 +57,17 @@ $(function (){
                 contentType: "application/json",
                 dataType: 'json',
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得下拉式選單內容");
+
                     console.log(e);
                 },
                 success: function(class_list){
                     console.log(class_list);
 
                     if(class_list.length == 0){ //no more pending question in the system
-                        alert("沒有待審檔案!\n所有檔案皆以審核完畢\n");
+                        //show msgModal
+                        show_msgModal("系統訊息", "沒有待審檔案<br>所有檔案皆審核完畢");
 
                         //close dropdown list
                         $("#dropdown-menu-pending").removeClass("show");
@@ -89,14 +94,18 @@ $(function (){
                 contentType: "application/json",
                 dataType: 'json',
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得下拉式選單內容");
+
                     console.log(e);
                 },
                 success: function(class_list){
                     console.log(class_list);
 
                     if(class_list.length == 0){ //no more approved question in the system
-                        alert("沒有已審的檔案！\n請至'待審檔案'開始審核喔\n");
+                        
+                        //show msgModal
+                        show_msgModal("系統訊息", "尚無已審的檔案<br>請至'待審檔案'頁面，開始審核");
 
                         //close dropdown list
                         $("#dropdown-menu-approved").removeClass("show");
@@ -123,14 +132,17 @@ $(function (){
                 contentType: "application/json",
                 dataType: 'json',
                 error: function(e){
-                    alert("something wrong");
+                    //show msgModal
+                    show_msgModal("系統錯誤", "無法取得下拉式選單內容");
+
                     console.log(e);
                 },
                 success: function(class_list){
                     console.log(class_list);
 
                     if(class_list.length == 0){ //no more approved question in the system
-                        alert("沒有已審的檔案！\n請至'待審檔案'開始審核喔\n");
+                        //show msgModal
+                        show_msgModal("系統訊息", "尚無已審的檔案<br>請至'待審檔案'頁面，開始審核");
 
                         //close dropdown list
                         $("#dropdown-menu-classification").removeClass("show");
@@ -159,7 +171,7 @@ $(function (){
 
     //bind all homepage_link
     $(".homepage_link").on('click', function(){
-        var args = $(this).attr('value'),
+        let args = $(this).attr('value'),
             dic = {};
         console.log(args);
         args.split('&').forEach((data) => {
@@ -253,7 +265,7 @@ $(function (){
 
 function render_homepage_list_link(){
     //for upload
-    var homepage_upload_list_str = "";
+    let homepage_upload_list_str = "";
     if(class_list.length == 0){
         homepage_upload_list_str += '<a href="#" class="list-group-item list-group-item-action homepage_link" value="type=upload&id=new">新增</a>';
     }
@@ -268,7 +280,7 @@ function render_homepage_list_link(){
     $("#homepage_upload_link").html(homepage_upload_list_str);
 
     //for pending
-    var homepage_pending_list_str = "";
+    let homepage_pending_list_str = "";
     if(pendingClass_list.length == 0){
         homepage_pending_list_str += '<a href="#" class="list-group-item-action">無</a>';
     }
@@ -282,7 +294,7 @@ function render_homepage_list_link(){
     $("#homepage_pending_link").html(homepage_pending_list_str);
 
     //for approved
-    var homepage_approved_list_str = "";
+    let homepage_approved_list_str = "";
     if(approvedClass_list.length == 0){
         homepage_approved_list_str += '<a href="#" class="list-group-item-action">無</a>';
     }
@@ -296,7 +308,7 @@ function render_homepage_list_link(){
     $("#homepage_approved_link").html(homepage_approved_list_str);
 
     //for classification
-    var homepage_classification_list_str = "";
+    let homepage_classification_list_str = "";
     if(approvedClass_list.length == 0){
         homepage_approved_list_str += '<a href="#" class="list-group-item-action">無</a>';
     }
@@ -310,15 +322,15 @@ function render_homepage_list_link(){
     $("#homepage_classification_link").html(homepage_classification_list_str);
 
     //for display
-    var homepage_display_list_str = '<a href="#" class="list-group-item list-group-item-action homepage_link" \
+    let homepage_display_list_str = '<a href="#" class="list-group-item list-group-item-action homepage_link" \
                                     value="type=display">播放清單</a>';
     $("#homepage_display_link").html(homepage_display_list_str);
 }
 
 function render_dropdownlist_div(functiontype, class_list){
-    var dropdownlist_str = "";
+    let dropdownlist_str = "";
     class_list.forEach((class_item) => {
-        var id = "dropdown-" + functiontype + "-" + class_item.name;
+        let id = "dropdown-" + functiontype + "-" + class_item.name;
         dropdownlist_str += '\
             <a class="dropdown-item" href="#" id="' + id + '">' + class_item.name + '</a>\
             ';
@@ -339,7 +351,9 @@ function show_class_upload_management(class_id) {
             cache: false,
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法進入'上傳檔案'頁面");
+
                 console.log(e);
             },
             success: function(payload){
@@ -348,7 +362,11 @@ function show_class_upload_management(class_id) {
                 
                 $("#display").html(render_upload_div(data.class_item, render_group_table(data.group_list)));
                 make_img_movable();
-                add_new_group_btn_handler(data.class_item, "add_new_group", "group_table");
+                
+                add_new_group_btn_handler("add_new_group", "new_group_name", "add_new_group_row");
+                set_new_group_btn_handler(data.class_item, "add_new_group", "set_new_group", "new_group_name", "group_table", "add_new_group_row", "group");
+                set_new_group_cancel_btn_handler("add_new_group", "set_new_group_cancel", "add_new_group_row");
+                
                 uplaod_btn_handler(data.class_item);
             }
         });
@@ -366,7 +384,7 @@ function show_class_upload_management(class_id) {
 
 function upload_dropdownlist_handler(class_list){
     class_list.forEach((class_item) => {
-        var dropdownlist_id = "#dropdown-upload-" + class_item.name;
+        let dropdownlist_id = "#dropdown-upload-" + class_item.name;
 
         //render_upload_div
         $(dropdownlist_id).on("click", function(){
@@ -379,7 +397,7 @@ function upload_dropdownlist_handler(class_list){
         // setup sample_name and sample_description
         $("#classModal_class_name").prop("placeholder", "ex: 人物");
         $("#classModal_sample_name").prop("placeholder", "ex: 伊麗莎白一世,Elizabeth I");
-        $("#classModal_sample_description").prop("placeholder", "(出生-死亡)\nex: (1961-1988)");
+        $("#classModal_sample_description").prop("placeholder", "出生-死亡\nex: 1961-1988");
 
         //add_new_class_handler();
         $("#classModal").modal("show");
@@ -393,11 +411,13 @@ function show_class_pending_management(class_id) {
         cache: false,
         contentType: "application/json",
         error: function(e){
-            alert("something wrong");
+            //show msgModal
+            show_msgModal("系統錯誤", "無法進入'待審檔案'頁面");
+
             console.log(e);
         },
         success: function(payload){
-            var data = JSON.parse(payload);
+            let data = JSON.parse(payload);
             console.log(data);
 
             $('#display').html(render_pending_div(render_pending_table(data.class_item, data.question_list)));
@@ -411,7 +431,7 @@ function show_class_pending_management(class_id) {
 
 function pending_dropdownlist_handler(class_list){
     class_list.forEach((class_item) => {
-        var dropdownlist_id = "#dropdown-pending-" + class_item.name;
+        let dropdownlist_id = "#dropdown-pending-" + class_item.name;
 
         //render_pending_div
         $(dropdownlist_id).on("click", function(){
@@ -427,11 +447,13 @@ function show_class_approved_management(class_id){
         cache: false,
         contentType: "application/json",
         error: function(e){
-            alert("something wrong");
+            //show msgModal
+            show_msgModal("系統錯誤", "無法進入'已審檔案'頁面");
+
             console.log(e);
         },
         success: function(payload){
-            var data = JSON.parse(payload);
+            let data = JSON.parse(payload);
             console.log(data);
 
             $('#display').html(render_approved_div(render_approved_table(data.class_item, data.question_list)));
@@ -445,7 +467,7 @@ function show_class_approved_management(class_id){
 
 function approved_dropdownlist_handler(class_list){
     class_list.forEach((class_item) => {
-        var dropdownlist_id = "#dropdown-approved-" + class_item.name;
+        let dropdownlist_id = "#dropdown-approved-" + class_item.name;
 
         //render_pending_div
         $(dropdownlist_id).on("click", function(){
@@ -462,11 +484,13 @@ function show_class_classfication_management(class_id){
         contentType: "application/json",
         dataType: 'json',
         error: function(e){
-            alert("something wrong");
+            //show msgModal
+            show_msgModal("系統錯誤", "無法進入'編輯群組'頁面");
+
             console.log(e);
         },
         success: function(payload){
-            var data = payload
+            let data = payload
             console.log(data);
 
             $("#display").html(render_classification_div(data.class_item, render_classification_selector(data.group_list)));
@@ -477,7 +501,7 @@ function show_class_classfication_management(class_id){
 
 function classification_dropdownlist_handler(class_list){
     class_list.forEach((class_item) => {
-        var dropdownlist_id = "#dropdown-classification-" + class_item.name;
+        let dropdownlist_id = "#dropdown-classification-" + class_item.name;
 
         //render_pending_div
         $(dropdownlist_id).on("click", function(){
@@ -494,11 +518,14 @@ function show_class_display_management(){
         contentType: "application/json",
         dataType: 'json',
         error: function(e){
-            alert("something wrong");
+
+            //show msgModal
+            show_msgModal("系統錯誤", "無法進入'播放清單'頁面");
+
             console.log(e);
         },
         success: function(payload){
-            var data = payload;
+            let data = payload;
             console.log(data.group_list);
             
             $("#display").html(render_display_div(render_grouplist_table(data.group_list)));
@@ -515,7 +542,7 @@ function show_class_display_management(){
 }
 
 function addnewclass_handler(){
-    var class_name = $("#classModal_class_name").val(),
+    let class_name = $("#classModal_class_name").val(),
         sample_name = $("#classModal_sample_name").val(),
         sample_description = $("#classModal_sample_description").val();
 
@@ -523,24 +550,27 @@ function addnewclass_handler(){
     
     //check input
     if($.trim(class_name) == ""){
-        alert("請輸入新類別名稱");
+        //show msg
+        $("#classModal_msg").text("請輸入名稱");
         return false;
     }
 
     if($.trim(sample_name) == ""){
-        alert("請輸入新類別名字範例");
+        //show msg
+        $("#classModal_msg").text("請輸入檔案名字範例");
         return false;
     }
 
-    var duplicate_flag = false;
-    for(var i = 0; i < class_list.length; i++){
+    let duplicate_flag = false;
+    for(let i = 0; i < class_list.length; i++){
         if(class_list[i].name == class_name){
             duplicate_flag = true;
             break;
         }
     }
     if(duplicate_flag){
-        alert("類別名稱不得重複");
+        //show msg
+        $("#classModal_msg").text("類別名稱不得重複");
         return false;
     }
 
@@ -557,15 +587,17 @@ function addnewclass_handler(){
         }),
         contentType: "application/json",
         error: function(e){
-            alert("something wrong");
+            $("#classModal").modal("hide");
+
+            //show msgModal
+            $("#classModal_msg").text("");
+            show_msgModal("系統錯誤", "新增類別 " + class_name + " 失敗");
+
             console.log(e);
         },
         success: function(payload){
-            var data = JSON.parse(payload);
+            let data = JSON.parse(payload);
             console.log("create new class success, and its id: ", data.class_id);
-
-            // append to dropdown list
-            alert(class_name + " 新增成功!");
             
             //hide classModal
             $("#classModal_class_name").val("");
@@ -573,9 +605,25 @@ function addnewclass_handler(){
             $("#classModal_sample_description").val("");
             $('#classModal').modal("hide");
 
+            //show msgModal
+            $("#classModal_msg").text("");
+            show_msgModal("系統訊息", "新增類別 " + class_name + " 成功");
+
             // directly show new class upload page
             $("#navbar").show();
             show_class_upload_management(data.class_id);
         }
     });
+}
+
+function show_msgModal(title, msg){
+    $("#my_modal_backdrop").addClass("my_modal_backdrop");
+    $("#messageModal_title").text(title);
+    $("#messageModal_body").html(msg);
+    $("#messageModal").modal("show");
+}
+
+function close_msgModal(){
+    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+    $("#messageModal").modal("hide");
 }
