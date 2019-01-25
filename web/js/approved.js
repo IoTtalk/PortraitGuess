@@ -39,7 +39,7 @@ function render_approved_table(class_item, approved_list){
 
 function approvedbtn_handler(class_item, mode){
     $(".approvedbtn").on("click", function(){
-        var id = this.id.split("_")[0];
+        let id = this.id.split("_")[0];
         console.log(id);
         
         $.ajax({
@@ -52,16 +52,21 @@ function approvedbtn_handler(class_item, mode){
                 console.log(e);
             },
             success: function(data){
-                var questionData = JSON.parse(data)
+                let questionData = JSON.parse(data);
                 console.log(questionData);
 
                 //set modal content by questionData
                 setupEditModal(class_item, questionData, 1);
 
-                add_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_group_table");
+                add_new_group_btn_handler("editModal_add_new_group", "editModal_new_group_name", "editModal_add_new_group_row");
+                set_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_set_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup");
+                set_new_group_cancel_btn_handler("editModal_add_new_group", "editModal_set_new_group_cancel", "editModal_add_new_group_row");
 
                 question_update_btn_handler(class_item, id, mode);
-                question_delete_btn_handler(class_item, id, mode);
+                question_delete_btn_handler();
+
+                confirmModal_confirm_btn_handler(delete_question_cb,{"class_item": class_item, "id": id, "mode":mode});
+                confirmModal_cancel_btn_handler();
 
                 //show edit modal
                 $('#editModal').modal("show");
