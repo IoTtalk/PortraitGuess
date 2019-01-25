@@ -46,6 +46,9 @@ function setupEditModal(class_item, questionData, status){
         group_str = "",
         picture_str = "";
 
+    //clear msg field
+    $("#editModal_msg").text("");
+
     //render question group
     let group_list = questionData.group;
     for(let i = 0; i < group_list.length; i++){
@@ -57,15 +60,15 @@ function setupEditModal(class_item, questionData, status){
         if(used){
             group_str += "\
                 <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalgroup' value='" + id + "' checked/></td>\
-                    <td><label for='editModal_" + id + "_checkbox'>" + name + "</label></td>\
+                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='editModalgroup' value='" + id + "' checked/></td>\
+                    <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
                 </tr>";
         }
         else{
             group_str += "\
                 <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='editModal_" + id + "_checkbox' name='editModalgroup' value='" + id + "' /></td>\
-                    <td><label for='editModal_" + id + "_checkbox'>" + name + "</label></td>\
+                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='editModalgroup' value='" + id + "' /></td>\
+                    <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
                 </tr>";
         }
     }
@@ -134,7 +137,8 @@ function pendingbtn_handler(class_item, mode){
             cache: false,
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法取得檔案資訊");
                 console.log(e);
             },
             success: function(data){
@@ -144,10 +148,16 @@ function pendingbtn_handler(class_item, mode){
                 //set modal content by questionData
                 setupEditModal(class_item, questionData, 0);
 
-                add_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_group_table");
+                add_new_group_btn_handler("editModal_add_new_group", "editModal_new_group_name", "editModal_add_new_group_row");
+                set_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_set_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup");
+                set_new_group_cancel_btn_handler("editModal_add_new_group", "editModal_set_new_group_cancel", "editModal_add_new_group_row");
+
 
                 question_update_btn_handler(class_item, id, mode);
-                question_delete_btn_handler(class_item, id, mode);
+                question_delete_btn_handler();
+
+                confirmModal_confirm_btn_handler(delete_question_cb,{"class_item": class_item, "id": id, "mode":mode});
+                confirmModal_cancel_btn_handler();
 
                 //show edit modal
                 $('#editModal').modal("show");
@@ -171,7 +181,7 @@ function question_update_btn_handler(class_item, id, mode){
 
         //chech input
         if($.trim(name) == ''){
-            alert("名字必需填入");
+            $("#editModal_msg").text("名字必需填入");
             return false;
         }
 
@@ -208,10 +218,13 @@ function question_update_btn_handler(class_item, id, mode){
             }),
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                $("#editModal_msg").text("[系統錯誤]<br>無法編輯檔案");
                 console.log(e);
             },
             success: function(data){
+                //close edit modal
+                $('#editModal').modal("hide");
+
                 if(mode == "pending"){
                     //remove this question from pending table
                     $('#'+ id).remove();
@@ -224,98 +237,136 @@ function question_update_btn_handler(class_item, id, mode){
                         $("#dropdown-menu-pending").html("");
                     }
                     
-                    alert(name + " 審核成功!!");
+                    //show msgModal
+                    $("#editModal_msg").text("");
+                    show_msgModal("系統訊息", name +" 審核成功");
                 }
                 else if(mode == "approved"){
                     //set new question info into approvd table
                     $('#'+ id).find('td:first-child').html(name);
                     $('#'+ id).find('td:nth-child(2)').html(description);
-                    alert(name + " 編輯成功!!");
+
+                    //show msgModal
+                    $("#editModal_msg").text("");
+                    show_msgModal("系統訊息", name +" 編輯成功");
                 }
                 else if(mode == "group"){
-                    alert(name + " 審核成功!!");
+                    //show msgModal
+                    $("#editModal_msg").text("");
+                    show_msgModal("系統訊息", name +" 審核成功");
+
                     //[TODO] make <label> with attr 'question_id'
                     //and UI to 移除
-
                 }
-
-                //close edit modal
-                $('#editModal').modal("hide");
             }
         });
     });
 }
 
-function question_delete_btn_handler(class_item, id, mode){
+function question_delete_btn_handler(){
     $("#editModal_delete").on("click", function(){
         event.preventDefault();
         event.stopPropagation();
 
-        //popup confirm box
-        let warning_str = "確定要刪除嗎?";
-        if(confirm(warning_str)){
-            //ajax
-            $.ajax({
-                type: "DELETE",
-                url: location.origin + "/questionDelete",
-                cache: false,
-                data: JSON.stringify(
-                {
-                    delete_question_id : id
-                }),
-                contentType: "application/json",
-                error: function(e){
-                    alert("something wrong");
-                    console.log(e);
-                },
-                success: function(data){
-                    let response = JSON.parse(data);
-                    if(mode == "approved"){
-                        if(response.using){
-                            alert("該檔案正在播放清單中，無法刪除\n請編輯使用中的群組!");
-                        }
-                        else{
-                            //remove this question from table
-                            $('#'+ id).remove();
+        //popup confirmModal
+        $("#my_modal_backdrop").addClass("my_modal_backdrop");
+        $("#confirmModal_title").text("確定要刪除嗎？");
+        $("#confirmModal").modal("show");
 
-                            alert("刪除成功!!");
+        
+    });
+}
 
-                            //close edit modal
-                            $('#editModal').modal("hide");
-                        }
-                    }
-                    else if(mode == "pending"){
-                        //remove this question from table
-                        $('#'+ id).remove();
+function delete_question_cb(args){
+    let class_item = args.class_item,
+        id = args.id,
+        mode = args.mode;
 
-                        //display no more pending files in this class
-                        let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
-                        if($("#pending_table tbody").find('tr').length == 1){
-                            console.log('the last pending files');
-                            $("tbody").append(msg);
-                            $("#dropdown-menu-pending").html("");
-                        }
-
-                        alert("刪除成功!!");
-
-                        //close edit modal
-                        $('#editModal').modal("hide");
-                    }
-                    else if(mode == "group"){
-                        //remove this question from table
-                        $('#'+ id + "_pendingbtn").parent().parent().remove();
-
-                        alert("刪除成功!!");
-
-                        //close edit modal
-                        $('#editModal').modal("hide");
-                    }
+    //ajax
+    $.ajax({
+        type: "DELETE",
+        url: location.origin + "/questionDelete",
+        cache: false,
+        data: JSON.stringify(
+        {
+            delete_question_id : id
+        }),
+        contentType: "application/json",
+        error: function(e){
+            $("#editModal_msg").text("[系統錯誤]<br>檔案無法刪除");
+            console.log(e);
+        },
+        success: function(data){
+            let response = JSON.parse(data);
+            if(mode == "approved"){
+                if(response.using){
+                    $("#editModal_msg").text("[系統訊息]<br>該檔案正在播放清單中，無法刪除<br>請至'編輯群組'頁面<br>編輯使用中的群組");
                 }
-            });
+                else{
+                    //remove this question from table
+                    $('#'+ id).remove();
+
+
+                    $("#confirmModal").modal("hide");
+                    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+
+                    //close edit modal
+                    $('#editModal').modal("hide");
+
+                    //show msgModal
+                    show_msgModal("系統訊息", "檔案刪除成功");
+                }
+            }
+            else if(mode == "pending"){
+                //remove this question from table
+                $('#'+ id).remove();
+
+                //display no more pending files in this class
+                let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
+                if($("#pending_table tbody").find('tr').length == 1){
+                    console.log('the last pending files');
+                    $("tbody").append(msg);
+                    $("#dropdown-menu-pending").html("");
+                }
+
+                $("#confirmModal").modal("hide");
+                    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+
+                //close edit modal
+                $('#editModal').modal("hide");
+
+                //show msgModal
+                show_msgModal("系統訊息", "檔案刪除成功");
+            }
+            else if(mode == "group"){
+                //remove this question from table
+                $('#'+ id + "_pendingbtn").parent().parent().remove();
+
+                $("#confirmModal").modal("hide");
+                $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+
+                //close edit modal
+                $('#editModal').modal("hide");
+
+                //show msgModal
+                show_msgModal("系統訊息", "檔案刪除成功");
+            }
         }
-        else{
-            return false;
-        }
+    });
+}
+
+function confirmModal_confirm_btn_handler(cb,args){
+    $("#confirmModal_confirm_btn").unbind('click');
+    $("#confirmModal_confirm_btn").on("click", function(){
+        cb(args);
+    });
+}
+
+function confirmModal_cancel_btn_handler(){
+    $("#confirmModal_cancel_btn").unbind('click');
+    $("#confirmModal_cancel_btn").on("click", function(){
+        $("#confirmModal").modal("hide");
+        $("#my_modal_backdrop").removeClass("my_modal_backdrop");
     });
 }
 
@@ -335,7 +386,8 @@ function refreshbtn_handler(class_item, mode){
             cache: false,
             contentType: "application/json",
             error: function(e){
-                alert("something wrong");
+                //show msgModal
+                show_msgModal("系統錯誤", "無法更新檔案資料");
                 console.log(e);
             },
             success: function(payload){
