@@ -126,7 +126,7 @@
 
     <!-- modal for edit -->
     <div class="modal fade bd-example-modal-lg" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title" id="editModalLabel_title"></h2>
@@ -153,10 +153,13 @@
                                 <form>
                                     <div class="form-group">
                                         <div class="row">
-                                            <h4 id="editModal_s_group" class="col-md-8"></h4>
-                                            <div class="col-md-4">
-                                                <input type="button" id="editModal_add_new_group" class="btn btn-secondary" value="新增群組">
-                                            </div>
+                                            <h4 id="editModal_s_group" style="width: 60%"></h4>
+                                            <input type="button" id="editModal_add_new_group" class="btn btn-secondary" value="新增群組">
+                                        </div>
+                                        <div id="editModal_add_new_group_row" class="row" style="display: none;">
+                                            <input id="editModal_new_group_name" class="form-control" type="text" style="width: 50%" placeholder="新群組名字">
+                                            <input id="editModal_set_new_group" type="button" class="btn btn-outline-success" value="確定">
+                                            <input id="editModal_set_new_group_cancel" type="button" class="btn btn-outline-danger" value="取消">
                                         </div>
                                         <div class="editModal_group_table">
                                             <table id="editModal_group_table" class="table table-hover"></table>
@@ -171,6 +174,7 @@
                                 </div>
                             </div>
                         </div>
+                        <h5 id="editModal_msg" style="color: red;"></h5>
                     </div>
                 </div>
                 <div id="editModal_footer" class="modal-footer"></div>
@@ -178,9 +182,9 @@
         </div>
     </div>
 
-    <!-- modal for display-->
+    <!-- modal for display -->
     <div class="modal fade bd-example-modal-lg" id="displayModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title" id="displayModal_title"></h2>
@@ -196,9 +200,9 @@
         </div>
     </div>
 
-    <!-- modal for new class-->
+    <!-- modal for new class -->
     <div class="modal fade bd-example-modal" id="classModal" tabindex="-1" role="dialog" aria-labelledby="classModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title" id="classModal_title">新增類別</h2>
@@ -209,16 +213,19 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <h4 class="required">輸入新類別名稱</h4>
+                            <h4 class="required">名稱</h4>
                             <input type="text" id="classModal_class_name" class="form-control" size="35" />
                         </div>
                         <div class="form-group">
-                            <h4 class="required">輸入新類別名字範例</h4>
+                            <h4 class="required">檔案名字範例</h4>
                             <input type="text" id="classModal_sample_name" class="form-control" size="35" />
                         </div>
                         <div class="form-group">
-                            <h4>輸入新類別敘述範例</h4>
+                            <h4>檔案敘述範例</h4>
                             <textarea class="form-control" id="classModal_sample_description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <h5 id="classModal_msg" style="color: red;"></h5>
                         </div>
                     </form>
                 </div>
@@ -230,22 +237,42 @@
         </div>
     </div>
 
-    <!-- modal for message-->
-    <div class="modal fade bd-example-modal" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <!-- modal for message -->
+    <div class="modal fade bd-example-modal" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true" style="z-index: 1070;" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title" id="messageModal_title">上傳成功</h2>
+                    <h4 class="modal-title" id="messageModal_title"></h4>
                 </div>
-                <!-- <div class="modal-body"></div> -->
+                <div class="modal-body">
+                    <h2 id="messageModal_body"></h2>
+                </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="close_msgModal()">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- modal for progressbar-->
+    <!-- modal for confirm/prompt -->
+    <div class="modal fade bd-example-modal" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true" style="z-index: 1060;" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="confirmModal_title"></h4>
+                </div>
+                <div id="confirmModal_body" class="modal-body" style="display: none;">
+                    <input id="confirmModal_input" type="text">
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmModal_cancel_btn" type="button" class="btn btn-outline-danger">取消</button>
+                    <button id="confirmModal_confirm_btn" type="button" class="btn btn-outline-primary">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- modal for progressbar -->
     <div class="modal" id="progressbarModal" tabindex="-1" role="dialog" aria-labelledby="progressbarModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
