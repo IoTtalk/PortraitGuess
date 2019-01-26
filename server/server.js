@@ -20,7 +20,7 @@ var express = require("express"),
     db = require('./db').db;
 
 /*** upload ***/
-var uploadFolder = './upload_cache/';
+let uploadFolder = './upload_cache/';
 utils.createFolder(uploadFolder);
 /******/
 
@@ -89,7 +89,7 @@ ws2Painting.onopen = function(){
         //6
         socket.on("playGroup", function(msg){
             console.log("6. receive playing group id:", msg);
-            var group_id = msg;
+            let group_id = msg;
             ganerateGameInfo(group_id, "play", socket);
             //7
             // socket.emit("GameStart", gameInfo);
@@ -119,7 +119,7 @@ ws2Painting.onopen = function(){
         //10
         socket.on("NewGameReq", function(msg){
             console.log("10. receive player's play-again request");
-            var group_id = msg;
+            let group_id = msg;
             ganerateGameInfo(group_id, "replay", socket);
             // dai.push("NextGame", [1]);
             // 11
@@ -156,7 +156,7 @@ console.log('---server start---');
 http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
 function ganerateGameInfo(group_id, mode, socket){
-    var answer_description = "",
+    let answer_description = "",
         answer_idx = 0,
         game_list = [];
 
@@ -169,10 +169,10 @@ function ganerateGameInfo(group_id, mode, socket){
             required: true }]
     }).then(GameQuestionList => {
         //check length of GameQuestionList to generate game_list and answer question
-        var answer_idx_in_list, answer_idx, answer_name, answer_questionid, answer_description;
+        let answer_idx_in_list, answer_idx, answer_name, answer_questionid, answer_description;
         if(GameQuestionList.length > 5){
             //random pick 5 question for game
-            var index, random_idx_list = [];
+            let index, random_idx_list = [];
             do{
                 index = Math.floor(Math.random() * GameQuestionList.length);
                 //check if this random index has existed
@@ -181,25 +181,25 @@ function ganerateGameInfo(group_id, mode, socket){
                 }
             } while(random_idx_list.length < 5);
 
-            for(var i = 0; i < 5; i++){
-                var GameQuestionData = GameQuestionList[random_idx_list[i]].get({plain: true});
+            for(let i = 0; i < 5; i++){
+                let GameQuestionData = GameQuestionList[random_idx_list[i]].get({plain: true});
                 game_list.push(GameQuestionData.Question.name);
             }
 
             //random generate answer_idx
-            var answer_idx = Math.floor(Math.random() * 5);
+            let answer_idx = Math.floor(Math.random() * 5);
 
             //get answer_idx_in_list
             answer_idx_in_list = random_idx_list[answer_idx];
         }
         else{ //pick all question for game
             GameQuestionList.forEach((GameQuestionSetItem) => {
-                var GameQuestionData = GameQuestionSetItem.get({plain: true});
+                let GameQuestionData = GameQuestionSetItem.get({plain: true});
                 game_list.push(GameQuestionData.Question.name);
             });
 
             //random generate answer_idx
-            var answer_idx = Math.floor(Math.random() * GameQuestionList.length);
+            let answer_idx = Math.floor(Math.random() * GameQuestionList.length);
 
             //get answer_idx_in_list
             answer_idx_in_list = answer_idx
@@ -208,28 +208,28 @@ function ganerateGameInfo(group_id, mode, socket){
         console.log("answer:", game_list[answer_idx], " in option:", answer_idx);
 
         //get answer question for game
-        var AnswerData = GameQuestionList[answer_idx_in_list].get({plain: true});
+        let AnswerData = GameQuestionList[answer_idx_in_list].get({plain: true});
         answer_description = AnswerData.Question.description;
         console.log("answer_description:", answer_description);
 
         db.Picture.findAll({where: {QuestionId: AnswerData.Question.id}}).then(AnswerPicList => {
             //prepare pic_dict(key:order, value:filename)
-            var pic_dict = {};
+            let pic_dict = {};
             AnswerPicList.forEach((AnswerPicSetItem => {
-                var AnswerPicData = AnswerPicSetItem.get({plain: true});
+                let AnswerPicData = AnswerPicSetItem.get({plain: true});
                 pic_dict[AnswerPicData.order] = AnswerPicData.id;
             }));
 
             //according pic_order, generate answer_pic_list
             answer_pic_list = [];
-            for(var i = 1; i <= AnswerPicList.length; i++){
+            for(let i = 1; i <= AnswerPicList.length; i++){
                 answer_pic_list.push(pic_dict[i]);
             }
             console.log("answer_pic:", answer_pic_list);
 
             //send game info
             console.log("---GameInfo generation has been done--");
-            var gameInfo = {};
+            let gameInfo = {};
             gameInfo["game_list"] = game_list;
             gameInfo["answer_description"] = answer_description;
             gameInfo["answer_idx"] = answer_idx;
@@ -249,12 +249,12 @@ function ganerateGameInfo(group_id, mode, socket){
 }
 
 function getGameGroup(mode, socket, res, contents){
-    var playGroup_list = [];
+    let playGroup_list = [];
     console.log("receive Game request, generating playGroupList...");
 
     db.Group.findAll({where: {status: 1}}).then(GroupList => {
         GroupList.forEach((GroupSetItem) => {
-            var GroupData = GroupSetItem.get({plain :true});
+            let GroupData = GroupSetItem.get({plain :true});
             playGroup_list.push({
                 id: GroupData.id,
                 class_id: GroupData.ClassId,
@@ -286,7 +286,7 @@ app.post("/url",function(req, res){
     if(req.body.accessToken == config.accessToken){
         url = shortid.generate();
         console.log(url);
-        var fullUrl = req.protocol + '://' + req.get('host') + '/' + url;
+        let fullUrl = req.protocol + '://' + req.get('host') + '/' + url;
         utils.sendResponse(res, 200, fullUrl);
     }
     else{
@@ -300,16 +300,16 @@ app.post("/url",function(req, res){
 //mode: all, pending, approved
 app.get("/getClass", function(req, res){
     console.log('---getClass---');
-    var mode = req.query.mode,
+    let mode = req.query.mode,
         class_list = [];
 
     console.log("mode: ", mode);
     if(mode == "all"){
         db.Class.findAll().then(ClassList => {
-            var count = 0;
+            let count = 0;
 
             ClassList.forEach((ClassSetItem) => {
-                var ClassData = ClassSetItem.get({ plain: true });
+                let ClassData = ClassSetItem.get({ plain: true });
 
                 class_list.push({
                     id: ClassData.id,
@@ -368,7 +368,7 @@ app.get("/getClass", function(req, res){
 
 // post addNewClass API
 app.post("/addNewClass", function(req, res){
-    var new_class_name = req.body.new_class_name,
+    let new_class_name = req.body.new_class_name,
         new_sample_name = req.body.new_sample_name,
         new_sample_description = req.body.new_sample_description;
 
@@ -402,12 +402,12 @@ app.post("/addNewClass", function(req, res){
 //mode: all, one; status: 0, 1
 app.get("/getQuestion", function(req, res){
     console.log("---getQuestion---");
-    var mode = req.query.mode,
+    let mode = req.query.mode,
         class_id = req.query.class_id;
 
     console.log("mode: ", mode);
     if(mode == "all"){
-        var status = req.query.status,
+        let status = req.query.status,
             question_list = [];
 
         console.log("get question with class:", class_id, "and status:",status);
@@ -415,7 +415,7 @@ app.get("/getQuestion", function(req, res){
             where: { status: status, ClassId: class_id}
         }).then(QuestionList => {
             QuestionList.forEach((QuestionSetItem) => {
-                var QuestionData = QuestionSetItem.get({ plain: true });
+                let QuestionData = QuestionSetItem.get({ plain: true });
                 
                 question_list.push({
                     id : QuestionData.id,
@@ -440,7 +440,7 @@ app.get("/getQuestion", function(req, res){
         });
     }
     else if(mode == "one"){
-        var question_id = req.query.question_id,
+        let question_id = req.query.question_id,
             allGroup_dict = {},
             questionData = {};
 
@@ -448,13 +448,13 @@ app.get("/getQuestion", function(req, res){
         //find all Group for check which this question has checked
         db.Group.findAll({ where: { ClassId: class_id } }).then(GroupList => {
             GroupList.forEach((GroupSetItem) => {
-                var GroupData = GroupSetItem.get({ plain: true });
+                let GroupData = GroupSetItem.get({ plain: true });
                 allGroup_dict[GroupData.id.toString()] = GroupData.name;
             });
 
             //create checked group list
-            var checkedGroup_list = [];
-            for(var groupId in allGroup_dict){
+            let checkedGroup_list = [];
+            for(let groupId in allGroup_dict){
                 if(allGroup_dict.hasOwnProperty(groupId)){
                     checkedGroup_list.push({
                         id: groupId,
@@ -470,11 +470,11 @@ app.get("/getQuestion", function(req, res){
                 include: [ { model: db.Picture },
                            { model: db.GroupMember }]
             }).then(QuestionObject => {
-                var QuestionData = QuestionObject.get({ plain: true });
+                let QuestionData = QuestionObject.get({ plain: true });
 
                 //sort picture by order
-                var picId, sortedPic_list = [];
-                for(var i = 0; i < QuestionData.Pictures.length; i++){
+                let picId, sortedPic_list = [];
+                for(let i = 0; i < QuestionData.Pictures.length; i++){
                     picId = utils.getPicIdbyOrder(QuestionData.Pictures, i + 1);
                     if(picId != "none"){
                         sortedPic_list.push(picId);
@@ -482,8 +482,8 @@ app.get("/getQuestion", function(req, res){
                 }
 
                 //mark those group for this question
-                for(var i = 0; i < checkedGroup_list.length; i++){
-                    for(var j = 0; j < QuestionData.GroupMembers.length; j++){
+                for(let i = 0; i < checkedGroup_list.length; i++){
+                    for(let j = 0; j < QuestionData.GroupMembers.length; j++){
                         if(checkedGroup_list[i].id == QuestionData.GroupMembers[j].GroupId){
                             checkedGroup_list[i].used = 1;
                         }
@@ -507,7 +507,7 @@ app.get("/getQuestion", function(req, res){
 // post questionUpload API
 app.post('/questionUpload', function (req, res) {
     console.log("---questionUpload---");
-    var question_id = utils.uuid().substring(0,16),
+    let question_id = utils.uuid().substring(0,16),
         user_upload_data = {}, img_order = {},
         qname = "", description = "", save_path = "",
         pictures = [], groupmembers = [], selected_group = [], photo_path = [],
@@ -531,7 +531,7 @@ app.post('/questionUpload', function (req, res) {
     });
 
     form.on('file', function (name, file) {
-        var buffer = null, type = null, order = 0,
+        let buffer = null, type = null, order = 0,
             picture_id = utils.uuid().substring(0,16);
 
         buffer = readChunk.sync(file.path, 0, 262);
@@ -580,13 +580,13 @@ app.post('/questionUpload', function (req, res) {
         if(photo_status){
             //create this question to related db
             console.log("start create this question...");
-            for(var i = 0; i < selected_group.length; i++){
+            for(let i = 0; i < selected_group.length; i++){
                 groupmembers.push({
                     GroupId: selected_group[i].group_id
                 });
             }
 
-            var data = {
+            let data = {
                 id : question_id,
                 name : qname,
                 description : description,
@@ -604,7 +604,7 @@ app.post('/questionUpload', function (req, res) {
         else{
             console.log("this question upload fail");
             //delete all files
-            for(var path in photo_path){
+            for(let path in photo_path){
                 fs.unlink(path, (err) => {
                     if(err){
                         console.log(path, " cannot be delete Q");
@@ -619,7 +619,7 @@ app.post('/questionUpload', function (req, res) {
 
 // put questionUpdate API
 app.put('/questionUpdate', function (req, res) {
-    var user_update_data = req.body.user_update_data,
+    let user_update_data = req.body.user_update_data,
         question_id = user_update_data.id,
         class_id = user_update_data.class_id,
         new_name = user_update_data.name,
@@ -640,7 +640,7 @@ app.put('/questionUpdate', function (req, res) {
         db.GroupMember.destroy({ //destroy old question group
             where: { QuestionId: question_id }, force:true 
         }).then(function(){ //create new question group
-            var new_selected_group_list = [];
+            let new_selected_group_list = [];
             new_selected_group.forEach((groupId)=>{
                 new_selected_group_list.push({
                     GroupId: groupId, QuestionId: question_id
@@ -650,9 +650,9 @@ app.put('/questionUpdate', function (req, res) {
             db.GroupMember.bulkCreate(new_selected_group_list).then(function() {
                 //update picture order
                 db.Picture.findAll({ where: { QuestionId: question_id } }).then(PictureList => {
-                    var count = 0;
+                    let count = 0;
                     PictureList.forEach((PictureSetItem) => {
-                        var PictureData = PictureSetItem.get({ plain: true });
+                        let PictureData = PictureSetItem.get({ plain: true });
                         db.Picture.update(
                             { order: new_img_order[PictureData.id] }, 
                             { where: { id: PictureData.id } } 
@@ -674,7 +674,7 @@ app.put('/questionUpdate', function (req, res) {
 
 // delete questionDelete API
 app.delete('/questionDelete', function(req, res){
-    var delete_question_id = req.body.delete_question_id,
+    let delete_question_id = req.body.delete_question_id,
         index, using_flag = false, approved_flag = false;
 
     /* delete this question from all related tables */
@@ -697,11 +697,11 @@ app.delete('/questionDelete', function(req, res){
             console.log(delete_question_id, "is safe to be deleted");
             //unlink related picture files from server
             db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
-                var pic_count = 0;
+                let pic_count = 0;
 
                 PictureList.forEach((PictureSetItem) => {
-                    var PictureData = PictureSetItem.get({ plain: true });
-                    var path = '../web/img/' + PictureData.id;
+                    let PictureData = PictureSetItem.get({ plain: true });
+                    let path = '../web/img/' + PictureData.id;
 
                     fs.unlink(path, (err) => {
                         if(err) console.log(PictureData.id, ' cannot be deleted');
@@ -729,19 +729,19 @@ app.delete('/questionDelete', function(req, res){
 // get getGroup API
 //mode: all, approved
 app.get('/getGroup', function(req, res){
-    var mode = req.query.mode;
+    let mode = req.query.mode;
 
     console.log("---getGroup---");
     console.log("mode:", mode);
     if(mode == "all"){
-        var class_id = req.query.class_id,
+        let class_id = req.query.class_id,
             group_list = [];
 
         if(class_id == "all"){
             console.log("get all groups from all classes");
             db.Group.findAll().then(GroupList => {
                 GroupList.forEach((GroupSetItem) => {
-                    var GroupData = GroupSetItem.get({ plain: true });
+                    let GroupData = GroupSetItem.get({ plain: true });
                     
                     group_list.push({
                         id : GroupData.id,
@@ -763,7 +763,7 @@ app.get('/getGroup', function(req, res){
             console.log("get all groups belongs to class_id:", class_id);
             db.Group.findAll({where :{ ClassId: class_id }}).then(GroupList => {
                 GroupList.forEach((GroupSetItem) => {
-                    var GroupData = GroupSetItem.get({ plain: true });
+                    let GroupData = GroupSetItem.get({ plain: true });
                     
                     group_list.push({
                         id : GroupData.id,
@@ -790,7 +790,7 @@ app.get('/getGroup', function(req, res){
         }
     }
     else if(mode == "approved"){
-        var class_id = req.query.class_id,
+        let class_id = req.query.class_id,
             group_list = [];
 
         console.log("get approved(filter those only contain pending questions) group from class_id:", class_id);
@@ -812,7 +812,7 @@ app.get('/getGroup', function(req, res){
                 }
                 else{
                     GroupList.forEach((GroupSetItem) => {
-                        var GroupData = GroupSetItem.get({ plain: true });
+                        let GroupData = GroupSetItem.get({ plain: true });
                         group_list.push({
                             id : GroupData.id,
                             name : GroupData.name,
@@ -848,7 +848,7 @@ app.get('/getGroup', function(req, res){
                 }
                 else{
                     GroupList.forEach((GroupSetItem) => {
-                        var GroupData = GroupSetItem.get({ plain: true });
+                        let GroupData = GroupSetItem.get({ plain: true });
                         group_list.push({
                             id : GroupData.id,
                             name : GroupData.name,
@@ -870,7 +870,7 @@ app.get('/getGroup', function(req, res){
 
 // post addNewHumanGroup API
 app.post('/addNewGroup', function(req, res){
-    var group_name = req.body.newgroup_name,
+    let group_name = req.body.newgroup_name,
         group_list = req.body.group_list,
         class_id = req.body.class_id;
 
@@ -879,7 +879,7 @@ app.post('/addNewGroup', function(req, res){
     console.log("add new group belongs to class_id:", class_id);
     console.log("add new group member:", group_list);
 
-    var data = {
+    let data = {
         name : group_name,
         status : 0,
         ClassId : class_id,
@@ -903,7 +903,7 @@ app.post('/addNewGroup', function(req, res){
 
 // delete deleteGroup API
 app.delete('/deleteGroup', function(req,res){
-    var delete_group_id = req.body.delete_group_id;
+    let delete_group_id = req.body.delete_group_id;
     console.log("---deleteGroup---");
     
     db.Group.destroy({where: { id: delete_group_id }}).then(function(){
@@ -916,7 +916,7 @@ app.delete('/deleteGroup', function(req,res){
 
 // put updateGroup API
 app.put('/updateGroup', function(req, res){
-    var update_group_id = req.body.update_group_id,
+    let update_group_id = req.body.update_group_id,
         group_list = req.body.group_list,
         class_id = req.body.class_id,
         index;
@@ -925,7 +925,7 @@ app.put('/updateGroup', function(req, res){
     console.log("group_id:", update_group_id, "updating...");
     //destroy old member
     db.GroupMember.destroy({ where: { GroupId: update_group_id } }).then(function(){ 
-        var new_groupmember_list = [];
+        let new_groupmember_list = [];
 
         group_list.forEach((element)=>{
             new_groupmember_list.push({
@@ -946,7 +946,7 @@ app.put('/updateGroup', function(req, res){
 
 //put setDisplayGroup API
 app.put('/setDisplayGroup', function(req, res){
-    var selected_group_list = req.body.selected_group_list,
+    let selected_group_list = req.body.selected_group_list,
         playlist = [];
 
     console.log("---setDisplayGroup---");
@@ -955,7 +955,7 @@ app.put('/setDisplayGroup', function(req, res){
         { status: 0 },
         { where: {status: 1} }
     ).then(function(){
-        var count = 0;
+        let count = 0;
         selected_group_list.forEach((selected_group) => { //set selected group to use
             db.Group.update(
                 { status: 1 },
@@ -976,12 +976,12 @@ app.put('/setDisplayGroup', function(req, res){
 // get getGroupMember API
 //mode: all, approved
 app.get("/getGroupMember", function(req, res){
-    var mode = req.query.mode;
+    let mode = req.query.mode;
 
     console.log("---getGroupMember---");
     console.log("mode:", mode);
     if(mode == "all"){
-        var target_group_id = req.query.group_id,
+        let target_group_id = req.query.group_id,
             groupMember_list = [];
 
         console.log("get all groupmember from group_id:", target_group_id);
@@ -999,7 +999,7 @@ app.get("/getGroupMember", function(req, res){
             }
             else{
                 GroupMemberList.forEach((GroupMemberSetItem) => {
-                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                    let GroupMemberData = GroupMemberSetItem.get({ plain: true });
                     
                     groupMember_list.push({
                         question_id: GroupMemberData.Question.id,
@@ -1016,7 +1016,7 @@ app.get("/getGroupMember", function(req, res){
         });
     }
     else if(mode == "approved"){
-        var target_group_id = req.query.group_id,
+        let target_group_id = req.query.group_id,
             groupMember_list = [];
 
         console.log("get approved groupmember from group_id:", target_group_id);
@@ -1035,7 +1035,7 @@ app.get("/getGroupMember", function(req, res){
             }
             else{
                 GroupMemberList.forEach((GroupMemberSetItem) => {
-                    var GroupMemberData = GroupMemberSetItem.get({ plain: true });
+                    let GroupMemberData = GroupMemberSetItem.get({ plain: true });
 
                     groupMember_list.push({
                         id: GroupMemberData.Question.id,
@@ -1061,15 +1061,15 @@ app.get("/manage", utils.auth, function(req, res){
     fs.readFile("../web/html/manage.html", function (err, contents) {
         if (err){ console.log(err); }
         else{
-            var class_list = [],
+            let class_list = [],
                 pendingClass_list = [],
                 approvedClass_list = [];
 
             //using template send class_list to front end for home page
             db.Class.findAll().then(ClassList => {
-                var count = 0;
+                let count = 0;
                 ClassList.forEach((ClassSetItem) => { 
-                    var ClassData = ClassSetItem.get({ plain: true });
+                    let ClassData = ClassSetItem.get({ plain: true });
                     //find pending class
                     db.Question.findAll({ 
                         where: {
@@ -1107,7 +1107,7 @@ app.get("/manage", utils.auth, function(req, res){
                             });
                             count += 1;
                             if(count == ClassList.length){
-                                var data = {
+                                let data = {
                                     class_list: class_list,
                                     pendingClass_list: pendingClass_list,
                                     approvedClass_list: approvedClass_list
@@ -1128,13 +1128,32 @@ app.get("/manage", utils.auth, function(req, res){
 
 // user page
 app.get("/user", function(req, res){
-    fs.readFile("../web/html/user.html", 
-        function(err, contents){
-            if (err){ console.log(err); }
-            else{
-                contents = contents.toString('utf8');
-                utils.sendResponse(res, 200, contents);
-            }
+    fs.readFile("../web/html/user.html", function(err, contents){
+        if (err){ console.log(err); }
+        else{
+            let class_list = [];
+            db.Class.findAll().then(ClassList => {
+                ClassList.forEach((ClassSetItem) => { 
+                    let ClassData = ClassSetItem.get({ plain: true });
+                    //push class into class_list
+                    class_list.push({
+                        id: ClassData.id,
+                        name: ClassData.name,
+                        sample_name: ClassData.sample_name,
+                        description: ClassData.description
+                    });
+
+                    let data = {
+                        class_list: class_list
+                    };
+                    console.log(data);
+
+                    //send response
+                    contents = contents.toString('utf8');
+                    utils.sendEjsRenderResponse(res, 200, contents, data);
+                });
+            });
+        }
     });
 });
 
