@@ -194,7 +194,7 @@ $(function(){
         //bind functions for group buttons
         $(".groupBtn").unbind('click');
         $(".groupBtn").click(function(){
-            lastClickTime = new Date(); 
+            // lastClickTime = new Date(); 
             //get selected group_id, and then socket emit to server, and socket on receive game_list
             playingGroup = $(this).attr("group_id");
             console.log("playingGroup: ", playingGroup);
