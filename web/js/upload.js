@@ -39,12 +39,6 @@ function render_upload_div(class_item, group_table_str){
             </div>\
             <div class="col-md-6">\
                 <div class="form-group ">\
-        <!--\
-                    <div class="row">\
-                        <h3 class="col-md-8" >選擇群組</h3>\
-                        <div class="col-md-4"><input type="button" value="新增群組" id="add_new_group" class="btn btn-secondary"></div>\
-                    </div>\
-        -->\
                     <div class="row">\
                         <h3 style="width: 60%">選擇群組</h3>\
                         <input type="button" id="add_new_group" class="btn btn-secondary" value="新增群組">\
