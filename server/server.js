@@ -136,7 +136,6 @@ ws2Painting.onopen = function(){
     });
 };
 
-
 var answer_pic_list = [],
     url = shortid.generate();
 console.log("----Game url----\n", url);
@@ -187,7 +186,7 @@ function ganerateGameInfo(group_id, mode, socket){
             }
 
             //random generate answer_idx
-            let answer_idx = Math.floor(Math.random() * 5);
+            answer_idx = Math.floor(Math.random() * 5);
 
             //get answer_idx_in_list
             answer_idx_in_list = random_idx_list[answer_idx];
@@ -199,7 +198,7 @@ function ganerateGameInfo(group_id, mode, socket){
             });
 
             //random generate answer_idx
-            let answer_idx = Math.floor(Math.random() * GameQuestionList.length);
+            answer_idx = Math.floor(Math.random() * GameQuestionList.length);
 
             //get answer_idx_in_list
             answer_idx_in_list = answer_idx
