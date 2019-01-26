@@ -1,10 +1,53 @@
+.manually-show-modal {
+    display:block !important;
+    z-index: 1060;
+}
+.my_modal_backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1055;
+    background-color: #000;
+    opacity: 0.5;
+}
+.preview_img {
+    position: relative;
+}
+.remove_tag {
+   position: absolute;
+   top: 0;
+   right: 1em;
+   height: 1em;
+   width: 1em;
+   z-index: 5;
+}
+#pic_row {
+    margin-top: 10px;
+}
+.my_cursor {
+    cursor: pointer;
+}
+.homepage_label {
+    font-size: 20px;
+}
+.homepage_link {
+    /*margin-left: 10%;*/
+}
 .mycheckbox {
     text-align: right;
 }
-.category_table {
+.group_table {
     border-top: 2px solid #ccc;
     border-bottom: 2px solid #ccc;
-    height: 150px;
+    height: 200px;
+    overflow: auto;
+}
+.accordion {
+    border-top: 2px solid #ccc;
+    border-bottom: 2px solid #ccc;
+    height: 550px;
     overflow: auto;
 }
 .required:after {
@@ -15,6 +58,10 @@
 .margin_center {
     margin-left: 25%;
     width: 50%;
+}
+.margin_table {
+    margin-left: 15%;
+    width: 70%;
 }
 .center {
     text-align: center;
