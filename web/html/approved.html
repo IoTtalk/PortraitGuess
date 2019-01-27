@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include partials/meta.html %>
+    <script type="text/javascript" src="../js/approved.js"></script>
+</head>
+<body>
+    <% include partials/modal.html %>
+    <% include partials/navbar.html %>
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="center top">已審檔案</h2>
+            <br>
+            <h3 class="center">請點選欲編輯的檔案</h3>
+            <br>
+            <div class="center">
+                <button id="refresh" class="btn btn-secondary">&#8635;</button>
+                <button id="ascending" class="btn btn-secondary">&#9650;</button>
+                <button id="descending" class="btn btn-secondary">&#9660;</button>
+            </div>
+            <br>
+            <div class="margin_table approved_table">
+                <table id="approved_table" class="table table-hover"></table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

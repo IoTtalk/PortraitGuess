@@ -1,5 +1,30 @@
+$(function(){
+    $(document).on("click", ".displayModal_btn", function(event){ show_displayModal(event); });
+    $(document).on("click", "#set_display_btn", set_display_group);
+    $(document).on("click", "#select_all_btn", select_all_to_display);
+    $(document).on("click", "#cancel_all_btn", cancel_all_to_display);
+
+    $.ajax({
+        type: "GET",
+        url: location.origin + "/getGroup?mode=approved&class_id=all",
+        cache: false,
+        contentType: "application/json",
+        dataType: 'json',
+        error: function(e){
+            show_msgModal("系統錯誤", "無法進入'播放清單'頁面");
+            console.log(e);
+        },
+        success: function(payload){
+            let data = payload;
+            console.log(data.group_list);
+            
+            render_grouplist_table(data.group_list);
+        }
+    });
+});
+
 function render_grouplist_table(group_list){
-    let grouplist_table_str = "<table class='table table-hover'>";
+    let grouplist_table_str = "";
     group_list.forEach((group) => {
         let id = group.id,
             name = group.name,
@@ -18,135 +43,52 @@ function render_grouplist_table(group_list){
             <td><label for='" + id + "_display_checkbox'>" + name + "</label></td>\
             <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td></tr>";
     });
-    grouplist_table_str += "</table>";
 
-    return grouplist_table_str;
+    $("#display_table").html(grouplist_table_str);
 }
 
-function render_groupmember_table(groupMembertList){
-    let groupmember_table_str = '<table id="displayModal_table" class="table table-hover">',
-        info = "";
+function set_display_group(){
+    let $selected_group = $('input[name=display]:checked');
+    if($selected_group.length < 1){
+        show_msgModal("系統訊息", "至少需勾選 1 個群組");
+        return false;
+    }
+    else{
+        let selected_group_list = [];
 
-    groupmember_table_str += '<tr><th width="40%">名字</th><th>敘述</th></tr>';
-    groupMembertList.forEach((content) => {
-        groupmember_table_str += '\
-            <tr>\
-                <td><label>' + content.name + '</label></td>\
-                <td><label>' + content.description + '</label></td>\
-            </tr>\
-        ';
-    });
+        $selected_group.each(function (){
+            selected_group_list.push({
+                id : $(this).val(),
+                class_id : $(this).attr("class_id")
+            });
+        });
+        
+        console.log(selected_group_list);
 
-    groupmember_table_str += '</table>';
-
-    return groupmember_table_str;
-}
-
-function displayModal_btn_handler(){
-    $(".displayModal_btn").on('click', function(req, res){
-        let display_group_id = $(this).parent().parent().find('input').attr('value'),
-            display_group_name = $(this).parent().parent().find('label').text();
-
-        console.log(display_group_id, display_group_name);
-
-        //ajax get this groupmember
         $.ajax({
-            type: "GET",
-            url: location.origin + "/getGroupMember?mode=approved&group_id=" + display_group_id,
+            type: "PUT",
+            url: location.origin + "/setDisplayGroup",
             cache: false,
+            data: JSON.stringify(
+            {
+                selected_group_list : selected_group_list
+            }),
             contentType: "application/json",
             error: function(e){
-                //show msgModal
-                show_msgModal("系統錯誤", "無法取得群組資訊");
+                show_msgModal("系統錯誤", "無法取得群組列表");
                 console.log(e);
             },
-            success: function(payload){
-                let data = JSON.parse(payload)
-                console.log(data);
-
-                //set moadl title by groupname
-                $('#displayModal_title').text(display_group_name);
-
-                //set modal content by groupMembertList
-                $('#displayModal_info').html(render_groupmember_table(data.groupMember_list));
-
-                //show display modal
-                $('#displayModal').modal("show");
+            success: function(){
+                show_msgModal("系統訊息", "建立播放清單成功");
             }
         });
-    });
+    }
 }
 
-function render_display_div(grouplist_table_str){
-    let display_div = '\
-        <h2 class="center">播放名單</h2>\
-        <br>\
-        <h3 class="center">請勾選欲播放的群組(可多選)</h3>\
-        <br>\
-        <div class="center">\
-            <button id="select_all" class="btn btn-secondary">全選</button>\
-            <button id="cancal_all" class="btn btn-secondary">全不選</button>\
-        </div>\
-        <br>\
-        <div class="margin_center display_table">' + grouplist_table_str + '</div>\
-        <br>\
-        <div class="center">\
-            <button id="set_display_btn" class="btn btn-primary">確認</button>\
-        </div>';
-
-    return display_div;
+function select_all_to_display(){
+    $("input:checkbox[name='display']").prop("checked", true);
 }
 
-function set_display_btn_handler(){
-    $('#set_display_btn').on('click', function(){
-        let $selected_group = $('input[name=display]:checked');
-        if($selected_group.length < 1){
-            //show msgModal
-            show_msgModal("系統訊息", "至少需勾選 1 個群組");
-            return false;
-        }
-        else{
-            let selected_group_list = [];
-
-            $selected_group.each(function (){
-                selected_group_list.push({
-                    id : $(this).val(),
-                    class_id : $(this).attr("class_id")
-                });
-            });
-            
-            console.log(selected_group_list);
-
-            $.ajax({
-                type: "PUT",
-                url: location.origin + "/setDisplayGroup",
-                cache: false,
-                data: JSON.stringify(
-                {
-                    selected_group_list : selected_group_list
-                }),
-                contentType: "application/json",
-                error: function(e){
-                    //show msgModal
-                    show_msgModal("系統錯誤", "無法取得群組列表");
-                    console.log(e);
-                },
-                success: function(){
-                    //show msgModal
-                    show_msgModal("系統訊息", "建立播放清單成功");
-                }
-            });
-        }
-    });
-}
-
-//make protrait selection all or none
-function select_and_cancel_handler(){
-    $('#select_all').on('click',function(){
-        $("input:checkbox[name='display']").prop("checked", true);
-    });
-
-    $('#cancal_all').on('click',function(){
-        $("input:checkbox[name='display']").prop("checked", false);
-    });
+function cancel_all_to_display(){
+    $("input:checkbox[name='display']").prop("checked", false);
 }

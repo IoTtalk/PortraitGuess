@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include partials/meta.html %>
+    <script type="text/javascript" src="../js/upload.js"></script>
+</head>
+<body>
+    <% include partials/modal.html %>
+    <% include partials/navbar.html %>
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div id="display">
+                <h2 class="center">上傳檔案</h2>
+                <br>
+                <form id="upload-photos" class="row" method="post" action="/upload_photos" enctype="multipart/form-data">
+                    <div class="col-md-6">
+                        <div class="form-group ">
+                            <h3 class="required">名字</h3>
+                            <input type="text" id="name" class="form-control" size="35"/>
+                        </div>
+                        <div class="form-group ">
+                            <h3>描述</h3>
+                            <textarea class="form-control" id="description" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group ">
+                            <div class="row">
+                                <h3 style="width: 60%">選擇群組</h3>
+                                <input type="button" id="add_new_group" class="btn btn-secondary" value="新增群組">
+                            </div>
+                            <div id="add_new_group_row" class="row" style="display: none;">
+                                <input id="new_group_name" class="form-control" type="text" style="width: 50%" placeholder="新群組名字">
+                                <input id="set_new_group" type="button" class="btn btn-outline-success" value="確定">
+                                <input id="set_new_group_cancel" type="button" class="btn btn-outline-danger" value="取消">
+                            </div>
+                            <div id="group_table" class="group_table"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group ">
+                            <h3 class="required">上傳圖片</h3>
+                            <p class="help-block">拉動圖片來排序(由左至右，由上至下)</p>
+                            <input id="upload_file" type="file" name="photos[]" accept=".png,.jpg,.jpeg" multiple="multiple"/>
+                        </div>
+                        <div id="pic_row" >
+                            <div class="row" id="movable_pic_row"></div>
+                        </div>
+                        <div class="form-group center">
+                            <input class="btn btn-warning" type="submit" value="上傳"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

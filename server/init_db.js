@@ -149,7 +149,7 @@ function set_db_init_value(){
     db.Class.bulkCreate(default_class).then(function(){
         console.log("--- set db default [class] value done ---");
         db.Group.bulkCreate(default_group).then(function(){
-            console.log("--- set db default [category] value done ---");
+            console.log("--- set db default [group] value done ---");
             var count = 0;
             default_human_question.forEach((human_question) => {
                 var question_id = utils.uuid().substring(0,16);

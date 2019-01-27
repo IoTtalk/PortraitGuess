@@ -1,23 +1,41 @@
-function render_approved_div(approved_table_str){
-    let approved_div = '\
-        <h2 class="center top">已審檔案</h2>\
-        <br>\
-        <h3 class="center">請點選欲編輯的檔案</h3>\
-        <br>\
-        <div class="center">\
-            <button id="refresh" class="btn btn-secondary">&#8635;</button>\
-            <button id="ascending" class="btn btn-secondary">&#9650;</button>\
-            <button id="descending" class="btn btn-secondary">&#9660;</button>\
-        </div>\
-        <br>\
-        <div class="margin_table approved_table">\
-            <table id="approved_table" class="table table-hover">\
-                ' + approved_table_str + ' \
-            </table>\
-        </div>\
-        ';
-    return approved_div;
-}
+//main
+var question_list = [];
+
+$(function(){
+    $(document).on("click", ".approvedbtn", function(event){ show_editModal(event, class_item, "approved"); });
+    $(document).on("click", "#editModal_delete", function(event){ show_confirmModal(); });
+    $(document).on("click", "#editModal_update", function(event){ update_question(event, class_item.id, "approved"); });
+
+    $(document).on("click", "#refresh", function(event){ refresh_question(class_item, "approved"); });
+    $(document).on("click", "#ascending", function(event){ display_ascending_question(class_item, "approved"); });
+    $(document).on("click", "#descending", function(event){ display_descending_question(class_item, "approved"); });
+
+    $(document).on("click", "#editModal_add_new_group", function(event){ show_new_group_edit_row(event, "editModal_new_group_name", "editModal_add_new_group_row"); });
+    $(document).on("click", "#editModal_set_new_group", function(event){ exec_add_new_group(class_item, "editModal_add_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup"); });
+    $(document).on("click", "#editModal_set_new_group_cancel", function(event){ cancel_add_new_group("editModal_add_new_group", "editModal_add_new_group_row"); });
+
+    $(document).on("click", "#confirmModal_confirm_btn", function(event){ confirmModal_confirm_btn_handler(delete_question_cb, {"class_item": class_item, "$this": $(event.target), "mode": "approved"}); });
+    $(document).on("click", "#confirmModal_cancel_btn", function(event){ close_confirmModal(); });
+
+    $.ajax({
+        type: "GET",
+        url: location.origin + "/getQuestion?mode=all&class_id=" + class_item.id + "&status=1",
+        cache: false,
+        contentType: "application/json",
+        error: function(e){
+            show_msgModal("系統錯誤", "無法進入'已審檔案'頁面");
+            console.log(e);
+        },
+        success: function(payload){
+            let data = JSON.parse(payload);
+            console.log(data);
+
+            question_list = data.question_list;
+
+            render_approved_table(data.class_item, data.question_list);
+        }
+    });
+});
 
 function render_approved_table(class_item, approved_list){
     let approved_table_str = "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>"
@@ -27,50 +45,12 @@ function render_approved_table(class_item, approved_list){
             description = approved_item.description;
 
         approved_table_str += '\
-            <tr id="' + id + '">\
+            <tr id="' + id + '_row">\
                 <td>' + name + '</td>\
                 <td>' + description + '</td>\
-                <td><button id="' + id + '_approvedbtn" class="btn btn-secondary approvedbtn">編輯</button></td>\
+                <td><button question_id="' + id + '" class="btn btn-secondary approvedbtn">編輯</button></td>\
             </tr>';
     });
 
-    return approved_table_str;
-}
-
-function approvedbtn_handler(class_item, mode){
-    $(".approvedbtn").on("click", function(){
-        let id = this.id.split("_")[0];
-        console.log(id);
-        
-        $.ajax({
-            type: "GET",
-            url: location.origin + "/getQuestion?mode=one&class_id=" + class_item.id + "&question_id=" + id,
-            cache: false,
-            contentType: "application/json",
-            error: function(e){
-                alert("something wrong");
-                console.log(e);
-            },
-            success: function(data){
-                let questionData = JSON.parse(data);
-                console.log(questionData);
-
-                //set modal content by questionData
-                setupEditModal(class_item, questionData, 1);
-
-                add_new_group_btn_handler("editModal_add_new_group", "editModal_new_group_name", "editModal_add_new_group_row");
-                set_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_set_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup");
-                set_new_group_cancel_btn_handler("editModal_add_new_group", "editModal_set_new_group_cancel", "editModal_add_new_group_row");
-
-                question_update_btn_handler(class_item, id, mode);
-                question_delete_btn_handler();
-
-                confirmModal_confirm_btn_handler(delete_question_cb,{"class_item": class_item, "id": id, "mode":mode});
-                confirmModal_cancel_btn_handler();
-
-                //show edit modal
-                $('#editModal').modal("show");
-            }
-        });
-    });
+    $("#approved_table").html(approved_table_str);
 }

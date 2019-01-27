@@ -150,14 +150,29 @@ app.use(bodyParser.urlencoded({
 // process http body
 app.use(bodyParser.json());
 
+// decompose html (let html can include html)
+app.set("view engine", "html");
+app.set("views", path.join(__dirname, "../web/html"));
+app.engine("html", ejs.renderFile);
+
 // server start
 console.log('---server start---');
 http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
 
 function ganerateGameInfo(group_id, mode, socket){
-    let answer_description = "",
-        answer_idx = 0,
-        game_list = [];
+    let answer_idx_in_list, 
+        answer_idx = 0, 
+        answer_name, 
+        answer_questionid, 
+        answer_description = "", 
+        index;
+    let game_list = [], 
+        random_idx_list = [];
+    let pic_dict = {}, 
+        gameInfo = {};
+    let GameQuestionData, 
+        AnswerData, 
+        AnswerPicData;
 
     console.log("---generating GameInfo for this game....---");
     db.GroupMember.findAll({
@@ -168,10 +183,8 @@ function ganerateGameInfo(group_id, mode, socket){
             required: true }]
     }).then(GameQuestionList => {
         //check length of GameQuestionList to generate game_list and answer question
-        let answer_idx_in_list, answer_idx, answer_name, answer_questionid, answer_description;
         if(GameQuestionList.length > 5){
             //random pick 5 question for game
-            let index, random_idx_list = [];
             do{
                 index = Math.floor(Math.random() * GameQuestionList.length);
                 //check if this random index has existed
@@ -181,7 +194,7 @@ function ganerateGameInfo(group_id, mode, socket){
             } while(random_idx_list.length < 5);
 
             for(let i = 0; i < 5; i++){
-                let GameQuestionData = GameQuestionList[random_idx_list[i]].get({plain: true});
+                GameQuestionData = GameQuestionList[random_idx_list[i]].get({plain: true});
                 game_list.push(GameQuestionData.Question.name);
             }
 
@@ -193,7 +206,7 @@ function ganerateGameInfo(group_id, mode, socket){
         }
         else{ //pick all question for game
             GameQuestionList.forEach((GameQuestionSetItem) => {
-                let GameQuestionData = GameQuestionSetItem.get({plain: true});
+                GameQuestionData = GameQuestionSetItem.get({plain: true});
                 game_list.push(GameQuestionData.Question.name);
             });
 
@@ -207,15 +220,14 @@ function ganerateGameInfo(group_id, mode, socket){
         console.log("answer:", game_list[answer_idx], " in option:", answer_idx);
 
         //get answer question for game
-        let AnswerData = GameQuestionList[answer_idx_in_list].get({plain: true});
+        AnswerData = GameQuestionList[answer_idx_in_list].get({plain: true});
         answer_description = AnswerData.Question.description;
         console.log("answer_description:", answer_description);
 
         db.Picture.findAll({where: {QuestionId: AnswerData.Question.id}}).then(AnswerPicList => {
             //prepare pic_dict(key:order, value:filename)
-            let pic_dict = {};
             AnswerPicList.forEach((AnswerPicSetItem => {
-                let AnswerPicData = AnswerPicSetItem.get({plain: true});
+                AnswerPicData = AnswerPicSetItem.get({plain: true});
                 pic_dict[AnswerPicData.order] = AnswerPicData.id;
             }));
 
@@ -228,7 +240,6 @@ function ganerateGameInfo(group_id, mode, socket){
 
             //send game info
             console.log("---GameInfo generation has been done--");
-            let gameInfo = {};
             gameInfo["game_list"] = game_list;
             gameInfo["answer_description"] = answer_description;
             gameInfo["answer_idx"] = answer_idx;
@@ -249,11 +260,12 @@ function ganerateGameInfo(group_id, mode, socket){
 
 function getGameGroup(mode, socket, res, contents){
     let playGroup_list = [];
+    let GroupData;
     console.log("receive Game request, generating playGroupList...");
 
     db.Group.findAll({where: {status: 1}}).then(GroupList => {
         GroupList.forEach((GroupSetItem) => {
-            let GroupData = GroupSetItem.get({plain :true});
+            GroupData = GroupSetItem.get({plain :true});
             playGroup_list.push({
                 id: GroupData.id,
                 class_id: GroupData.ClassId,
@@ -304,7 +316,7 @@ app.get("/getClass", function(req, res){
 
     console.log("mode: ", mode);
     if(mode == "all"){
-        db.Class.findAll().then(ClassList => {
+        db.Class.findAll({order: [ ['id', 'ASC'] ]}).then(ClassList => {
             let count = 0;
 
             ClassList.forEach((ClassSetItem) => {
@@ -329,6 +341,7 @@ app.get("/getClass", function(req, res){
     }
     else if(mode == "pending"){
         db.Class.findAll({
+            order: [ ['id', 'ASC'] ],
             include: [{
                 model: db.Question,
                 where: {status: 0},
@@ -347,6 +360,7 @@ app.get("/getClass", function(req, res){
     }
     else if(mode == "approved"){
         db.Class.findAll({
+            order: [ ['id', 'ASC'] ],
             include: [{
                 model: db.Question,
                 where: {status: 1},
@@ -738,7 +752,7 @@ app.get('/getGroup', function(req, res){
 
         if(class_id == "all"){
             console.log("get all groups from all classes");
-            db.Group.findAll().then(GroupList => {
+            db.Group.findAll({order: [ ['id', 'ASC'] ]}).then(GroupList => {
                 GroupList.forEach((GroupSetItem) => {
                     let GroupData = GroupSetItem.get({ plain: true });
                     
@@ -760,7 +774,10 @@ app.get('/getGroup', function(req, res){
         }
         else{
             console.log("get all groups belongs to class_id:", class_id);
-            db.Group.findAll({where :{ ClassId: class_id }}).then(GroupList => {
+            db.Group.findAll({
+                where :{ ClassId: class_id },
+                order: [ ['id', 'ASC'] ],
+            }).then(GroupList => {
                 GroupList.forEach((GroupSetItem) => {
                     let GroupData = GroupSetItem.get({ plain: true });
                     
@@ -795,6 +812,7 @@ app.get('/getGroup', function(req, res){
         console.log("get approved(filter those only contain pending questions) group from class_id:", class_id);
         if(class_id == "all"){
             db.Group.findAll({
+                order: [ ['id', 'ASC'] ],
                 include: [{
                     model: db.GroupMember,
                     include: [{
@@ -831,6 +849,7 @@ app.get('/getGroup', function(req, res){
         else{
             db.Group.findAll({
                 where: {ClassId: class_id},
+                order: [ ['id', 'ASC'] ],
                 include: [{
                     model: db.GroupMember,
                     include: [{
@@ -986,6 +1005,7 @@ app.get("/getGroupMember", function(req, res){
         console.log("get all groupmember from group_id:", target_group_id);
         db.GroupMember.findAll({ 
             where: { GroupId: target_group_id },
+            order: [ ['id', 'ASC'] ],
             include: [{
                 model: db.Question,
                 required: true }]
@@ -1021,6 +1041,7 @@ app.get("/getGroupMember", function(req, res){
         console.log("get approved groupmember from group_id:", target_group_id);
         db.GroupMember.findAll({ 
             where: { GroupId: target_group_id },
+            order: [ ['id', 'ASC'] ],
             include: [{
                 model: db.Question,
                 where: {status: 1},
@@ -1053,76 +1074,120 @@ app.get("/getGroupMember", function(req, res){
 });
 
 
+function get_class_list_for_manage_page(res, pagename, class_item){
+    let class_list = [],
+        pendingClass_list = [],
+        approvedClass_list = [];
 
-/* web page */
-// manage page
-app.get("/manage", utils.auth, function(req, res){
-    fs.readFile("../web/html/manage.html", function (err, contents) {
-        if (err){ console.log(err); }
-        else{
-            let class_list = [],
-                pendingClass_list = [],
-                approvedClass_list = [];
-
-            //using template send class_list to front end for home page
-            db.Class.findAll().then(ClassList => {
-                let count = 0;
-                ClassList.forEach((ClassSetItem) => { 
-                    let ClassData = ClassSetItem.get({ plain: true });
-                    //find pending class
-                    db.Question.findAll({ 
-                        where: {
-                            status: 0, 
-                            ClassId: ClassData.id}
-                    }).then(pendingQuestionList => {
-                        if(pendingQuestionList.length > 0){
-                            pendingClass_list.push({
-                                id: ClassData.id,
-                                name: ClassData.name,
-                                sample_name: ClassData.sample_name,
-                                description: ClassData.description
-                            });
-                        }
-                        //find approved class
-                        db.Question.findAll({
-                            where: {
-                                status: 1, 
-                                ClassId: ClassData.id}
-                        }).then(approvedClassList => {
-                            if(approvedClassList.length > 0){
-                                approvedClass_list.push({
-                                    id: ClassData.id,
-                                    name: ClassData.name,
-                                    sample_name: ClassData.sample_name,
-                                    description: ClassData.description
-                                });
-                            }
-                            //push class into class_list
-                            class_list.push({
-                                id: ClassData.id,
-                                name: ClassData.name,
-                                sample_name: ClassData.sample_name,
-                                description: ClassData.description
-                            });
-                            count += 1;
-                            if(count == ClassList.length){
-                                let data = {
-                                    class_list: class_list,
-                                    pendingClass_list: pendingClass_list,
-                                    approvedClass_list: approvedClass_list
-                                };
-                                console.log(data);
-
-                                //send response
-                                contents = contents.toString('utf8');
-                                utils.sendEjsRenderResponse(res, 200, contents, data);
-                            }
-                        });
+    //using template send class_list to front end for home page
+    db.Class.findAll({ order: [ ['id', 'ASC'] ]}).then(ClassList => {
+        let count = 0;
+        ClassList.forEach((ClassSetItem) => { 
+            let ClassData = ClassSetItem.get({ plain: true });
+            //find pending class
+            db.Question.findAll({ 
+                where: {
+                    status: 0, 
+                    ClassId: ClassData.id}
+            }).then(pendingQuestionList => {
+                if(pendingQuestionList.length > 0){
+                    pendingClass_list.push({
+                        id: ClassData.id,
+                        name: ClassData.name,
+                        sample_name: ClassData.sample_name,
+                        description: ClassData.description
                     });
+                }
+                //find approved class
+                db.Question.findAll({
+                    where: {
+                        status: 1, 
+                        ClassId: ClassData.id}
+                }).then(approvedClassList => {
+                    if(approvedClassList.length > 0){
+                        approvedClass_list.push({
+                            id: ClassData.id,
+                            name: ClassData.name,
+                            sample_name: ClassData.sample_name,
+                            description: ClassData.description
+                        });
+                    }
+                    //push class into class_list
+                    class_list.push({
+                        id: ClassData.id,
+                        name: ClassData.name,
+                        sample_name: ClassData.sample_name,
+                        description: ClassData.description
+                    });
+                    count += 1;
+                    if(count == ClassList.length){
+                        let data = {
+                            class_list: class_list,
+                            pendingClass_list: pendingClass_list,
+                            approvedClass_list: approvedClass_list,
+                            class_item: class_item
+                        };
+                        console.log(data);
+
+                        //send response
+                        res.status(200);
+                        res.render(pagename, data);
+                    }
                 });
             });
+        });
+    });
+}
+
+function check_class_exist_and_then_render_page(class_id, res, functionpage){
+    db.Class.findOne({where:{id :class_id}}).then(function(c){
+        if(c != null){
+            let class_item = {
+                id: c.id,
+                name: c.name,
+                sample_name: c.sample_name,
+                description: c.description
+            };
+            get_class_list_for_manage_page(res, functionpage, class_item);
+        }
+        else{
+            //no this class
+            res.status(404).send("page not found");
         }
     });
+}
+
+/* web page */
+// manage pages
+app.get("/manage", utils.auth, function(req, res){
+    get_class_list_for_manage_page(res, "manage.html", null);
+});
+
+app.get("/display", utils.auth, function(req, res){
+    get_class_list_for_manage_page(res, "display.html", null);
+});
+
+app.get("/:functionpage/:class_id", utils.auth, function(req, res){
+    let functionpage = req.params.functionpage,
+        class_id = req.params.class_id;
+
+    console.log("functionpage:", functionpage, " class_id:", class_id);
+    if(functionpage == "upload"){
+        check_class_exist_and_then_render_page(class_id, res, "upload.html");
+    }
+    else if(functionpage == "pending"){
+        check_class_exist_and_then_render_page(class_id, res, "pending.html");
+    }
+    else if(functionpage == "approved"){
+        check_class_exist_and_then_render_page(class_id, res, "approved.html");
+    }
+    else if(functionpage == "group"){
+        check_class_exist_and_then_render_page(class_id, res, "group.html");
+    }
+    else{
+        //no this page
+        res.status(404).send("page not found");
+    }
 });
 
 // user page

@@ -1,23 +1,41 @@
-function render_pending_div(pending_table_str){
-    let pending_div = '\
-        <h2 class="center top">待審檔案</h2>\
-        <br>\
-        <h3 class="center">請點選欲審核的檔案</h3>\
-        <br>\
-        <div class="center">\
-            <button id="refresh" class="btn btn-secondary">&#8635;</button>\
-            <button id="ascending" class="btn btn-secondary">&#9650;</button>\
-            <button id="descending" class="btn btn-secondary">&#9660;</button>\
-        </div>\
-        <br>\
-        <div class="margin_table pending_table">\
-            <table id="pending_table" class="table table-hover">\
-                ' + pending_table_str + ' \
-            </table>\
-        </div>\
-        ';
-    return pending_div;
-}
+//main
+var question_list = [];
+
+$(function(){
+    $(document).on("click", ".pendingbtn", function(event){ show_editModal(event, class_item, "pending"); });
+    $(document).on("click", "#editModal_delete", function(event){ show_confirmModal(); });
+    $(document).on("click", "#editModal_update", function(event){ update_question(event, class_item.id, "pending"); });
+
+    $(document).on("click", "#refresh", function(event){ refresh_question(class_item, "pending"); });
+    $(document).on("click", "#ascending", function(event){ display_ascending_question(class_item, "pending"); });
+    $(document).on("click", "#descending", function(event){ display_descending_question(class_item, "pending"); });
+
+    $(document).on("click", "#editModal_add_new_group", function(event){ show_new_group_edit_row(event, "editModal_new_group_name", "editModal_add_new_group_row"); });
+    $(document).on("click", "#editModal_set_new_group", function(event){ exec_add_new_group(class_item, "editModal_add_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup"); });
+    $(document).on("click", "#editModal_set_new_group_cancel", function(event){ cancel_add_new_group("editModal_add_new_group", "editModal_add_new_group_row"); });
+
+    $(document).on("click", "#confirmModal_confirm_btn", function(event){ confirmModal_confirm_btn_handler(delete_question_cb, {"class_item": class_item, "$this": $(event.target), "mode": "pending"}); });
+    $(document).on("click", "#confirmModal_cancel_btn", function(event){ close_confirmModal(); });
+
+    $.ajax({
+        type: "GET",
+        url: location.origin + "/getQuestion?mode=all&class_id=" + class_item.id + "&status=0",
+        cache: false,
+        contentType: "application/json",
+        error: function(e){
+            show_msgModal("系統錯誤", "無法進入'待審檔案'頁面");
+            console.log(e);
+        },
+        success: function(payload){
+            let data = JSON.parse(payload);
+            console.log(data);
+
+            question_list = data.question_list;
+
+            render_pending_table(data.class_item, question_list);
+        }
+    });
+});
 
 function render_pending_table(class_item, pending_list){
     let pending_table_str = "<tr><th width='40%'>名字</th><th width='50%'>敘述</th><th width='10%'></th></tr>";
@@ -31,405 +49,12 @@ function render_pending_table(class_item, pending_list){
             description = pending_item.description;
 
         pending_table_str += '\
-            <tr id="' + id + '">\
+            <tr id="' + id + '_row">\
                 <td>' + name + '</td>\
                 <td>' + description + '</td>\
-                <td><button id="' + id + '_pendingbtn" class="btn btn-secondary pendingbtn">審核</button></td>\
+                <td><button question_id="' + id + '" class="btn btn-secondary pendingbtn">審核</button></td>\
             </tr>';
     });
 
-    return pending_table_str;
-}
-
-function setupEditModal(class_item, questionData, status){
-    let editModal_body_str = "",
-        group_str = "",
-        picture_str = "";
-
-    //clear msg field
-    $("#editModal_msg").text("");
-
-    //render question group
-    let group_list = questionData.group;
-    for(let i = 0; i < group_list.length; i++){
-        let id = group_list[i].id,
-            name = group_list[i].name,
-            used = group_list[i].used;
-        
-        //mark this group checked
-        if(used){
-            group_str += "\
-                <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='editModalgroup' value='" + id + "' checked/></td>\
-                    <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
-                </tr>";
-        }
-        else{
-            group_str += "\
-                <tr>\
-                    <td class='mycheckbox'><input type='checkbox' id='" + id + "_checkbox' name='editModalgroup' value='" + id + "' /></td>\
-                    <td><label for='" + id + "_checkbox'>" + name + "</label></td>\
-                </tr>";
-        }
-    }
-
-    //render question picture
-    let picture_list = questionData.picture;
-    for(let i = 0; i < picture_list.length; i++){
-        picture_str += '\
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">\
-                <img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail">\
-                </img>\
-            </div>';
-    }
-
-    //render footer btn
-    let footer_str = '\
-        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>\
-        <button type="button" id="editModal_delete" class="btn btn-danger">刪除</button>\
-        <button type="button" id="editModal_update" class="btn btn-warning">完成</button>\
-        ';
-
-    /* check modal mode */
-    let mode;
-    if(status == 1){
-        mode = "編輯";
-    }
-    else{
-        mode = "審核";
-    }
-
-    /* set modal title and body */
-    $("#editModalLabel_title").text(class_item.name + mode);
-    $('#editModal_s_name').text("名字");
-    $('#editModal_s_description').text("描述");
-    $('#editModal_s_group').text("分類");
-    $('#editModal_s_picture').text("圖片");
-
-    //set class default placeholder
-    $("#editModal_name").attr("placeholder", class_item.sample_name);
-    $("#editModal_description").attr("placeholder", class_item.description);
-
-    //set human info
-    $('#editModal_name').val(questionData.name);
-    $('#editModal_description').val(questionData.description);
-
-    //set all category and mark those used
-    $('#editModal_group_table').html(group_str);
-
-    //ser picture
-    $('#editModal_picture_row').html(picture_str);
-    $("#editModal_picture_row").sortable();
-    $("#movable_pic_row").disableSelection();
-
-    /* set modal footer */
-    $('#editModal_footer').html(footer_str);
-}
-
-function pendingbtn_handler(class_item, mode){
-    $(".pendingbtn").on("click", function(){
-        let id = this.id.split("_")[0];
-        console.log("checking: ", id);
-        
-        $.ajax({
-            type: "GET",
-            url: location.origin + "/getQuestion?mode=one&class_id=" + class_item.id + "&question_id=" + id,
-            cache: false,
-            contentType: "application/json",
-            error: function(e){
-                //show msgModal
-                show_msgModal("系統錯誤", "無法取得檔案資訊");
-                console.log(e);
-            },
-            success: function(data){
-                let questionData = JSON.parse(data)
-                console.log(questionData);
-
-                //set modal content by questionData
-                setupEditModal(class_item, questionData, 0);
-
-                add_new_group_btn_handler("editModal_add_new_group", "editModal_new_group_name", "editModal_add_new_group_row");
-                set_new_group_btn_handler(class_item, "editModal_add_new_group", "editModal_set_new_group", "editModal_new_group_name", "editModal_group_table", "editModal_add_new_group_row", "editModalgroup");
-                set_new_group_cancel_btn_handler("editModal_add_new_group", "editModal_set_new_group_cancel", "editModal_add_new_group_row");
-
-
-                question_update_btn_handler(class_item, id, mode);
-                question_delete_btn_handler();
-
-                confirmModal_confirm_btn_handler(delete_question_cb,{"class_item": class_item, "id": id, "mode":mode});
-                confirmModal_cancel_btn_handler();
-
-                //show edit modal
-                $('#editModal').modal("show");
-            }
-        });
-    });
-}
-
-function question_update_btn_handler(class_item, id, mode){
-    $("#editModal_update").on("click", function(){
-        event.preventDefault();
-        event.stopPropagation();
-
-        // Get the data from input, create new FormData.
-        let formData = new FormData(),
-            name = $('#editModal_name').val(),
-            description = $('#editModal_description').val(),
-            img_order = {},
-            data = {},
-            selected_group = [];
-
-        //chech input
-        if($.trim(name) == ''){
-            $("#editModal_msg").text("名字必需填入");
-            return false;
-        }
-
-        let $selected_list = $('input[name=editModalgroup]:checked');
-        $selected_list.each(function (){
-            selected_group.push($(this).val());
-            // console.log($(this).val());
-        });
-
-        //get img order
-        $("#editModal_picture_row img").each(function(index){
-            img_order[$(this).attr('id')] = index + 1;
-        });
-        console.log(img_order);
-
-        //append data in formData
-        data["id"] = id;
-        data["class_id"] = class_item.id;
-        data["img_order"] = img_order;
-        data["selected_group"] = selected_group;
-        data["name"] = name;
-        data["description"] = description;
-
-        console.log(data);
-
-        //ajax
-        $.ajax({
-            type: "PUT",
-            url: location.origin + "/questionUpdate",
-            cache: false,
-            data: JSON.stringify(
-            {
-                user_update_data : data
-            }),
-            contentType: "application/json",
-            error: function(e){
-                $("#editModal_msg").text("[系統錯誤]<br>無法編輯檔案");
-                console.log(e);
-            },
-            success: function(data){
-                //close edit modal
-                $('#editModal').modal("hide");
-
-                if(mode == "pending"){
-                    //remove this question from pending table
-                    $('#'+ id).remove();
-                    
-                    //display no more pending files in this class
-                    let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
-                    if($("#pending_table tbody").find('tr').length == 1){
-                        console.log('the last pending files');
-                        $("tbody").append(msg);
-                        $("#dropdown-menu-pending").html("");
-                    }
-                    
-                    //show msgModal
-                    $("#editModal_msg").text("");
-                    show_msgModal("系統訊息", name +" 審核成功");
-                }
-                else if(mode == "approved"){
-                    //set new question info into approvd table
-                    $('#'+ id).find('td:first-child').html(name);
-                    $('#'+ id).find('td:nth-child(2)').html(description);
-
-                    //show msgModal
-                    $("#editModal_msg").text("");
-                    show_msgModal("系統訊息", name +" 編輯成功");
-                }
-                else if(mode == "group"){
-                    //show msgModal
-                    $("#editModal_msg").text("");
-                    show_msgModal("系統訊息", name +" 審核成功");
-
-                    //[TODO] make <label> with attr 'question_id'
-                    //and UI to 移除
-                }
-            }
-        });
-    });
-}
-
-function question_delete_btn_handler(){
-    $("#editModal_delete").on("click", function(){
-        event.preventDefault();
-        event.stopPropagation();
-
-        //popup confirmModal
-        $("#my_modal_backdrop").addClass("my_modal_backdrop");
-        $("#confirmModal_title").text("確定要刪除嗎？");
-        $("#confirmModal").modal("show");
-
-        
-    });
-}
-
-function delete_question_cb(args){
-    let class_item = args.class_item,
-        id = args.id,
-        mode = args.mode;
-
-    //ajax
-    $.ajax({
-        type: "DELETE",
-        url: location.origin + "/questionDelete",
-        cache: false,
-        data: JSON.stringify(
-        {
-            delete_question_id : id
-        }),
-        contentType: "application/json",
-        error: function(e){
-            $("#editModal_msg").text("[系統錯誤]<br>檔案無法刪除");
-            console.log(e);
-        },
-        success: function(data){
-            let response = JSON.parse(data);
-            if(mode == "approved"){
-                if(response.using){
-                    $("#editModal_msg").text("[系統訊息]<br>該檔案正在播放清單中，無法刪除<br>請至'編輯群組'頁面<br>編輯使用中的群組");
-                }
-                else{
-                    //remove this question from table
-                    $('#'+ id).remove();
-
-
-                    $("#confirmModal").modal("hide");
-                    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-
-                    //close edit modal
-                    $('#editModal').modal("hide");
-
-                    //show msgModal
-                    show_msgModal("系統訊息", "檔案刪除成功");
-                }
-            }
-            else if(mode == "pending"){
-                //remove this question from table
-                $('#'+ id).remove();
-
-                //display no more pending files in this class
-                let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
-                if($("#pending_table tbody").find('tr').length == 1){
-                    console.log('the last pending files');
-                    $("tbody").append(msg);
-                    $("#dropdown-menu-pending").html("");
-                }
-
-                $("#confirmModal").modal("hide");
-                    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-
-                //close edit modal
-                $('#editModal').modal("hide");
-
-                //show msgModal
-                show_msgModal("系統訊息", "檔案刪除成功");
-            }
-            else if(mode == "group"){
-                //remove this question from table
-                $('#'+ id + "_pendingbtn").parent().parent().remove();
-
-                $("#confirmModal").modal("hide");
-                $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-
-                //close edit modal
-                $('#editModal').modal("hide");
-
-                //show msgModal
-                show_msgModal("系統訊息", "檔案刪除成功");
-            }
-        }
-    });
-}
-
-function confirmModal_confirm_btn_handler(cb,args){
-    $("#confirmModal_confirm_btn").unbind('click');
-    $("#confirmModal_confirm_btn").on("click", function(){
-        cb(args);
-    });
-}
-
-function confirmModal_cancel_btn_handler(){
-    $("#confirmModal_cancel_btn").unbind('click');
-    $("#confirmModal_cancel_btn").on("click", function(){
-        $("#confirmModal").modal("hide");
-        $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-    });
-}
-
-function refreshbtn_handler(class_item, mode){
-    $("#refresh").on("click", function(){
-        let status;
-        if(mode == "pending"){
-            status = 0;
-        }
-        else if(mode == "approved"){
-            status = 1;
-        }
-
-        $.ajax({
-            type: "GET",
-            url: location.origin + "/getQuestion?mode=all&class_id=" + class_item.id + "&status=" + status,
-            cache: false,
-            contentType: "application/json",
-            error: function(e){
-                //show msgModal
-                show_msgModal("系統錯誤", "無法更新檔案資料");
-                console.log(e);
-            },
-            success: function(payload){
-                let data = JSON.parse(payload);
-                console.log(data);
-
-                if(mode == "pending"){
-                    $('#pending_table').html(render_pending_table(data.class_item, data.question_list));
-                    pendingbtn_handler(data.class_item, "pending");
-                }
-                else{
-                    $('#approved_table').html(render_approved_table(data.class_item, data.question_list));
-                    approvedbtn_handler(data.class_item, "approved");
-                }
-            }
-        });
-    });
-}
-
-function ascendingbtn_handler(class_item, question_list, mode){
-    $("#ascending").on("click", function(){
-        if(mode == "pending"){
-            $('#pending_table').html(render_pending_table(class_item, question_list));
-            pendingbtn_handler(class_item, "pending");
-        }
-        else if(mode == "approved"){
-            $('#approved_table').html(render_approved_table(class_item, question_list));
-            approvedbtn_handler(class_item, "pending");
-        }
-    });
-}
-
-function descendingbtn_handler(class_item, question_list, mode){
-    $("#descending").on("click", function(){
-        let reverse_question_list = question_list.slice();
-        if(mode == "pending"){
-            $('#pending_table').html(render_pending_table(class_item, reverse_question_list.reverse()));
-            pendingbtn_handler(class_item, "pending");
-        }
-        else if(mode == "approved"){
-            $('#approved_table').html(render_approved_table(class_item, reverse_question_list.reverse()));
-            approvedbtn_handler(class_item, "approved");
-        }
-    });
+    $("#pending_table").html(pending_table_str);
 }
