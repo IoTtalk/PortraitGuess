@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <% include partials/meta.html %>
-    <script type="text/javascript" src="../js/manage.js"></script>
+    <script type="text/javascript" src="/js/manage.js"></script>
 </head>
 <body>
     <% include partials/modal.html %>
+    <% var role = isadmin ? 'manage' : 'user' %>
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="row">
@@ -30,17 +31,18 @@
                             </div>
                             <div id="collpaseUpload" class="collapse" aria-labelledby="headingUpload" data-parent="#accordion">
                                 <div class="card-body">
-                                    <% if(class_list.length == 0){ %>
-
-                                    <% } %>
                                     <% for(let i = 0; i < class_list.length; i++){ %>
-                                        <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=upload&id=<%= class_list[i].id %>"> <%= class_list[i].name %> </a>
+                                        <a href="/<%= role %>/upload/<%= class_list[i].id %>" class="list-group-item list-group-item-action"> <%= class_list[i].name %> </a>
                                     <% } %>
+
+                                    <% if(isadmin){ %>
                                     <a id="homepage_link_show_classModal_btn" href="#" class="list-group-item list-group-item-action">新增</a>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>
 
+                        <% if(isadmin){ %>
                         <div class="card">
                             <div id="headingPending" class="card-header my_cursor" data-toggle="collapse" data-target="#collpasePending" aria-expanded="true" aria-controls="collpasePending">
                                 <button class="btn btn-link homepage_label" >待審檔案</button>
@@ -51,7 +53,7 @@
                                         <a href="#" class="list-group-item-action">無</a>
                                     <% } %>
                                     <% for(let i = 0; i < pendingClass_list.length; i++){ %>
-                                        <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=pending&id=<%= pendingClass_list[i].id %>"> <%= pendingClass_list[i].name %> </a>
+                                        <a href="/<%= role %>/pending/<%= pendingClass_list[i].id %>" class="list-group-item list-group-item-action"> <%= pendingClass_list[i].name %> </a>
                                     <% } %>
                                 </div>
                             </div>
@@ -67,7 +69,7 @@
                                         <a href="#" class="list-group-item-action">無</a>
                                     <% } %>
                                     <% for(let i = 0; i < approvedClass_list.length; i++){ %>
-                                        <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=approved&id=<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
+                                        <a href="/<%= role %>/approved/<%= approvedClass_list[i].id %>" class="list-group-item list-group-item-action"> <%= approvedClass_list[i].name %> </a>
                                     <% } %>
                                 </div>
                             </div>
@@ -83,7 +85,7 @@
                                         <a href="#" class="list-group-item-action">無</a>
                                     <% } %>
                                     <% for(let i = 0; i < approvedClass_list.length; i++){ %>
-                                        <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=group&id=<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
+                                        <a href="/<%= role %>/group/<%= approvedClass_list[i].id %>" class="list-group-item list-group-item-action"> <%= approvedClass_list[i].name %> </a>
                                     <% } %>
                                 </div>
                             </div>
@@ -95,10 +97,11 @@
                             </div>
                             <div id="collpaseDisplay" class="collapse" aria-labelledby="headingDisplay" data-parent="#accordion">
                                 <div class="card-body">
-                                    <a href="#" class="list-group-item list-group-item-action homepage_link" value="type=display">播放清單</a>
+                                    <a href="/<%= role %>/display" class="list-group-item list-group-item-action homepage_link">播放清單</a>
                                 </div>
                             </div>
                         </div>
+                        <% } %>
                     </div>
                 </div>
             </div>

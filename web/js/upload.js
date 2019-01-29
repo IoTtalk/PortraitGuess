@@ -18,7 +18,7 @@ $(function(){
             data = JSON.parse(payload);
             console.log(data);
 
-            $("#name").prop("placeholder", data.class_item.sample_name);
+            $("#name").prop("placeholder", "ex: " + data.class_item.sample_name);
             $("#description").prop("placeholder", data.class_item.description);
             
             render_group_table(data.group_list);

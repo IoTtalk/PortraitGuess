@@ -6,5 +6,4 @@ $(function (){
 
     $(document).on("click", "#homepage_link_show_classModal_btn", show_classModal);
     $(document).on("click", "#classModal_add", addnewclass_handler);
-    $(document).on("click", ".homepage_link", redirect_page);
 });

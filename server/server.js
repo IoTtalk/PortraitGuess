@@ -693,47 +693,83 @@ app.delete('/questionDelete', function(req, res){
     /* delete this question from all related tables */
     console.log("---questionDelete---");
     console.log("checking:", delete_question_id, "...");
-    //check this question using or not
-    db.Group.findAll({
-        where: {status: 1},
-        include: [{
-            model: db.GroupMember,
-            where: {QuestionId: delete_question_id},
-            reqired: true }]
-    }).then(GroupList => {
-        if(GroupList.length > 0){ //this question is playing now, cannot be deleted
-            console.log(delete_question_id, "is using, cannot be deleted");
-            //send response "OPERATION DENIED"
-            utils.sendResponse(res, 200, JSON.stringify({using: 1}));
-        }
-        else{ //safe to be deleted
-            console.log(delete_question_id, "is safe to be deleted");
-            //unlink related picture files from server
-            db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
-                let pic_count = 0;
+    //check this question is approved or not
+    db.Question.findOne({ where: {id: delete_question_id}}).then(function(qq){
+        if(qq != null){
+            if(qq.status == 0){ //safe to be deleted
+                console.log(delete_question_id, "is safe to be deleted");
+                //unlink related picture files from server
+                db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
+                    let pic_count = 0;
 
-                PictureList.forEach((PictureSetItem) => {
-                    let PictureData = PictureSetItem.get({ plain: true });
-                    let path = '../web/img/' + PictureData.id;
+                    PictureList.forEach((PictureSetItem) => {
+                        let PictureData = PictureSetItem.get({ plain: true });
+                        let path = '../web/img/' + PictureData.id;
 
-                    fs.unlink(path, (err) => {
-                        if(err) console.log(PictureData.id, ' cannot be deleted');
-                        else    console.log(PictureData.id, ' deleted');
+                        fs.unlink(path, (err) => {
+                            if(err) console.log(PictureData.id, ' cannot be deleted');
+                            else    console.log(PictureData.id, ' deleted');
+                        });
+
+                        pic_count += 1;
+                        if(pic_count == PictureList.length){
+                            //delete all picture files from server storage
+                            console.log("all pictures have been successfully deleted from server storage");
+                            db.Question.destroy({ where: { id: delete_question_id } }).then(function(){
+                                console.log("delete ", delete_question_id, " success");
+
+                                //send response
+                                utils.sendResponse(res, 200, JSON.stringify({using: 0}));
+                            });
+                        }
                     });
+                });
+            }
+            else{
+                //check this question using or not
+                db.Group.findAll({
+                    where: {status: 1},
+                    include: [{
+                        model: db.GroupMember,
+                        where: {QuestionId: delete_question_id},
+                        reqired: true }]
+                }).then(GroupList => {
+                    if(GroupList.length > 0){ //this question is playing now, cannot be deleted
+                        console.log(delete_question_id, "is using, cannot be deleted");
+                        //send response "OPERATION DENIED"
+                        utils.sendResponse(res, 200, JSON.stringify({using: 1}));
+                    }
+                    else{ //safe to be deleted
+                        console.log(delete_question_id, "is safe to be deleted");
+                        //unlink related picture files from server
+                        db.Picture.findAll({ where: {QuestionId: delete_question_id} }).then(PictureList => {
+                            let pic_count = 0;
 
-                    pic_count += 1;
-                    if(pic_count == PictureList.length){
-                        //delete all picture files from server storage
-                        console.log("all pictures have been successfully deleted from server storage");
-                        db.Question.destroy({ where: { id: delete_question_id } }).then(function(){
-                            console.log("delete ", delete_question_id, " success");
+                            PictureList.forEach((PictureSetItem) => {
+                                let PictureData = PictureSetItem.get({ plain: true });
+                                let path = '../web/img/' + PictureData.id;
 
-                            //send response
-                            utils.sendResponse(res, 200, JSON.stringify({using: 0}));
+                                fs.unlink(path, (err) => {
+                                    if(err) console.log(PictureData.id, ' cannot be deleted');
+                                    else    console.log(PictureData.id, ' deleted');
+                                });
+
+                                pic_count += 1;
+                                if(pic_count == PictureList.length){
+                                    //delete all picture files from server storage
+                                    console.log("all pictures have been successfully deleted from server storage");
+                                    db.Question.destroy({ where: { id: delete_question_id } }).then(function(){
+                                        console.log("delete ", delete_question_id, " success");
+
+                                        //send response
+                                        utils.sendResponse(res, 200, JSON.stringify({using: 0}));
+                                    });
+                                }
+                            });
                         });
                     }
                 });
-            });
+            }
         }
     });
 });
@@ -1074,7 +1110,7 @@ app.get("/getGroupMember", function(req, res){
 });
 
 
-function get_class_list_for_manage_page(res, pagename, class_item){
+function send_page_response(res, pagename, class_item=null, isadmin=false){
     let class_list = [],
         pendingClass_list = [],
         approvedClass_list = [];
@@ -1125,7 +1161,8 @@ function get_class_list_for_manage_page(res, pagename, class_item){
                             class_list: class_list,
                             pendingClass_list: pendingClass_list,
                             approvedClass_list: approvedClass_list,
-                            class_item: class_item
+                            class_item: class_item,
+                            isadmin: isadmin
                         };
                         console.log(data);
 
@@ -1139,7 +1176,7 @@ function get_class_list_for_manage_page(res, pagename, class_item){
     });
 }
 
-function check_class_exist_and_then_render_page(class_id, res, functionpage){
+function check_class_exist_and_then_render_page(class_id, res, functionpage, isadmin=false){
     db.Class.findOne({where:{id :class_id}}).then(function(c){
         if(c != null){
             let class_item = {
@@ -1148,7 +1185,7 @@ function check_class_exist_and_then_render_page(class_id, res, functionpage){
                 sample_name: c.sample_name,
                 description: c.description
             };
-            get_class_list_for_manage_page(res, functionpage, class_item);
+            send_page_response(res, functionpage, class_item, isadmin);
         }
         else{
             //no this class
@@ -1158,67 +1195,31 @@ function check_class_exist_and_then_render_page(class_id, res, functionpage){
 }
 
 /* web page */
+
 // manage pages
 app.get("/manage", utils.auth, function(req, res){
-    get_class_list_for_manage_page(res, "manage.html", null);
+    send_page_response(res, "manage.html", null, true);
 });
 
-app.get("/display", utils.auth, function(req, res){
-    get_class_list_for_manage_page(res, "display.html", null);
+app.get("/manage/display", utils.auth, function(req, res){
+    send_page_response(res, "display.html", null, true);
 });
 
-app.get("/:functionpage/:class_id", utils.auth, function(req, res){
+app.get("/manage/:functionpage/:class_id", utils.auth, function(req, res){
     let functionpage = req.params.functionpage,
         class_id = req.params.class_id;
 
     console.log("functionpage:", functionpage, " class_id:", class_id);
-    if(functionpage == "upload"){
-        check_class_exist_and_then_render_page(class_id, res, "upload.html");
-    }
-    else if(functionpage == "pending"){
-        check_class_exist_and_then_render_page(class_id, res, "pending.html");
-    }
-    else if(functionpage == "approved"){
-        check_class_exist_and_then_render_page(class_id, res, "approved.html");
-    }
-    else if(functionpage == "group"){
-        check_class_exist_and_then_render_page(class_id, res, "group.html");
-    }
-    else{
-        //no this page
-        res.status(404).send("page not found");
-    }
+    check_class_exist_and_then_render_page(class_id, res, functionpage + ".html", true);
 });
 
 // user page
-app.get("/user", function(req, res){
-    fs.readFile("../web/html/user.html", function(err, contents){
-        if (err){ console.log(err); }
-        else{
-            let class_list = [];
-            db.Class.findAll().then(ClassList => {
-                ClassList.forEach((ClassSetItem) => { 
-                    let ClassData = ClassSetItem.get({ plain: true });
-                    //push class into class_list
-                    class_list.push({
-                        id: ClassData.id,
-                        name: ClassData.name,
-                        sample_name: ClassData.sample_name,
-                        description: ClassData.description
-                    });
-
-                    let data = {
-                        class_list: class_list
-                    };
-                    console.log(data);
-
-                    //send response
-                    contents = contents.toString('utf8');
-                    utils.sendEjsRenderResponse(res, 200, contents, data);
-                });
-            });
-        }
-    });
+app.get("/user", utils.auth, function(req, res){
+    send_page_response(res, "manage.html");
+});
+app.get("/user/upload/:class_id", function(req, res){
+    let class_id = req.params.class_id;
+    check_class_exist_and_then_render_page(class_id, res, "upload.html");
 });
 
 // other page

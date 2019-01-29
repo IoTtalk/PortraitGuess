@@ -1,48 +1,53 @@
-<script type="text/javascript" src="../js/navbar.js"></script>
+<script type="text/javascript" src="/js/navbar.js"></script>
 
+<% var role = isadmin ? 'manage' : 'user' %>
 <nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">管理頁面</a>
+    <a class="navbar-brand" href="<% if(isadmin){ %>/manage<% }else{ %>/user<% } %>">FrameTalk</a>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">上傳檔案</a>
                 <div class="dropdown-menu" aria-labelledby="navbar-upload-btn" id="dropdown-menu-upload">
                     <% for(let i = 0; i < class_list.length; i++){ %>
-                        <a class="dropdown-item dropdown_list_btn" href="#" value="type=upload&id=<%= class_list[i].id %>"> <%= class_list[i].name %> </a>
+                        <a class="dropdown-item" href="/<%= role %>/upload/<%= class_list[i].id %>"> <%= class_list[i].name %> </a>
                     <% } %>
+                    <% if(isadmin){ %>
                     <a id="dropdown-show-classModal-btn" href="#" class="dropdown-item">新增</a>
+                    <% } %>
                 </div>
             </li>
+            <% if(isadmin){ %>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">待審檔案</a>
+                <a class="nav-link dropdown-toggle" id="navbar-pending-btn" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">待審檔案</a>
                 <div class="dropdown-menu" aria-labelledby="navbar-pending-btn" id="dropdown-menu-pending">
                     <% if(pendingClass_list.length == 0){ %>
                         <a href="#" class="dropdown-item">無待審檔案</a>
                     <% }%>
                     <% for(let i = 0; i < pendingClass_list.length; i++){ %>
-                        <a class="dropdown-item dropdown_list_btn" href="#" value="type=pending&id=<%= pendingClass_list[i].id %>"> <%= pendingClass_list[i].name %> </a>
+                        <a class="dropdown-item" href="/<%= role %>/pending/<%= pendingClass_list[i].id %>"> <%= pendingClass_list[i].name %> </a>
                     <% } %>
                 </div>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
+                <a class="nav-link dropdown-toggle" id="navbar-approved-btn" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
                 <div class="dropdown-menu" aria-labelledby="navbar-approved-btn" id="dropdown-menu-approved">
                     <% for(let i = 0; i < approvedClass_list.length; i++){ %>
-                        <a class="dropdown-item dropdown_list_btn" href="#" value="type=approved&id=<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
+                        <a class="dropdown-item" href="/<%= role %>/approved/<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
                     <% } %>
                 </div>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">編輯群組</a>
+                <a class="nav-link dropdown-toggle" id="navbar-group-btn" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">編輯群組</a>
                 <div class="dropdown-menu" aria-labelledby="navbar-group-btn" id="dropdown-menu-group">
                     <% for(let i = 0; i < approvedClass_list.length; i++){ %>
-                        <a class="dropdown-item dropdown_list_btn" href="#" value="type=group&id=<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
+                        <a class="dropdown-item" href="/<%= role %>/group/<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
                     <% } %>
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link dropdown_list_btn" href="#" value="type=display&id=all">播放清單</a>
+                <a class="nav-link" href="/<%= role %>/display">播放清單</a>
             </li>
+            <% } %>
         </ul>
     </div>
 </nav>

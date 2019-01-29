@@ -1,41 +1,3 @@
-function redirect_page(){
-    let args = $(this).attr('value'),
-        dic = {};
-    console.log(args);
-    args.split('&').forEach((data) => {
-        data = data.split('=');
-        dic[data[0]] = data[1];
-    });
-    if (dic.type == 'upload') {
-        if (dic.id) {
-            console.log('upload id:', dic.id);
-            location.href= location.origin + '/upload/' + dic.id;
-        }
-    }
-    else if(dic.type == 'pending') {
-        if (dic.id) {
-            console.log('pending id:', dic.id);
-            location.href= location.origin + '/pending/' + dic.id;
-        }
-    }
-    else if(dic.type == 'approved') {
-        if (dic.id) {
-            console.log('approved id:', dic.id);
-            location.href= location.origin + '/approved/' + dic.id;
-        }
-    }
-    else if(dic.type == 'group') {
-        if (dic.id) {
-            console.log('group id:', dic.id);
-            location.href= location.origin + '/group/' + dic.id;
-        }
-    }
-    else if(dic.type == 'display') {
-        console.log('display id:', dic.id);
-        location.href= location.origin + '/display';
-    }
-}
-
 function show_new_group_edit_row(event, nameId, rowId){
     //show input text
     $("#" + rowId).show();
@@ -221,42 +183,45 @@ function delete_question_cb(args){
         },
         success: function(data){
             let response = JSON.parse(data);
+            console.log(data);
             if(mode == "approved"){
+                console.log("approved");
                 if(response.using){
                     $("#editModal_msg").text("[系統訊息]<br>該檔案正在播放清單中，無法刪除<br>請至'編輯群組'頁面<br>編輯使用中的群組");
                 }
                 else{
+                    console.log("not using");
                     //remove this question from table
                     $('#'+ id + "_row").remove();
 
+                    //display no more approved files in this class
+                    let msg = "<tr><td>所有" + class_item.name + "檔案皆已刪除完畢</td></tr>";
+                    if($("#approved_table").find('tr').length == 1){
+                        console.log('the last pending files');
+                        $("#approved_table").append(msg);
+                    }
 
                     $("#confirmModal").modal("hide");
                     $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-
-                    //close edit modal
                     $('#editModal').modal("hide");
-
                     show_msgModal("系統訊息", "檔案刪除成功");
                 }
             }
             else if(mode == "pending"){
+                console.log("pending");
                 //remove this question from table
                 $('#'+ id + "_row").remove();
 
-                //[TODO]display no more pending files in this class
-                let msg = "<tr><td>所有" + class_item.name + "檔案皆以審核完畢</td></tr>";
-                if($("#pending_table tbody").find('tr').length == 1){
+                //display no more pending files in this class
+                let msg = "<tr><td>所有" + class_item.name + "檔案皆已審核完畢</td></tr>";
+                if($("#pending_table").find('tr').length == 1){
                     console.log('the last pending files');
-                    $("tbody").append(msg);
-                    $("#dropdown-menu-pending").html("");
+                    $("#pending_table").append(msg);
                 }
 
                 $("#confirmModal").modal("hide");
-                    $("#my_modal_backdrop").removeClass("my_modal_backdrop");
-
-                //close edit modal
+                $("#my_modal_backdrop").removeClass("my_modal_backdrop");
                 $('#editModal').modal("hide");
-
                 show_msgModal("系統訊息", "檔案刪除成功");
             }
         }

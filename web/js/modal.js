@@ -220,13 +220,13 @@ function update_question(event, class_id, mode){
                 //remove this question from pending table
                 $('#'+ question_id + '_row').remove();
                 
-                //[TODO]display no more pending files in this class
-                let msg = "<tr><td>此類別所有檔案皆以審核完畢</td></tr>";
-                if($("#pending_table tbody").find('tr').length == 1){
+                //display no more pending files in this class
+                let msg = "<tr><td>所有" + class_item.name + "檔案皆審核完畢</td></tr>";
+                if($("#pending_table").find('tr').length == 1){
                     console.log('the last pending files');
-                    $("tbody").append(msg);
-                    $("#dropdown-menu-pending").html("");
+                    $("#pending_table").append(msg);
                 }
+
                 
                 $("#editModal_msg").text("");
                 show_msgModal("系統訊息", name +" 審核成功");
