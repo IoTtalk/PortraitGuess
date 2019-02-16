@@ -16,15 +16,25 @@ $(function(){
         },
         success: function(payload){
             let data = payload;
-            console.log(data.group_list);
+            console.log(data);
             
-            render_grouplist_table(data.group_list);
+            render_grouplist_table(data.class_list, data.group_list);
         }
     });
 });
 
-function render_grouplist_table(group_list){
+function render_grouplist_table(class_list, group_list){
     let grouplist_table_str = "";
+    class_list.forEach((classs) => {
+        let id = classs.id,
+            name = classs.name;
+
+        grouplist_table_str += "\
+            <tr><td class='mycheckbox'><input style='display:none;' type='checkbox' value='" + id + "'/></td>\
+            <td><label>" + name + "</label></td>\
+            <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td></tr>";
+    });
+
     group_list.forEach((group) => {
         let id = group.id,
             name = group.name,
@@ -49,40 +59,34 @@ function render_grouplist_table(group_list){
 
 function set_display_group(){
     let $selected_group = $('input[name=display]:checked');
-    if($selected_group.length < 1){
-        show_msgModal("系統訊息", "至少需勾選 1 個群組");
-        return false;
-    }
-    else{
-        let selected_group_list = [];
+    let selected_group_list = [];
 
-        $selected_group.each(function (){
-            selected_group_list.push({
-                id : $(this).val(),
-                class_id : $(this).attr("class_id")
-            });
+    $selected_group.each(function (){
+        selected_group_list.push({
+            id : $(this).val(),
+            class_id : $(this).attr("class_id")
         });
-        
-        console.log(selected_group_list);
+    });
+    
+    console.log(selected_group_list);
 
-        $.ajax({
-            type: "PUT",
-            url: location.origin + "/setDisplayGroup",
-            cache: false,
-            data: JSON.stringify(
-            {
-                selected_group_list : selected_group_list
-            }),
-            contentType: "application/json",
-            error: function(e){
-                show_msgModal("系統錯誤", "無法取得群組列表");
-                console.log(e);
-            },
-            success: function(){
-                show_msgModal("系統訊息", "建立播放清單成功");
-            }
-        });
-    }
+    $.ajax({
+        type: "PUT",
+        url: location.origin + "/setDisplayGroup",
+        cache: false,
+        data: JSON.stringify(
+        {
+            selected_group_list : selected_group_list
+        }),
+        contentType: "application/json",
+        error: function(e){
+            show_msgModal("系統錯誤", "無法取得群組列表");
+            console.log(e);
+        },
+        success: function(){
+            show_msgModal("系統訊息", "建立播放清單成功");
+        }
+    });
 }
 
 function select_all_to_display(){
