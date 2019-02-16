@@ -270,11 +270,11 @@ function render_group_accordion(class_item, option, group_list){
 function render_member_in_group_card(cardId, question_in_group_list){
     let question_in_group_table_str = "";
 
-    question_in_group_table_str += '<tr><th width="10%"></th><th  width="40%">名字</th><th  width="50%">敘述</th></tr>'
+    question_in_group_table_str += '<tr><th width="20%">加入群組</th><th  width="35%">名字</th><th  width="45%">敘述</th></tr>'
     question_in_group_list.forEach((question) => {
         question_in_group_table_str += '\
             <tr>\
-                <td><button id="' + question.id + '" class="btn btn-outline-info member_add_btn">添加</button>\
+                <td><button id="' + question.id + '" class="btn btn-outline-info member_add_btn">加入</button>\
                 <td><label>' + question.name + '</label></td>\
                 <td><label>' + question.description + '</label></td>\
             </tr>\
@@ -360,6 +360,11 @@ function update_group(event, class_item){
         console.log(update_group_id);
         console.log(newgroup_list);
 
+        if(newgroup_list.length == 0){
+            show_msgModal("系統訊息", "群組內需至少一位成員，或點選'刪除'完成操作");
+            return false;
+        }
+
         //ajax
         $.ajax({
             type: "PUT",
@@ -382,7 +387,7 @@ function update_group(event, class_item){
             }
         });
     }
-    else{ //add add group
+    else{ //add new group
         let newgroup_list = [],
             newgroup_name = $("#group_title").text();
 
@@ -397,6 +402,11 @@ function update_group(event, class_item){
 
         console.log(newgroup_name);
         console.log(newgroup_list);
+
+        if(newgroup_list.length == 0){
+            show_msgModal("系統訊息", "群組內需至少一位成員");
+            return false;
+        }
 
         //ajax
         $.ajax({
