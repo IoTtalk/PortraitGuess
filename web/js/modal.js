@@ -69,10 +69,11 @@ function show_classModal(){
     $("#classModal").modal("show");
 }
 
-function show_msgModal(title, msg){
+function show_msgModal(title, msg1, msg2=""){
     $("#my_modal_backdrop").addClass("my_modal_backdrop");
     $("#messageModal_title").text(title);
-    $("#messageModal_body").html(msg);
+    $("#messageModal_body1").html(msg1);
+    $("#messageModal_body2").html(msg2);
     $("#messageModal").modal("show");
 }
 
@@ -299,31 +300,56 @@ function setup_displayModal(group_name, groupMembertList){
 }
 
 function show_displayModal(event){
-    let display_group_id = $(event.target).parent().parent().find('input').attr('value'),
+    let type = $(event.target).parent().parent().find('input').attr('name'),
+        display_group_id = $(event.target).parent().parent().find('input').attr('value'),
         display_group_name = $(event.target).parent().parent().find('label').text();
 
-    console.log(display_group_id, display_group_name);
+    console.log(type, display_group_id, display_group_name);
 
-    //ajax get this groupmember
-    $.ajax({
-        type: "GET",
-        url: location.origin + "/getGroupMember?mode=approved&group_id=" + display_group_id,
-        cache: false,
-        contentType: "application/json",
-        error: function(e){
-            show_msgModal("系統錯誤", "無法取得群組資訊");
-            console.log(e);
-        },
-        success: function(payload){
-            let data = JSON.parse(payload)
-            console.log(data);
+    if(type == 'display'){
+        //ajax get this groupmember
+        $.ajax({
+            type: "GET",
+            url: location.origin + "/getGroupMember?mode=approved&group_id=" + display_group_id,
+            cache: false,
+            contentType: "application/json",
+            error: function(e){
+                show_msgModal("系統錯誤", "無法取得群組資訊");
+                console.log(e);
+            },
+            success: function(payload){
+                let data = JSON.parse(payload)
+                console.log(data);
 
-            //set modal content by groupMembertList
-            setup_displayModal(display_group_name, data.groupMember_list);
+                //set modal content by groupMembertList
+                setup_displayModal(display_group_name, data.groupMember_list);
 
-            //show display modal
-            $('#displayModal').modal("show");
-        }
-    });
+                //show display modal
+                $('#displayModal').modal("show");
+            }
+        });
+    }
+    else{ //get class default groupmember
+        $.ajax({
+            type: "GET",
+            url: location.origin + "/getQuestion?mode=all&class_id=" + display_group_id + "&status=1",
+            cache: false,
+            contentType: "application/json",
+            error: function(e){
+                show_msgModal("系統錯誤", "無法取得群組資訊");
+                console.log(e);
+            },
+            success: function(payload){
+                let data = JSON.parse(payload);
+                console.log(data);
+
+                //set modal content by groupMembertList
+                setup_displayModal(display_group_name, data.question_list);
+
+                //show display modal
+                $('#displayModal').modal("show");
+            }
+        });
+    }
 }
 
