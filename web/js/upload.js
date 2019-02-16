@@ -162,9 +162,20 @@ function handleUploadSuccess(data){
     $("#my_modal_backdrop").removeClass("my_modal_backdrop");
     $("#progressbarModal").removeClass("manually-show-modal");
 
-    if(res.photo_status){;
-        //show msgModal
-        show_msgModal("系統訊息", "上傳檔案成功");
+    if(res.photo_status){
+        //show msgModal with selected_group
+        let selected_group = "";
+        let $selected_list = $('input[name=group]:checked');
+        $selected_list.each(function(){
+            console.log($(this).parent().parent().find('label').text());
+            selected_group = selected_group + " " + $(this).parent().parent().find('label').text();
+        });
+        if($selected_list.length > 0){
+            show_msgModal("系統訊息", "上傳檔案成功", "加入至群組：" + selected_group);
+        }
+        else{
+            show_msgModal("系統訊息", "上傳檔案成功", "加入至群組：全部" + class_item.name);
+        }
 
         // clear all input
         $('#upload_file').val('');
