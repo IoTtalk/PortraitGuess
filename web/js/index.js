@@ -50,6 +50,7 @@ $(function(){
     const chance = 5;  // 猜錯機會
     var playButton_first_play = true;  // 檢查是不是第一次玩
     var chance_count = chance;
+    var playType; // 玩家選擇了全部群組or 一般群組
     var playingGroup; // 玩家選好要玩的群組
 
     var socket = io();
@@ -168,7 +169,7 @@ $(function(){
         $("#chance").show();
     };
     //display group li buttons
-    var displayGroup = function(groupList){
+    var displayGroup = function(classList, groupList){
         $("#playButton").hide();
         $("#playGroupButton").hide();
         $("#endButton").hide();
@@ -182,9 +183,14 @@ $(function(){
         $("#group_options_div").show();
 
         //generate group buttons
+        /* <li><button class="groupBtn btn btn-primary center-block"></button></li> */
         var group_list_item_str = "";
+        for(var i = 0; i < classList.length; i++){
+            group_list_item_str += '\
+                <li><button class_id="' + classList[i].id + '" class="groupBtn btn btn-secondary center-block">' + classList[i].name + '</button></li>\
+            ';
+        }
         for(var i = 0; i < groupList.length; i++){
-            /* <li><button class="groupBtn btn btn-primary center-block"></button></li> */
             group_list_item_str += '\
                 <li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-secondary center-block">' + groupList[i].name + '</button></li>\
             ';
@@ -196,14 +202,21 @@ $(function(){
         $(".groupBtn").click(function(){
             // lastClickTime = new Date(); 
             //get selected group_id, and then socket emit to server, and socket on receive game_list
-            playingGroup = $(this).attr("group_id");
+            if($(this).attr("group_id") == undefined){ //choose class default group
+                playType = "class";
+                playingGroup = $(this).attr("class_id");
+            }
+            else{ //choose group
+                playType = "group";
+                playingGroup = $(this).attr("group_id");
+            }
             console.log("playingGroup: ", playingGroup);
             //let other groups btn disable
             $("#prompt3").hide();
             $(".groupBtn").hide();
             //6
             console.log("6. choose one group I want to play");
-            socket.emit("playGroup", playingGroup);
+            socket.emit("playGroup", {playType: playType, playingGroup: playingGroup});
         });
     }
 
@@ -232,7 +245,7 @@ $(function(){
                 console.log("playButton, playButton_first_play, false");
                 //10
                 console.log("10. send replay request");
-                socket.emit("NewGameReq", playingGroup);
+                socket.emit("NewGameReq", {playType: playType, playingGroup: playingGroup});
             }
         }
     });
@@ -280,7 +293,7 @@ $(function(){
         else{
             isMePlaying = true;
             playButton_first_play = false;
-            displayGroup(groupList);
+            displayGroup(classList, groupList);
         }
     });
     //7
@@ -294,9 +307,10 @@ $(function(){
         enterPlay(gameInfo);
     });
     //13
-    socket.on("NewGroupRes", function(groupList){
+    socket.on("NewGroupRes", function(msg){
         console.log("13. receive the new groupList and display group_options");
-        displayGroup(groupList);
+        console.log(msg);
+        displayGroup(msg.classList, msg.groupList);
     });
 
     var checkTimeout = setInterval(function(){
