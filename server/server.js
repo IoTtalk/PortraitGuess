@@ -30,10 +30,11 @@ utils.createFolder(uploadFolder);
 /*** connect websocket to paintingDA ***/
 var connectedCount;
 var isGamePlaying;
+var playSock = undefined;
 
 var ws2Painting = new websocketclient();
 ws2Painting.open('ws://' + config.paintingIP + ':' + config.webSocketPort);
-ws2Painting.onerror= function(err){
+ws2Painting.onerror = function(err){
     console.log('FrameDA is not running!');
 };
 ws2Painting.onopen = function(){
@@ -51,6 +52,7 @@ ws2Painting.onopen = function(){
                 ws2Painting.send(JSON.stringify({ "Command": "leaveGame" }));
                 isGamePlaying = false;
                 playID = undefined;
+                playSock = undefined;
             }
         });
         //1
@@ -81,6 +83,8 @@ ws2Painting.onopen = function(){
                 if(isGamePlaying == false){
                     isGamePlaying = true;
                     playID = socket.id;
+                    playSock = socket;
+                    console.log("player socket id", playID);
                     console.log("5.5 Frame is player:", socket.id,"'s turn now");
                     socket.broadcast.emit('isGamePlaying', {"isGamePlaying": isGamePlaying});
                 }
@@ -133,6 +137,22 @@ ws2Painting.onopen = function(){
         })
     });
 };
+ws2Painting.onmessage = function(data, flags, number){
+    let signal_type = data.split(":")[0]
+    let status = data.split(":")[1]
+    console.log(data, signal_type, status);
+    
+    if(signal_type == "load" && playSock != undefined){
+        playSock.emit("loading", status);
+        if(status == "finish"){
+            console.log("6.5. send loading finish signal to player", playSock.id, " to release loading page");
+        }
+    }
+    if(signal_type == "display" && playSock != undefined){
+        playSock.emit("displayFinish", true);
+        console.log("9.5 got processing display done");
+    }
+};
 
 var answer_pic_list = [],
     url = shortid.generate();
@@ -156,6 +176,8 @@ app.engine("html", ejs.renderFile);
 // server start
 console.log('---server start---');
 http.listen((process.env.PORT || config.webServerPort), '0.0.0.0');
+
+//[TODO] use class(global) to store game info
 
 function ganerateGameInfo(playtype, group_id, mode, socket){
     let answer_idx_in_list, 
@@ -181,6 +203,7 @@ function ganerateGameInfo(playtype, group_id, mode, socket){
             //check length of GameQuestionList to generate game_list and answer question
             if(GameQuestionList.length > 5){
                 //random pick 5 question for game
+                //[TODO] shuffle
                 do{
                     index = Math.floor(Math.random() * GameQuestionList.length);
                     //check if this random index has existed
@@ -264,6 +287,7 @@ function ganerateGameInfo(playtype, group_id, mode, socket){
             //check length of GameQuestionList to generate game_list and answer question
             if(GameQuestionList.length > 5){
                 //random pick 5 question for game
+                //[TODO] shuffle
                 do{
                     index = Math.floor(Math.random() * GameQuestionList.length);
                     //check if this random index has existed
@@ -353,7 +377,7 @@ function getGameGroup(mode, socket, res, contents){
     }).then(ClassList => {
         ClassList.forEach((ClassSetItem) => {
             ClassData = ClassSetItem.get({plain: true});
-            console.log(ClassData);
+            // console.log(ClassData);
             if(ClassData.Questions.length != 0){ //push this class default group
                 playClassGroup_list.push({
                     id: ClassData.id,
@@ -1335,7 +1359,7 @@ app.get("/manage/:functionpage/:class_id", utils.auth, function(req, res){
 });
 
 // user page
-app.get("/user", utils.auth, function(req, res){
+app.get("/user", function(req, res){
     send_page_response(res, "manage.html");
 });
 app.get("/user/upload/:class_id", function(req, res){
