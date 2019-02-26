@@ -3,6 +3,20 @@ html, body, .container-table {
     height: 100%;
     background-color: #f7e1b5;
 }
+.manually-show-modal {
+    display:block !important;
+    z-index: 1060;
+}
+.my_modal_backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1055;
+    background-color: #000;
+    opacity: 0.5;
+}
 .container-table {
     display: table;
 }
