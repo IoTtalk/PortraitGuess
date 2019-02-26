@@ -105,13 +105,7 @@ $(function(){
                 $("#prompt3").hide();
                 $("#chance").hide();
 
-                $("#playButton").show().prop("disabled", false);
-                $("#playButton").css("font-size","35px");
-                $("#playButton").html("Play Again");
-                $("#playButton").css("width","275px");
-                // $("#playButton").css("height","100px");
-                $("#playGroupButton").show();
-                $("#endButton").show();
+                //6.5 when recv processing display signal, and then show btns
                 console.log("correct!");
             }
             else {  // 猜錯                   
@@ -135,13 +129,7 @@ $(function(){
                     $("#prompt3").hide();
                     $("#chance").hide();
 
-                    $("#playButton").show().prop("disabled", false);
-                    $("#playButton").css("font-size","35px");
-                    $("#playButton").html("Play Again");
-                    $("#playButton").css("width","275px");
-                    // $("#playButton").css("height","100px");
-                    $("#playGroupButton").show();
-                    $("#endButton").show();
+                    //6.5 when recv processing display signal, and then show btns
                     console.log("game over!");
                 }
                 else {  // 猜錯次數沒超過上限
@@ -217,6 +205,11 @@ $(function(){
             //6
             console.log("6. choose one group I want to play");
             socket.emit("playGroup", {playType: playType, playingGroup: playingGroup});
+            
+            // show progressbar
+            console.log("6.5. display processing bar");
+            $("#my_modal_backdrop").addClass("my_modal_backdrop");
+            $("#progressbarModal").addClass("manually-show-modal");
         });
     }
 
@@ -245,7 +238,13 @@ $(function(){
                 console.log("playButton, playButton_first_play, false");
                 //10
                 console.log("10. send replay request");
+                //[TODO] the same with PlayGroup
                 socket.emit("NewGameReq", {playType: playType, playingGroup: playingGroup});
+
+                // show progressbar
+                console.log("10.5. display processing bar");
+                $("#my_modal_backdrop").addClass("my_modal_backdrop");
+                $("#progressbarModal").addClass("manually-show-modal");
             }
         }
     });
@@ -296,10 +295,32 @@ $(function(){
             displayGroup(classList, groupList);
         }
     });
+    //6.5
+    socket.on("loading", function(percentage){
+        console.log("6.5. receive processing loading", percentage);
+        if(percentage == "finish"){
+            console.log("6.5. receive processing ready signal");
+            //close progressbar
+            $("#my_modal_backdrop").removeClass("my_modal_backdrop");
+            $("#progressbarModal").removeClass("manually-show-modal");
+        }
+    });
     //7
     socket.on("GameStart", function(gameInfo){
         console.log("7. receive gameInfo and generate game options");
         enterPlay(gameInfo);
+    });
+    //9.5
+    socket.on("displayFinish", function(displayFinish){
+        console.log("9.5. receive processing finish signal");
+        if(displayFinish == true){
+            $("#playButton").show().prop("disabled", false);
+            $("#playButton").css("font-size","35px");
+            $("#playButton").html("Play Again");
+            $("#playButton").css("width","275px");
+            $("#playGroupButton").show();
+            $("#endButton").show();
+        }
     });
     //11
     socket.on("NewGameRes", function(gameInfo){
