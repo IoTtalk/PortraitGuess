@@ -157,7 +157,7 @@ $(function(){
         $("#chance").show();
     };
     //display group li buttons
-    var displayGroup = function(classList, groupList){
+    var displayGroup = function(groupList){
         $("#playButton").hide();
         $("#playGroupButton").hide();
         $("#endButton").hide();
@@ -173,15 +173,9 @@ $(function(){
         //generate group buttons
         /* <li><button class="groupBtn btn btn-primary center-block"></button></li> */
         var group_list_item_str = "";
-        for(var i = 0; i < classList.length; i++){
-            group_list_item_str += '\
-                <li><button class_id="' + classList[i].id + '" class="groupBtn btn btn-secondary center-block">' + classList[i].name + '</button></li>\
-            ';
-        }
+        group_list_item_str += '<li><button class_id="all" class="groupBtn btn btn-secondary center-block">全部</button></li>';
         for(var i = 0; i < groupList.length; i++){
-            group_list_item_str += '\
-                <li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-secondary center-block">' + groupList[i].name + '</button></li>\
-            ';
+            group_list_item_str += '<li><button group_id="' + groupList[i].id + '" class="groupBtn btn btn-secondary center-block">' + groupList[i].name + '</button></li>';
         }
         $("#group_options").html(group_list_item_str);
 
@@ -292,7 +286,7 @@ $(function(){
         else{
             isMePlaying = true;
             playButton_first_play = false;
-            displayGroup(classList, groupList);
+            displayGroup(groupList);
         }
     });
     //6.5
@@ -331,7 +325,7 @@ $(function(){
     socket.on("NewGroupRes", function(msg){
         console.log("13. receive the new groupList and display group_options");
         console.log(msg);
-        displayGroup(msg.classList, msg.groupList);
+        displayGroup(msg.groupList);
     });
 
     var checkTimeout = setInterval(function(){
