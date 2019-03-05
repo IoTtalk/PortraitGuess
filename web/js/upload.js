@@ -174,7 +174,7 @@ function handleUploadSuccess(data){
             show_msgModal("系統訊息", "上傳檔案成功", "加入至群組：" + selected_group);
         }
         else{
-            show_msgModal("系統訊息", "上傳檔案成功", "加入至群組：全部" + class_item.name);
+            show_msgModal("系統訊息", "上傳檔案成功", "加入至群組：全部");
         }
 
         // clear all input
