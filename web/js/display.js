@@ -25,15 +25,10 @@ $(function(){
 
 function render_grouplist_table(class_list, group_list){
     let grouplist_table_str = "";
-    class_list.forEach((classs) => {
-        let id = classs.id,
-            name = classs.name;
-
-        grouplist_table_str += "\
-            <tr><td class='mycheckbox'><input style='display:none;' type='checkbox' value='" + id + "'/></td>\
-            <td><label>" + name + "</label></td>\
-            <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td></tr>";
-    });
+    grouplist_table_str += "\
+        <tr><td class='mycheckbox'><input style='display:none;' type='checkbox' value='all'/></td>\
+        <td><label>全部</label></td>\
+        <td><button class='btn btn-outline-dark displayModal_btn' data-toggle='modal' data-target='#displayModal'>內容</button></td></tr>";
 
     group_list.forEach((group) => {
         let id = group.id,
