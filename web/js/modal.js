@@ -332,7 +332,7 @@ function show_displayModal(event){
     else{ //get class default groupmember
         $.ajax({
             type: "GET",
-            url: location.origin + "/getQuestion?mode=all&class_id=" + display_group_id + "&status=1",
+            url: location.origin + "/getQuestion?mode=all&class_id=all&status=1",
             cache: false,
             contentType: "application/json",
             error: function(e){
