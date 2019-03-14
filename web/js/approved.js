@@ -3,7 +3,8 @@ var question_list = [];
 
 $(function(){
     $(document).on("click", ".approvedbtn", function(event){ show_editModal(event, class_item, "approved"); });
-    $(document).on("click", "#editModal_delete", function(event){ show_confirmModal(); });
+    $(document).on("click", ".remove_tag", function(event){ remove_img(event) });
+    $(document).on("click", "#editModal_delete", function(event){ show_confirmModal(event); });
     $(document).on("click", "#editModal_update", function(event){ update_question(event, class_item.id, "approved"); });
 
     $(document).on("click", "#refresh", function(event){ refresh_question(class_item, "approved"); });
