@@ -120,8 +120,9 @@ function setupEditModal(class_item, questionData, status){
     for(let i = 0; i < picture_list.length; i++){
         picture_str += '\
             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">\
-                <img id="' + picture_list[i] + '" src="/img/' + picture_list[i] + '" class="img-thumbnail">\
-                </img>\
+                <span class="">' + picture_list[i].size + ' MB</span>\
+                <img id="' + picture_list[i].src + '" src="/img/' + picture_list[i].src + '" size="' + picture_list[i].size + '" class="img-thumbnail"></img>\
+                <span class="remove_tag"> ✖️ </span>\
             </div>';
     }
 
@@ -148,10 +149,51 @@ function setupEditModal(class_item, questionData, status){
     //set all category and mark those used
     $('#editModal_group_table').html(group_str);
 
-    //ser picture
+    //set total img size
+    //warning too large size
+    $("#total_img_size").text(questionData.total_img_size);
+    check_img_size(parseFloat(questionData.total_img_size));
+
+    //set picture
     $('#editModal_picture_row').html(picture_str);
     $("#editModal_picture_row").sortable();
     $("#movable_pic_row").disableSelection();
+}
+
+function check_img_size(size){
+    if(size >= 20.0){
+        if(!$("#total_img_size").hasClass("warning")){
+            $("#total_img_size").addClass("warning");
+        }
+    }
+    else{
+        if($("#total_img_size").hasClass("warning")){
+            $("#total_img_size").removeClass("warning");
+        }
+    }
+}
+
+function remove_img(event){
+    // the last pic cannot be deleted
+    if($("#editModal_picture_row").find("img").length == 1){
+        console.log("at least one picture to display!");
+        $("#editModal_msg").text("至少需留下一張圖片！");
+        return false;
+    }
+    else{ 
+        //update total_img_size
+        let $this = $(event.target),
+            remove_size = $this.parent().find("img").attr("size"),
+            total_img_size = $("#total_img_size").text(),
+            new_total_img_size = Math.round((parseFloat(total_img_size) - parseFloat(remove_size)) * 100) / 100;
+
+        //update warning size text
+        $("#total_img_size").text(new_total_img_size);
+        check_img_size(new_total_img_size);
+
+        //remove img
+        $this.parent().remove();
+    }
 }
 
 function show_confirmModal(){
@@ -175,6 +217,14 @@ function update_question(event, class_id, mode){
     if($.trim(name) == ''){
         $("#editModal_msg").text("名字必需填入");
         return false;
+    }
+    //add large img size restriction in mode "pending"
+    if(mode == "pending"){
+        let total_img_size = $("#total_img_size").text();
+        if(parseFloat(total_img_size) >= 20.0){
+            $("#editModal_msg").text("圖片總大小限制為20.0 MB，請刪除圖片以利遊戲進行");
+            return false;
+        }
     }
 
     let $selected_list = $('input[name=editModalgroup]:checked');
@@ -352,4 +402,3 @@ function show_displayModal(event){
         });
     }
 }
-
