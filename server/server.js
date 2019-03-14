@@ -601,6 +601,8 @@ app.get("/getQuestion", function(req, res){
     }
     else if(mode == "one"){
         let question_id = req.query.question_id,
+            img_size = 0.0,
+            total_img_size = 0.0,
             allGroup_dict = {},
             questionData = {};
 
@@ -643,9 +645,16 @@ app.get("/getQuestion", function(req, res){
                 for(let i = 0; i < QuestionData.Pictures.length; i++){
                     picId = utils.getPicIdbyOrder(QuestionData.Pictures, i + 1);
                     if(picId != "none"){
-                        sortedPic_list.push(picId);
+                        img_size = Math.round((utils.getFilesizeInBytes("../web/img/" + picId) / 1000000.0) * 100) / 100;
+                        total_img_size += img_size;
+                        sortedPic_list.push({
+                            src : picId,
+                            size : img_size
+                        });
+                        // console.log(utils.getFilesizeInBytes("../web/img/" + picId) / 1000000.0);
                     }
                 }
+
 
                 //mark those group for this question
                 for(let i = 0; i < checkedGroup_list.length; i++){
@@ -661,6 +670,7 @@ app.get("/getQuestion", function(req, res){
                 questionData["description"] = QuestionData.description;
                 questionData["picture"] = sortedPic_list;
                 questionData["group"] = checkedGroup_list;
+                questionData["total_img_size"] = total_img_size;
                 console.log(questionData);
 
                 //response
@@ -817,20 +827,40 @@ app.put('/questionUpdate', function (req, res) {
                 //update picture order
                 db.Picture.findAll({ where: { QuestionId: question_id } }).then(PictureList => {
                     let count = 0;
-                    PictureList.forEach((PictureSetItem) => {
+                    PictureList.forEach((PictureSetItem, idx) => {
                         let PictureData = PictureSetItem.get({ plain: true });
-                        db.Picture.update(
-                            { order: new_img_order[PictureData.id] }, 
-                            { where: { id: PictureData.id } } 
-                        ).then(function(){
-                            console.log("pic:", PictureData.id, " update success");
-                            count += 1;
-                            if(count == PictureList.length){
-                                console.log("pic update done");
-                                //send response
-                                utils.sendResponse(res, 200, "success!");
-                            }
-                        });
+                        if(idx > Object.keys(new_img_order).length - 1){ //this img deleted
+                            db.Picture.destroy(
+                                { where: { id: PictureData.id } }
+                            ).then(function(){
+                                // delete pic
+                                let path = '../web/img/' + PictureData.id;
+                                fs.unlink(path, (err) => {
+                                    if(err) console.log(PictureData.id, ' cannot be deleted');
+                                    else    console.log(PictureData.id, ' deleted');
+                                });
+                                count += 1;
+                                if(count == PictureList.length){
+                                    console.log("pic update done");
+                                    //send response
+                                    utils.sendResponse(res, 200, "success!");
+                                }
+                            });
+                        }
+                        else{ //this img remained
+                            db.Picture.update(
+                                { order: new_img_order[PictureData.id] }, 
+                                { where: { id: PictureData.id } } 
+                            ).then(function(){
+                                console.log("pic:", PictureData.id, " update success");
+                                count += 1;
+                                if(count == PictureList.length){
+                                    console.log("pic update done");
+                                    //send response
+                                    utils.sendResponse(res, 200, "success!");
+                                }
+                            });
+                        }
                     });
                 });
             });
