@@ -24,7 +24,7 @@ var sendEjsRenderResponse = function(res, statusCode, contents, JSONdata){
 }
 
 var uuid =  function(){
-    var d = Date.now();
+    let d = Date.now();
 
     if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
         d += performance.now(); //use high-precision timer if available
@@ -37,7 +37,7 @@ var uuid =  function(){
 }
 
 var getPicIdbyOrder = function(list, order){
-    for(var i = 0; i < list.length; i++){
+    for(let i = 0; i < list.length; i++){
         if(list[i].order == order){
             return list[i].id;
         }
@@ -46,7 +46,7 @@ var getPicIdbyOrder = function(list, order){
 }
 
 var auth = function(req, res, next){
-    var user = basicAuth(req);
+    let user = basicAuth(req);
     if(!user || !user.name || !user.pass){
         res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
         res.sendStatus(401);
@@ -62,11 +62,24 @@ var auth = function(req, res, next){
     }
 }
 
+var getFilesizeInBytes = function(filename) {
+    try {
+        let stats = fs.statSync(filename);
+        let fileSizeInBytes = stats["size"];
+        return fileSizeInBytes;
+    }
+    catch(err) {
+        console.log(filename, ' does not exist');
+        return null;
+    }
+}
+
 module.exports = {
     createFolder: createFolder,
     sendResponse: sendResponse,
     sendEjsRenderResponse: sendEjsRenderResponse,
     uuid: uuid,
     getPicIdbyOrder: getPicIdbyOrder,
-    auth: auth
+    auth: auth,
+    getFilesizeInBytes: getFilesizeInBytes
 };
