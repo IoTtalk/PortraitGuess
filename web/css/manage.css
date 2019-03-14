@@ -1,3 +1,6 @@
+.warning {
+    color: red;
+}
 .manually-show-modal {
     display:block !important;
     z-index: 1060;
