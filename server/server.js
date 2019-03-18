@@ -670,7 +670,7 @@ app.get("/getQuestion", function(req, res){
                 questionData["description"] = QuestionData.description;
                 questionData["picture"] = sortedPic_list;
                 questionData["group"] = checkedGroup_list;
-                questionData["total_img_size"] = total_img_size;
+                questionData["total_img_size"] = Math.round(total_img_size * 100) / 100;;
                 console.log(questionData);
 
                 //response
@@ -825,42 +825,25 @@ app.put('/questionUpdate', function (req, res) {
 
             db.GroupMember.bulkCreate(new_selected_group_list).then(function() {
                 //update picture order
-                db.Picture.findAll({ where: { QuestionId: question_id } }).then(PictureList => {
-                    let count = 0;
-                    PictureList.forEach((PictureSetItem, idx) => {
-                        let PictureData = PictureSetItem.get({ plain: true });
-                        if(idx > Object.keys(new_img_order).length - 1){ //this img deleted
-                            db.Picture.destroy(
-                                { where: { id: PictureData.id } }
-                            ).then(function(){
-                                // delete pic
-                                let path = '../web/img/' + PictureData.id;
-                                fs.unlink(path, (err) => {
-                                    if(err) console.log(PictureData.id, ' cannot be deleted');
-                                    else    console.log(PictureData.id, ' deleted');
-                                });
-                                count += 1;
-                                if(count == PictureList.length){
-                                    console.log("pic update done");
-                                    //send response
-                                    utils.sendResponse(res, 200, "success!");
-                                }
+                db.Picture.destroy({ //destroy old picture 
+                    where: {QuestionId: question_id }, force:true
+                }).then(function(){ //create new picture 
+                    let new_picture_list = [];
+                    for(let key in new_img_order){
+                        if(new_img_order.hasOwnProperty(key)){
+                            new_picture_list.push({
+                                id: key,
+                                order: new_img_order[key],
+                                origin_name: "",
+                                QuestionId: question_id
                             });
                         }
-                        else{ //this img remained
-                            db.Picture.update(
-                                { order: new_img_order[PictureData.id] }, 
-                                { where: { id: PictureData.id } } 
-                            ).then(function(){
-                                console.log("pic:", PictureData.id, " update success");
-                                count += 1;
-                                if(count == PictureList.length){
-                                    console.log("pic update done");
-                                    //send response
-                                    utils.sendResponse(res, 200, "success!");
-                                }
-                            });
-                        }
+                    }
+                    // console.log(new_picture_list);
+                    db.Picture.bulkCreate(new_picture_list).then(function(){
+                        console.log("pic update done");
+                        //send response
+                        utils.sendResponse(res, 200, "success!");
                     });
                 });
             });
