@@ -19,6 +19,7 @@
     position: relative;
 }
 .remove_tag {
+   cursor: pointer;
    position: absolute;
    top: 0;
    right: 1em;
