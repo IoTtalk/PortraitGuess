@@ -29,7 +29,7 @@
                 </div>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" id="navbar-approved-btn" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">已審檔案</a>
+                <a class="nav-link dropdown-toggle" id="navbar-approved-btn" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">編輯檔案</a>
                 <div class="dropdown-menu" aria-labelledby="navbar-approved-btn" id="dropdown-menu-approved">
                     <% for(let i = 0; i < approvedClass_list.length; i++){ %>
                         <a class="dropdown-item" href="/<%= role %>/approved/<%= approvedClass_list[i].id %>"> <%= approvedClass_list[i].name %> </a>
